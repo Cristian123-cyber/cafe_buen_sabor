@@ -1,0 +1,21 @@
+# Archivos de configuración de entorno y secretos
+# ¡NUNCA subir el .env con las contraseñas!
+.env
+.env.local
+.env.*.local
+
+# Archivos del editor de código
+.vscode/
+.idea/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs generales
+*.log
+logs/
+
+# Opcional: Si no quieres subir los datos de la BBDD local de Docker
+# (Generalmente es buena idea ignorarlo)
+cafeteria_mysql_data/
