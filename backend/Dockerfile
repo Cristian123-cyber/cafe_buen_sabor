@@ -24,4 +24,5 @@ RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/Allo
 WORKDIR /var/www/html
 
 # Exponer puerto 80
-EXPOSE 80
+EXPOSE 80   
+
