@@ -1,0 +1,21 @@
+{
+    "name": "cafe-buen-sabor/api",
+    "description": "API para el sistema de Café Buen Sabor",
+    "type": "project",
+    "require": {
+        "php": "^8.1",
+        "bramus/router": "^1.6",
+        "vlucas/phpdotenv": "^5.5",
+        "ext-pdo": "*",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/",
+            "Config\\": "src/config/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    }
+} 
