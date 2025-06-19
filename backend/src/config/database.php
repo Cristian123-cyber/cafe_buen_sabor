@@ -4,7 +4,7 @@ namespace Config;
 // Clase para manejar la conexión a la base de datos
 class Database {
     private $host = "cafeteria_mysql"; // Usa el nombre del servicio MySQL en Docker
-    private $db_name = "cafe_buen_sabor_db";
+    private $db_name = "cafe_buen_sabor_bd";
     private $username = "root";
     private $password = "root123";
     public $conn;
