@@ -10,16 +10,15 @@ class BaseController {
         $this->db = $db;
     }
 
-    protected function jsonResponse($data, $statusCode = 200) {
-        http_response_code($statusCode);
-        echo json_encode($data);
-    }
-
-    protected function sendError($message, $statusCode = 400) {
-        $this->jsonResponse([
-            'error' => true,
-            'message' => $message
-        ], $statusCode);
+    protected function handleResponse($success, $message, $data = [], $httpCode = 200)
+    {
+        http_response_code($httpCode);
+        echo json_encode([
+            'success' => $success,
+            'message' => $message,
+            'data' => $data
+        ]);
+        exit;
     }
 
     protected function getRequestData() {

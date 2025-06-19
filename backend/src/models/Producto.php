@@ -4,22 +4,14 @@ namespace App\Models;
 
 use PDO;
 use PDOException;
-use Config\Database;
+use Exception;
 
 class Producto extends BaseModel
 {
     public function __construct()
     {
-        $db = new Database();
-        parent::__construct($db->getConnection());
+        parent::__construct(); // Llama al constructor de BaseModel
         $this->table_name = 'productos';
-    }
-
-    public function getById($id)
-    {
-        $stmt = $this->conn->prepare("SELECT * FROM productos WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
     public function getProductosConCategoria($page = 1, $limit = 10) {

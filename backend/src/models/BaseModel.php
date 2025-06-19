@@ -2,6 +2,7 @@
 namespace App\Models;
 
 use PDO;
+use Config\Database;
 
 // Clase base abstracta para modelos con métodos CRUD genéricos
 abstract class BaseModel {
@@ -9,9 +10,9 @@ abstract class BaseModel {
     protected $table_name;
     protected $primary_key = 'id';
 
-    // El constructor recibe la conexión PDO
-    public function __construct($db) {
-        $this->conn = $db;
+    // El constructor maneja la conexión automáticamente
+    public function __construct() {
+        $this->conn = Database::getInstance()->getConnection();
     }
 
     // Obtener todos los registros con paginación y orden opcional
@@ -81,6 +82,11 @@ abstract class BaseModel {
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetch()['total'];
+    }
+
+    // Método para obtener la conexión (por si se necesita)
+    protected function getConnection() {
+        return $this->conn;
     }
 }
 ?> 
