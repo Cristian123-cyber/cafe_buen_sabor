@@ -2,6 +2,14 @@
 # Esto debe ir PRIMERO para interceptar la petición antes de cualquier otra cosa.
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    
+    # --- INICIO DE LA CORRECCIÓN ---
+    # Capturar la cabecera 'Authorization' y pasarla a PHP.
+    # Esto es necesario en algunas configuraciones de Apache.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    # --- FIN DE LA CORRECCIÓN ---
+
     RewriteCond %{REQUEST_METHOD} OPTIONS
     RewriteRule ^(.*)$ $1 [R=204,L]
 </IfModule>

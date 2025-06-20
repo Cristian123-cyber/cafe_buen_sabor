@@ -3,15 +3,53 @@
 // Router principal con agrupación de rutas por recursos usando clases
 
 use Bramus\Router\Router;
+use App\Middleware\AuthMiddleware;
 
 $router = new Router();
 
 // ========================================
-// AGRUPACIÓN DE RUTAS POR RECURSOS
+// NAMESPACE (para no repetir el prefijo de los controladores)
+// ========================================
+$router->setNamespace('\App\Controllers');
+
+// ========================================
+// RUTAS PÚBLICAS
 // ========================================
 
-// Registrar todas las rutas usando clases
-RouteGroup::registerAll($router);
+// La autenticación debe ser pública para poder obtener el token
+$router->post('/api/auth/login', 'AuthController@login');
+// Aquí podrían ir otras rutas públicas como 'forgot-password'
+// $router->post('/api/auth/forgot-password', 'AuthController@forgotPassword');
+
+
+// ========================================
+// GRUPO DE RUTAS PROTEGIDAS
+// ========================================
+
+// Todas las rutas dentro de este grupo requerirán un token JWT válido
+$router->before('POST|PUT|DELETE|GET', '/api/.*', function() {
+    // Excepción para la ruta de login que ya está definida fuera del grupo
+    if (strpos($_SERVER['REQUEST_URI'], '/api/auth/login') === 0) {
+        return;
+    }
+    AuthMiddleware::handle();
+});
+
+// --- Rutas de Productos ---
+$router->get('/api/productos', 'ProductoController@index');
+$router->get('/api/productos/(\d+)', 'ProductoController@show');
+$router->post('/api/productos', 'ProductoController@store');
+$router->put('/api/productos/(\d+)', 'ProductoController@update');
+$router->delete('/api/productos/(\d+)', 'ProductoController@delete');
+$router->get('/api/productos/buscar', 'ProductoController@search');
+$router->get('/api/productos/categoria/(\d+)', 'ProductoController@getByCategory');
+$router->put('/api/productos/(\d+)/stock', 'ProductoController@updateStock');
+$router->get('/api/productos/(\d+)/stock/historial', 'ProductoController@getStockHistory');
+// ... añadir aquí el resto de rutas de productos si es necesario
+
+// --- Rutas de Perfil (ejemplo de otra ruta protegida) ---
+// $router->get('/api/auth/profile', 'AuthController@profile');
+
 
 // ========================================
 // MANEJO DE ERRORES GLOBALES
@@ -47,8 +85,7 @@ abstract class RouteGroup {
         AdminRoutes::register($router);
         CategoryRoutes::register($router);
         OrderRoutes::register($router);
-        AuthRoutes::register($router);
-        EmployeeRoutes::register($router);
+        AuthRoutes::registerProtectedRoutes($router); // Rutas de auth que sí necesitan token
     }
 }
 
@@ -59,18 +96,27 @@ class ProductRoutes {
     
     public static function register($router) {
         // CRUD básico
-        $router->get('/api/productos', 'App\\Controllers\\ProductoController@index');
-        $router->get('/api/productos/(\d+)', 'App\\Controllers\\ProductoController@show');
-        $router->post('/api/productos', 'App\\Controllers\\ProductoController@store');
-        $router->put('/api/productos/(\d+)', 'App\\Controllers\\ProductoController@update');
-        $router->delete('/api/productos/(\d+)', 'App\\Controllers\\ProductoController@delete');
+        $router->get('/api/productos', 'ProductoController@index');
+        $router->get('/api/productos/(\d+)', 'ProductoController@show');
+        $router->post('/api/productos', 'ProductoController@store');
+        $router->put('/api/productos/(\d+)', 'ProductoController@update');
+        $router->delete('/api/productos/(\d+)', 'ProductoController@delete');
         
         // Rutas específicas de productos
-        $router->get('/api/productos/buscar', 'App\\Controllers\\ProductoController@search');
-        $router->get('/api/productos/categoria/(\d+)', 'App\\Controllers\\ProductoController@getByCategory');
-        $router->put('/api/productos/(\d+)/stock', 'App\\Controllers\\ProductoController@updateStock');
-        $router->get('/api/productos/disponibles', 'App\\Controllers\\ProductoController@getAvailable');
-        $router->get('/api/productos/populares', 'App\\Controllers\\ProductoController@getPopular');
+        $router->get('/api/productos/buscar', 'ProductoController@search');
+        $router->get('/api/productos/categoria/(\d+)', 'ProductoController@getByCategory');
+        $router->get('/api/productos/ingredientes', 'ProductoController@getWithIngredients');
+        
+        // Rutas de gestión de stock
+        $router->put('/api/productos/(\d+)/stock', 'ProductoController@updateStock');
+        $router->get('/api/productos/(\d+)/stock/historial', 'ProductoController@getStockHistory');
+        $router->get('/api/productos/stock/estado/(\d+)', 'ProductoController@getByStockStatus');
+        $router->get('/api/productos/stock/bajo', 'ProductoController@getLowStock');
+        $router->get('/api/productos/stock/critico', 'ProductoController@getCriticalStock');
+        
+        // Rutas adicionales (mantener compatibilidad)
+        $router->get('/api/productos/disponibles', 'ProductoController@getAvailable');
+        $router->get('/api/productos/populares', 'ProductoController@getPopular');
     }
 }
 
@@ -81,18 +127,18 @@ class AdminRoutes {
     
     public static function register($router) {
         // CRUD básico
-        $router->get('/api/administradores', 'App\\Controllers\\AdminController@index');
-        $router->get('/api/administradores/(\d+)', 'App\\Controllers\\AdminController@show');
-        $router->post('/api/administradores', 'App\\Controllers\\AdminController@store');
-        $router->put('/api/administradores/(\d+)', 'App\\Controllers\\AdminController@update');
-        $router->delete('/api/administradores/(\d+)', 'App\\Controllers\\AdminController@delete');
+        $router->get('/api/administradores', 'AdminController@index');
+        $router->get('/api/administradores/(\d+)', 'AdminController@show');
+        $router->post('/api/administradores', 'AdminController@store');
+        $router->put('/api/administradores/(\d+)', 'AdminController@update');
+        $router->delete('/api/administradores/(\d+)', 'AdminController@delete');
         
         // Rutas específicas de administradores
-        $router->get('/api/administradores/perfil', 'App\\Controllers\\AdminController@profile');
-        $router->put('/api/administradores/cambiar-password', 'App\\Controllers\\AdminController@changePassword');
-        $router->get('/api/administradores/estadisticas', 'App\\Controllers\\AdminController@getStats');
-        $router->post('/api/administradores/activar/(\d+)', 'App\\Controllers\\AdminController@activate');
-        $router->post('/api/administradores/desactivar/(\d+)', 'App\\Controllers\\AdminController@deactivate');
+        $router->get('/api/administradores/perfil', 'AdminController@profile');
+        $router->put('/api/administradores/cambiar-password', 'AdminController@changePassword');
+        $router->get('/api/administradores/estadisticas', 'AdminController@getStats');
+        $router->post('/api/administradores/activar/(\d+)', 'AdminController@activate');
+        $router->post('/api/administradores/desactivar/(\d+)', 'AdminController@deactivate');
     }
 }
 
@@ -103,17 +149,17 @@ class CategoryRoutes {
     
     public static function register($router) {
         // CRUD básico
-        $router->get('/api/categorias', 'App\\Controllers\\CategoriaController@index');
-        $router->get('/api/categorias/(\d+)', 'App\\Controllers\\CategoriaController@show');
-        $router->post('/api/categorias', 'App\\Controllers\\CategoriaController@store');
-        $router->put('/api/categorias/(\d+)', 'App\\Controllers\\CategoriaController@update');
-        $router->delete('/api/categorias/(\d+)', 'App\\Controllers\\CategoriaController@delete');
+        $router->get('/api/categorias', 'CategoriaController@index');
+        $router->get('/api/categorias/(\d+)', 'CategoriaController@show');
+        $router->post('/api/categorias', 'CategoriaController@store');
+        $router->put('/api/categorias/(\d+)', 'CategoriaController@update');
+        $router->delete('/api/categorias/(\d+)', 'CategoriaController@delete');
         
         // Rutas específicas de categorías
-        $router->get('/api/categorias/activas', 'App\\Controllers\\CategoriaController@getActive');
-        $router->get('/api/categorias/(\d+)/productos', 'App\\Controllers\\CategoriaController@getProducts');
-        $router->post('/api/categorias/(\d+)/activar', 'App\\Controllers\\CategoriaController@activate');
-        $router->post('/api/categorias/(\d+)/desactivar', 'App\\Controllers\\CategoriaController@deactivate');
+        $router->get('/api/categorias/activas', 'CategoriaController@getActive');
+        $router->get('/api/categorias/(\d+)/productos', 'CategoriaController@getProducts');
+        $router->post('/api/categorias/(\d+)/activar', 'CategoriaController@activate');
+        $router->post('/api/categorias/(\d+)/desactivar', 'CategoriaController@deactivate');
     }
 }
 
@@ -124,19 +170,19 @@ class OrderRoutes {
     
     public static function register($router) {
         // CRUD básico
-        $router->get('/api/pedidos', 'App\\Controllers\\PedidoController@index');
-        $router->get('/api/pedidos/(\d+)', 'App\\Controllers\\PedidoController@show');
-        $router->post('/api/pedidos', 'App\\Controllers\\PedidoController@store');
-        $router->put('/api/pedidos/(\d+)', 'App\\Controllers\\PedidoController@update');
-        $router->delete('/api/pedidos/(\d+)', 'App\\Controllers\\PedidoController@delete');
+        $router->get('/api/pedidos', 'PedidoController@index');
+        $router->get('/api/pedidos/(\d+)', 'PedidoController@show');
+        $router->post('/api/pedidos', 'PedidoController@store');
+        $router->put('/api/pedidos/(\d+)', 'PedidoController@update');
+        $router->delete('/api/pedidos/(\d+)', 'PedidoController@delete');
         
         // Rutas específicas de pedidos
-        $router->put('/api/pedidos/(\d+)/estado', 'App\\Controllers\\PedidoController@updateStatus');
-        $router->get('/api/pedidos/estado/(\w+)', 'App\\Controllers\\PedidoController@getByStatus');
-        $router->get('/api/pedidos/cliente/(\d+)', 'App\\Controllers\\PedidoController@getByCustomer');
-        $router->get('/api/pedidos/hoy', 'App\\Controllers\\PedidoController@getToday');
-        $router->get('/api/pedidos/estadisticas', 'App\\Controllers\\PedidoController@getStats');
-        $router->post('/api/pedidos/(\d+)/cancelar', 'App\\Controllers\\PedidoController@cancel');
+        $router->put('/api/pedidos/(\d+)/estado', 'PedidoController@updateStatus');
+        $router->get('/api/pedidos/estado/(\w+)', 'PedidoController@getByStatus');
+        $router->get('/api/pedidos/cliente/(\d+)', 'PedidoController@getByCustomer');
+        $router->get('/api/pedidos/hoy', 'PedidoController@getToday');
+        $router->get('/api/pedidos/estadisticas', 'PedidoController@getStats');
+        $router->post('/api/pedidos/(\d+)/cancelar', 'PedidoController@cancel');
     }
 }
 
@@ -145,40 +191,31 @@ class OrderRoutes {
  */
 class AuthRoutes {
     
-    public static function register($router) {
+    /**
+     * Rutas públicas que no requieren token
+     */
+    public static function registerPublicRoutes($router) {
         // Autenticación básica
-        $router->post('/api/auth/login', 'App\\Controllers\\AuthController@login');
-        $router->post('/api/auth/logout', 'App\\Controllers\\AuthController@logout');
-        $router->post('/api/auth/refresh', 'App\\Controllers\\AuthController@refresh');
+        $router->post('/api/auth/login', 'AuthController@login');
         
         // Recuperación de contraseña
-        $router->post('/api/auth/forgot-password', 'App\\Controllers\\AuthController@forgotPassword');
-        $router->post('/api/auth/reset-password', 'App\\Controllers\\AuthController@resetPassword');
+        $router->post('/api/auth/forgot-password', 'AuthController@forgotPassword');
+        $router->post('/api/auth/reset-password', 'AuthController@resetPassword');
         
-        // Verificación
-        $router->post('/api/auth/verify-email', 'App\\Controllers\\AuthController@verifyEmail');
-        $router->post('/api/auth/resend-verification', 'App\\Controllers\\AuthController@resendVerification');
+        // Verificación (puede ser pública dependiendo de la lógica)
+        $router->post('/api/auth/verify-email', 'AuthController@verifyEmail');
+        $router->post('/api/auth/resend-verification', 'AuthController@resendVerification');
+    }
+
+    /**
+     * Rutas que sí requieren un token válido
+     */
+    public static function registerProtectedRoutes($router) {
+        $router->post('/api/auth/logout', 'AuthController@logout');
+        $router->post('/api/auth/refresh', 'AuthController@refresh');
         
         // Perfil
-        $router->get('/api/auth/profile', 'App\\Controllers\\AuthController@profile');
-        $router->put('/api/auth/profile', 'App\\Controllers\\AuthController@updateProfile');
+        $router->get('/api/auth/profile', 'AuthController@profile');
+        $router->put('/api/auth/profile', 'AuthController@updateProfile');
     }
 } 
-
-/**
- * Rutas relacionadas con los empleados 
- */
-class EmployeeRoutes {
-    public static function register($router) {
-        // CRUD básico
-        $router->get('/api/empleados', 'App\\Controllers\\EmployeesController@index');
-        $router->get('/api/empleados/(\d+)', 'App\\Controllers\\EmployeesController@show');
-        $router->post('/api/empleados', 'App\\Controllers\\EmployeesController@store');
-        $router->put('/api/empleados/(\d+)', 'App\\Controllers\\EmployeesController@update');
-        $router->delete('/api/empleados/(\d+)', 'App\\Controllers\\EmployeesController@delete');
-
-        // Búsqueda por nombre o email
-        $router->get('/api/empleados/buscar', 'App\\Controllers\\EmployeesController@buscar');
-    }
-}
-
