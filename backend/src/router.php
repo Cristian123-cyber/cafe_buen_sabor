@@ -48,6 +48,7 @@ abstract class RouteGroup {
         CategoryRoutes::register($router);
         OrderRoutes::register($router);
         AuthRoutes::register($router);
+        EmployeeRoutes::register($router);
     }
 }
 
@@ -163,3 +164,21 @@ class AuthRoutes {
         $router->put('/api/auth/profile', 'App\\Controllers\\AuthController@updateProfile');
     }
 } 
+
+/**
+ * Rutas relacionadas con los empleados 
+ */
+class EmployeeRoutes {
+    public static function register($router) {
+        // CRUD básico
+        $router->get('/api/empleados', 'App\\Controllers\\EmployeesController@index');
+        $router->get('/api/empleados/(\d+)', 'App\\Controllers\\EmployeesController@show');
+        $router->post('/api/empleados', 'App\\Controllers\\EmployeesController@store');
+        $router->put('/api/empleados/(\d+)', 'App\\Controllers\\EmployeesController@update');
+        $router->delete('/api/empleados/(\d+)', 'App\\Controllers\\EmployeesController@delete');
+
+        // Búsqueda por nombre o email
+        $router->get('/api/empleados/buscar', 'App\\Controllers\\EmployeesController@buscar');
+    }
+}
+

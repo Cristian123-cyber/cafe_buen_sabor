@@ -11,17 +11,15 @@ class Producto extends BaseModel
     public function __construct()
     {
         parent::__construct(); // Llama al constructor de BaseModel
-        $this->table_name = 'productos';
+        $this->table_name = 'products';
     }
 
     public function getProductosConCategoria($page = 1, $limit = 10) {
         $offset = ($page - 1) * $limit;
         
-        $query = "SELECT p.*, c.nombre as categoria_nombre 
-                 FROM productos p
-                 LEFT JOIN categorias_productos c ON p.categoria_id = c.id
-                 ORDER BY p.fecha_creacion DESC
-                 LIMIT :limit OFFSET :offset";
+        $query = "SELECT *
+                 FROM products";
+                 
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
