@@ -85,10 +85,38 @@ abstract class RouteGroup {
         AdminRoutes::register($router);
         CategoryRoutes::register($router);
         OrderRoutes::register($router);
+        RoleRoutes::register($router);
         AuthRoutes::registerProtectedRoutes($router); // Rutas de auth que sí necesitan token
+        EmployeesStatusRoutes::register($router);
     }
 }
-
+/**
+ * Rutas relacionadas con roles de los trabajadores
+ */
+class RoleRoutes {
+    public static function register($router) {
+        // CRUD básico para roles
+        $router->get('/api/roles', 'RolesController@index');
+        $router->get('/api/roles/(\d+)', 'RolesController@show');
+        $router->post('/api/roles', 'RolesController@store');
+        $router->put('/api/roles/(\d+)', 'RolesController@update');
+        $router->delete('/api/roles/(\d+)', 'RolesController@delete');
+    }
+}
+/**
+ * Rutas relacionadas con el estatus de los trabajadores
+ */
+class EmployeeStatusRoutes {
+    
+    public static function register($router) {
+        // CRUD básico para estados de empleados
+        $router->get('/api/estados-empleados', 'EmployeesStatusesController@index');
+        $router->get('/api/estados-empleados/(\d+)', 'EmployeesStatusesController@show');
+        $router->post('/api/estados-empleados', 'EmployeesStatusesController@store');
+        $router->put('/api/estados-empleados/(\d+)', 'EmployeesStatusesController@update');
+        $router->delete('/api/estados-empleados/(\d+)', 'EmployeesStatusesController@delete');
+    }
+}
 /**
  * Rutas relacionadas con productos
  */
