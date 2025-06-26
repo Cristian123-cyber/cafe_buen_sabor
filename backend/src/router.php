@@ -32,19 +32,11 @@ $router->before('POST|PUT|DELETE|GET', '/api/.*', function() {
     if (strpos($_SERVER['REQUEST_URI'], '/api/auth/login') === 0) {
         return;
     }
-    AuthMiddleware::handle();
+    //AuthMiddleware::handle();
 });
 
 // --- Rutas de Productos ---
-$router->get('/api/productos', 'ProductoController@index');
-$router->get('/api/productos/(\d+)', 'ProductoController@show');
-$router->post('/api/productos', 'ProductoController@store');
-$router->put('/api/productos/(\d+)', 'ProductoController@update');
-$router->delete('/api/productos/(\d+)', 'ProductoController@delete');
-$router->get('/api/productos/buscar', 'ProductoController@search');
-$router->get('/api/productos/categoria/(\d+)', 'ProductoController@getByCategory');
-$router->put('/api/productos/(\d+)/stock', 'ProductoController@updateStock');
-$router->get('/api/productos/(\d+)/stock/historial', 'ProductoController@getStockHistory');
+
 // ... añadir aquí el resto de rutas de productos si es necesario
 
 // --- Rutas de Perfil (ejemplo de otra ruta protegida) ---
@@ -66,8 +58,6 @@ $router->set404(function() {
     ]);
 });
 
-return $router;
-
 // ========================================
 // CLASES PARA AGRUPAR RUTAS
 // ========================================
@@ -82,12 +72,10 @@ abstract class RouteGroup {
      */
     public static function registerAll($router) {
         ProductRoutes::register($router);
-        AdminRoutes::register($router);
         CategoryRoutes::register($router);
-        OrderRoutes::register($router);
         RoleRoutes::register($router);
         AuthRoutes::registerProtectedRoutes($router); // Rutas de auth que sí necesitan token
-        EmployeesStatusRoutes::register($router);
+        EmployeeStatusRoutes::register($router);
     }
 }
 /**
@@ -149,28 +137,6 @@ class ProductRoutes {
 }
 
 /**
- * Rutas relacionadas con administradores
- */
-class AdminRoutes {
-    
-    public static function register($router) {
-        // CRUD básico
-        $router->get('/api/administradores', 'AdminController@index');
-        $router->get('/api/administradores/(\d+)', 'AdminController@show');
-        $router->post('/api/administradores', 'AdminController@store');
-        $router->put('/api/administradores/(\d+)', 'AdminController@update');
-        $router->delete('/api/administradores/(\d+)', 'AdminController@delete');
-        
-        // Rutas específicas de administradores
-        $router->get('/api/administradores/perfil', 'AdminController@profile');
-        $router->put('/api/administradores/cambiar-password', 'AdminController@changePassword');
-        $router->get('/api/administradores/estadisticas', 'AdminController@getStats');
-        $router->post('/api/administradores/activar/(\d+)', 'AdminController@activate');
-        $router->post('/api/administradores/desactivar/(\d+)', 'AdminController@deactivate');
-    }
-}
-
-/**
  * Rutas relacionadas con categorías
  */
 class CategoryRoutes {
@@ -191,28 +157,6 @@ class CategoryRoutes {
     }
 }
 
-/**
- * Rutas relacionadas con pedidos
- */
-class OrderRoutes {
-    
-    public static function register($router) {
-        // CRUD básico
-        $router->get('/api/pedidos', 'PedidoController@index');
-        $router->get('/api/pedidos/(\d+)', 'PedidoController@show');
-        $router->post('/api/pedidos', 'PedidoController@store');
-        $router->put('/api/pedidos/(\d+)', 'PedidoController@update');
-        $router->delete('/api/pedidos/(\d+)', 'PedidoController@delete');
-        
-        // Rutas específicas de pedidos
-        $router->put('/api/pedidos/(\d+)/estado', 'PedidoController@updateStatus');
-        $router->get('/api/pedidos/estado/(\w+)', 'PedidoController@getByStatus');
-        $router->get('/api/pedidos/cliente/(\d+)', 'PedidoController@getByCustomer');
-        $router->get('/api/pedidos/hoy', 'PedidoController@getToday');
-        $router->get('/api/pedidos/estadisticas', 'PedidoController@getStats');
-        $router->post('/api/pedidos/(\d+)/cancelar', 'PedidoController@cancel');
-    }
-}
 
 /**
  * Rutas relacionadas con autenticación
@@ -247,3 +191,6 @@ class AuthRoutes {
         $router->put('/api/auth/profile', 'AuthController@updateProfile');
     }
 } 
+
+RouteGroup::registerAll($router);
+return $router;

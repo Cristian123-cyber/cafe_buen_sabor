@@ -61,7 +61,7 @@ class AuthMiddleware
         // Es una buena práctica no revelar detalles internos en los mensajes de error.
         echo json_encode([
             'success' => false,
-            'message' => 'Acceso no autorizado.',
+            'message' => 'Acceso no autorizado. pai',
             'error' => $message
         ]);
         exit();
