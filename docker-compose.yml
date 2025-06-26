@@ -7,6 +7,9 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpass}
       MYSQL_DATABASE: ${DB_NAME:-cafeteria_db}
+      MYSQL_USER: ${DB_USER:-cafeuser}           
+      MYSQL_PASSWORD: ${DB_PASSWORD:-12345}
+
     volumes:
       - cafeteria_mysql_data:/var/lib/mysql
     ports:

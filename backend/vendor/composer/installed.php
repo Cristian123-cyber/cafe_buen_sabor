@@ -3,7 +3,7 @@
         'name' => 'cafe-buen-sabor/api',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'bf99e108b3668d0f4ef4fc11f4208443d1ad4a56',
+        'reference' => 'd1d33942c44930a74a0f97d0ea975f46a062deb5',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'cafe-buen-sabor/api' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'bf99e108b3668d0f4ef4fc11f4208443d1ad4a56',
+            'reference' => 'd1d33942c44930a74a0f97d0ea975f46a062deb5',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
