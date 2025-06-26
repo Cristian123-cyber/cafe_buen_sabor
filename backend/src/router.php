@@ -32,7 +32,7 @@ $router->before('POST|PUT|DELETE|GET', '/api/.*', function() {
     if (strpos($_SERVER['REQUEST_URI'], '/api/auth/login') === 0) {
         return;
     }
-    AuthMiddleware::handle();
+    //AuthMiddleware::handle();
 });
 
 // --- Rutas de Productos ---
