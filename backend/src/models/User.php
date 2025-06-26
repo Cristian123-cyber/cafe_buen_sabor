@@ -1,0 +1,36 @@
+<?php
+
+namespace App\Models;
+
+use PDO;
+
+class User extends BaseModel
+{
+    public function __construct()
+    {
+        parent::__construct();
+        $this->table_name = 'employees'; // Corregido: La tabla es 'employees'
+        $this->primary_key = 'id_employe'; // Corregido: La PK es 'id_employe'
+    }
+
+    /**
+     * Busca un usuario por su dirección de email y obtiene su rol.
+     *
+     * @param string $email El email del usuario a buscar.
+     * @return mixed Devuelve un array con los datos del usuario y su rol si se encuentra, o false si no.
+     */
+    public function findByEmail($email)
+    {
+        // Actualizado: Se une con la tabla de roles para obtener el nombre del rol.
+        $query = "SELECT e.*, r.rol_name 
+                  FROM {$this->table_name} e
+                  LEFT JOIN employees_rol r ON e.employees_rol_id_rol = r.id_rol
+                  WHERE e.employe_email = :email 
+                  LIMIT 1";
+                  
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+} 
