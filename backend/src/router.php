@@ -72,10 +72,26 @@ abstract class RouteGroup {
      */
     public static function registerAll($router) {
         ProductRoutes::register($router);
-        CategoryRoutes::register($router);
+        EmployeeRoutes::register($router);
         RoleRoutes::register($router);
         AuthRoutes::registerProtectedRoutes($router); // Rutas de auth que sí necesitan token
         EmployeeStatusRoutes::register($router);
+        TableRoutes::register($router);
+        TableSessionRoutes::register($router);
+        SaleRoutes::register($router);
+        SaleOrderRoutes::register($router);
+    }
+}
+/**
+ * Rutas relacionadas con empleados
+ */
+class EmployeeRoutes {
+    public static function register($router) {
+        $router->get('/api/employees', 'EmployeesController@index');
+        $router->get('/api/employees/(\d+)', 'EmployeesController@show');
+        $router->post('/api/employees', 'EmployeesController@store');
+        $router->put('/api/employees/(\d+)', 'EmployeesController@update');
+        $router->delete('/api/employees/(\d+)', 'EmployeesController@delete');
     }
 }
 /**
@@ -137,27 +153,37 @@ class ProductRoutes {
 }
 
 /**
- * Rutas relacionadas con categorías
+ * Rutas relacionadas con mesas
  */
-class CategoryRoutes {
-    
+class TableRoutes {
     public static function register($router) {
-        // CRUD básico
-        $router->get('/api/categorias', 'CategoriaController@index');
-        $router->get('/api/categorias/(\d+)', 'CategoriaController@show');
-        $router->post('/api/categorias', 'CategoriaController@store');
-        $router->put('/api/categorias/(\d+)', 'CategoriaController@update');
-        $router->delete('/api/categorias/(\d+)', 'CategoriaController@delete');
-        
-        // Rutas específicas de categorías
-        $router->get('/api/categorias/activas', 'CategoriaController@getActive');
-        $router->get('/api/categorias/(\d+)/productos', 'CategoriaController@getProducts');
-        $router->post('/api/categorias/(\d+)/activar', 'CategoriaController@activate');
-        $router->post('/api/categorias/(\d+)/desactivar', 'CategoriaController@deactivate');
+        // Listar todas las mesas
+        $router->get('/api/mesas', 'TablesController@index');
+        // Obtener una mesa por ID
+        $router->get('/api/mesas/(\d+)', 'TablesController@show');
+        // Crear una nueva mesa
+        $router->post('/api/mesas', 'TablesController@store');
+        // Actualizar una mesa
+        $router->put('/api/mesas/(\d+)', 'TablesController@update');
+        // Eliminar una mesa
+        $router->delete('/api/mesas/(\d+)', 'TablesController@delete');
+        // Cambiar estado de la mesa (ejemplo: ocupar/liberar)
+        $router->put('/api/mesas/(\d+)/estado', 'TablesController@updateStatus');
+        // Buscar por token QR
+        $router->get('/api/mesas/token/([a-zA-Z0-9_]+)', 'TablesController@findByToken');
     }
 }
 
-
+class TableSessionRoutes {
+    public static function register($router) {
+        $router->get('/api/table-sessions', 'TableSessionController@index');
+        $router->get('/api/table-sessions/(\d+)', 'TableSessionController@show');
+        $router->post('/api/table-sessions', 'TableSessionController@store');
+        $router->put('/api/table-sessions/(\d+)', 'TableSessionController@update');
+        $router->delete('/api/table-sessions/(\d+)', 'TableSessionController@delete');
+        $router->get('/api/table-sessions/table/(\d+)', 'TableSessionController@byTable');
+    }
+}
 /**
  * Rutas relacionadas con autenticación
  */
@@ -191,6 +217,25 @@ class AuthRoutes {
         $router->put('/api/auth/profile', 'AuthController@updateProfile');
     }
 } 
+//rutas de ventas
+class SaleRoutes {
+    public static function register($router) {
+        $router->get('/api/sales', 'SalesController@index');
+        $router->get('/api/sales/(\d+)', 'SalesController@show');
+        $router->post('/api/sales', 'SalesController@store');
+        $router->put('/api/sales/(\d+)', 'SalesController@update');
+        $router->delete('/api/sales/(\d+)', 'SalesController@delete');
+    }
+}
 
+class SaleOrderRoutes {
+    public static function register($router) {
+        $router->get('/api/sales-orders', 'SaleOrderController@index');
+        $router->get('/api/sales-orders/sale/(\d+)', 'SaleOrderController@bySale');
+        $router->get('/api/sales-orders/order/(\d+)', 'SaleOrderController@byOrder');
+        $router->post('/api/sales-orders', 'SaleOrderController@add');
+        $router->delete('/api/sales-orders', 'SaleOrderController@remove');
+    }
+}
 RouteGroup::registerAll($router);
 return $router;
