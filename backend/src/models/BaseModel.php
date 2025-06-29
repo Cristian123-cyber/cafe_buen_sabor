@@ -88,5 +88,4 @@ abstract class BaseModel {
     protected function getConnection() {
         return $this->conn;
     }
-}
-?> 
+} 

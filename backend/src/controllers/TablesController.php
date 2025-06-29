@@ -4,198 +4,218 @@ namespace App\Controllers;
 use App\Models\Table;
 use Exception;
 
-class TablesController
+class TablesController extends BaseController
 {
+    private $tableModel;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->tableModel = new Table();
+    }
+
     // Listar todas las mesas
     public function index()
     {
-        try {
-            $tableModel = new Table();
-            $tables = $tableModel->all();
-            echo json_encode([
-                'success' => true,
-                'data' => $tables
-            ]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al obtener las mesas',
-                'error' => $e->getMessage()
-            ]);
-        }
+        return $this->executeWithErrorHandling(function() {
+            $tables = $this->tableModel->all();
+            $this->handleResponse(true, 'Mesas obtenidas correctamente.', $tables);
+            
+        }, 'Error al obtener las mesas');
     }
 
     // Obtener una mesa por ID
     public function show($id)
     {
-        try {
-            $tableModel = new Table();
-            $table = $tableModel->find($id);
-            if ($table) {
-                echo json_encode([
-                    'success' => true,
-                    'data' => $table
-                ]);
-            } else {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Mesa no encontrada'
-                ]);
+        return $this->executeWithErrorHandling(function() use ($id) {
+            // Validar ID
+            $tableId = $this->validateId($id);
+            if (!$tableId) {
+                $this->handleResponse(false, 'ID de mesa inválido', [], 400);
+                return;
             }
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al obtener la mesa',
-                'error' => $e->getMessage()
-            ]);
-        }
+            
+            $table = $this->tableModel->find($tableId);
+            if ($table) {
+                $this->handleResponse(true, 'Mesa obtenida correctamente.', $table);
+            } else {
+                $this->handleResponse(false, 'Mesa no encontrada', [], 404);
+            }
+            
+        }, 'Error al obtener la mesa');
     }
 
     // Crear una nueva mesa
     public function store()
     {
-        try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            $tableModel = new Table();
-            $table = $tableModel->createTable($data);
-            echo json_encode([
-                'success' => true,
-                'data' => $table
-            ]);
-        } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al crear la mesa',
-                'error' => $e->getMessage()
-            ]);
-        }
+        return $this->executeWithErrorHandling(function() {
+            $data = $this->getRequestData();
+            
+            // Validar campos requeridos
+            $requiredFields = ['table_number'];
+            $missingFields = $this->validateRequiredFields($data, $requiredFields);
+            
+            if (!empty($missingFields)) {
+                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+                return;
+            }
+
+            // Sanitizar y validar datos
+            $tableData = [
+                'table_number' => $this->validateId($data['table_number']),
+                'table_status' => $this->sanitizeString($data['table_status'] ?? 'FREE')
+            ];
+
+            // Validar número de mesa
+            if (!$tableData['table_number']) {
+                $this->handleResponse(false, 'Número de mesa inválido', [], 400);
+                return;
+            }
+
+            // Validar estado de mesa
+            $validStatuses = ['FREE', 'OCCUPIED', 'INACTIVE'];
+            if (!in_array($tableData['table_status'], $validStatuses)) {
+                $this->handleResponse(false, 'Estado de mesa inválido. Debe ser: FREE, OCCUPIED o INACTIVE', [], 400);
+                return;
+            }
+
+            $table = $this->tableModel->createTable($tableData);
+            if ($table) {
+                $this->handleResponse(true, 'Mesa creada correctamente.', $table, 201);
+            } else {
+                $this->handleResponse(false, 'Error al crear la mesa', [], 500);
+            }
+            
+        }, 'Error al crear la mesa');
     }
 
     // Actualizar una mesa
     public function update($id)
     {
-        try {
-             $data = json_decode(file_get_contents('php://input'), true);
-        $tableModel = new Table();
-        $table = $tableModel->updateTable($id, $data);
-        if ($table) {
-                
-                echo json_encode([
-                    'success' => true,
-                    'data' => $table
-                ]);
-            } else {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Mesa no encontrada'
-                ]);
+        return $this->executeWithErrorHandling(function() use ($id) {
+            // Validar ID
+            $tableId = $this->validateId($id);
+            if (!$tableId) {
+                $this->handleResponse(false, 'ID de mesa inválido', [], 400);
+                return;
             }
-        } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al actualizar la mesa',
-                'error' => $e->getMessage()
-            ]);
-        }
+            
+            $data = $this->getRequestData();
+            
+            if (empty($data)) {
+                $this->handleResponse(false, 'No se proporcionaron datos para actualizar', [], 400);
+                return;
+            }
+
+            // Sanitizar y validar datos
+            $updateData = [];
+            
+            if (isset($data['table_number'])) {
+                $tableNumber = $this->validateId($data['table_number']);
+                if (!$tableNumber) {
+                    $this->handleResponse(false, 'Número de mesa inválido', [], 400);
+                    return;
+                }
+                $updateData['table_number'] = $tableNumber;
+            }
+            
+            if (isset($data['table_status'])) {
+                $status = $this->sanitizeString($data['table_status']);
+                $validStatuses = ['FREE', 'OCCUPIED', 'INACTIVE'];
+                if (!in_array($status, $validStatuses)) {
+                    $this->handleResponse(false, 'Estado de mesa inválido. Debe ser: FREE, OCCUPIED o INACTIVE', [], 400);
+                    return;
+                }
+                $updateData['table_status'] = $status;
+            }
+
+            $table = $this->tableModel->updateTable($tableId, $updateData);
+            if ($table) {
+                $this->handleResponse(true, 'Mesa actualizada correctamente.', $table);
+            } else {
+                $this->handleResponse(false, 'Mesa no encontrada', [], 404);
+            }
+            
+        }, 'Error al actualizar la mesa');
     }
 
     // Eliminar una mesa
     public function delete($id)
     {
-        try {
-            $tableModel = new Table();
-            $deleted = $tableModel->deleteTable($id);
-            if ($deleted) {
-                
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Mesa eliminada'
-                ]);
-            } else {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Mesa no encontrada'
-                ]);
+        return $this->executeWithErrorHandling(function() use ($id) {
+            // Validar ID
+            $tableId = $this->validateId($id);
+            if (!$tableId) {
+                $this->handleResponse(false, 'ID de mesa inválido', [], 400);
+                return;
             }
-        } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al eliminar la mesa',
-                'error' => $e->getMessage()
-            ]);
-        }
+            
+            $deleted = $this->tableModel->deleteTable($tableId);
+            if ($deleted) {
+                $this->handleResponse(true, 'Mesa eliminada correctamente.', []);
+            } else {
+                $this->handleResponse(false, 'Mesa no encontrada', [], 404);
+            }
+            
+        }, 'Error al eliminar la mesa');
     }
 
     // Cambiar el estado de la mesa (ejemplo: ocupar/liberar)
     public function updateStatus($id)
     {
-        try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            $tableModel = new Table();
-            if (isset($data['table_status'])) {
-                $table = $tableModel->updateTable($id, ['table_status' => $data['table_status']]);
-                if ($table) {
-                    echo json_encode([
-                        'success' => true,
-                        'data' => $table
-                    ]);
-                } else {
-                    http_response_code(400);
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Falta el campo table_status'
-                    ]);
-                }
-            } else {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Mesa no encontrada'
-                ]);
+        return $this->executeWithErrorHandling(function() use ($id) {
+            // Validar ID
+            $tableId = $this->validateId($id);
+            if (!$tableId) {
+                $this->handleResponse(false, 'ID de mesa inválido', [], 400);
+                return;
             }
-        } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al actualizar el estado de la mesa',
-                'error' => $e->getMessage()
-            ]);
-        }
+            
+            $data = $this->getRequestData();
+            
+            // Validar campo requerido
+            if (!isset($data['table_status'])) {
+                $this->handleResponse(false, 'Campo table_status es requerido', [], 400);
+                return;
+            }
+
+            $status = $this->sanitizeString($data['table_status']);
+            $validStatuses = ['FREE', 'OCCUPIED', 'INACTIVE'];
+            
+            if (!in_array($status, $validStatuses)) {
+                $this->handleResponse(false, 'Estado de mesa inválido. Debe ser: FREE, OCCUPIED o INACTIVE', [], 400);
+                return;
+            }
+
+            $table = $this->tableModel->updateTable($tableId, ['table_status' => $status]);
+            if ($table) {
+                $this->handleResponse(true, 'Estado de mesa actualizado correctamente.', $table);
+            } else {
+                $this->handleResponse(false, 'Mesa no encontrada', [], 404);
+            }
+            
+        }, 'Error al actualizar el estado de la mesa');
     }
 
     // Buscar mesa por token QR
     public function findByToken($qr_token)
     {
-        try {
-            $tableModel = new Table();
-            $table = $tableModel->findByToken($qr_token);
-            if ($table) {
-                echo json_encode([
-                    'success' => true,
-                    'data' => $table
-                ]);
-            } else {
-                http_response_code(404);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Mesa no encontrada'
-                ]);
+        return $this->executeWithErrorHandling(function() use ($qr_token) {
+            // Sanitizar token
+            $token = $this->sanitizeString($qr_token);
+            
+            if (empty($token)) {
+                $this->handleResponse(false, 'Token QR requerido', [], 400);
+                return;
             }
-        } catch (Exception $e) {
-            http_response_code(400);
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error al buscar la mesa por token',
-                'error' => $e->getMessage()
-            ]);
-        }
+            
+            $table = $this->tableModel->findByToken($token);
+            if ($table) {
+                $this->handleResponse(true, 'Mesa encontrada correctamente.', $table);
+            } else {
+                $this->handleResponse(false, 'Mesa no encontrada', [], 404);
+            }
+            
+        }, 'Error al buscar la mesa por token');
     }
 }

@@ -49,12 +49,13 @@ $router->before('POST|PUT|DELETE|GET', '/api/.*', function() {
 
 // Ruta para manejar 404 (no encontrada)
 $router->set404(function() {
-    header('Content-Type: application/json');
     http_response_code(404);
+    header('Content-Type: application/json; charset=UTF-8');
     echo json_encode([
         'success' => false, 
         'message' => 'Ruta no encontrada',
-        'data' => []
+        'data' => [],
+        'error_code' => 'RES001'
     ]);
 });
 
