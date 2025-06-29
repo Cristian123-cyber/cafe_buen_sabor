@@ -606,6 +606,35 @@
 
     -Si el token es inválido o ha expirado, devolver un mensaje de unauthorized con codigo de estado 401.
 
+
+## TABLE_SESSIONS:
+# - RUTA BASE ESPERADA: api/table-sessions/
+
+# OBTENER TODAS LAS SESSIONES DE MESA 
+    - METODO: GET
+    - ENDPOINT: api/table-sessions/
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    **IMPORTANTE**: Devolver una lista de todas las sesiones de mesa con sus respectivos estados y datos de la mesa asociada a la session (JOINS) NO IMPORTA EL ESTADO, DEVOLVER TODAS LAS SESSIONES EXISTENTES.
+
+
+# OBTENER SESIONES DE MESA POR ESTADO
+    - METODO: GET
+    - ENDPOINT: api/table-sessions/status/{status}
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    **IMPORTANTE**: Devolver una lista de todas las sesiones de mesa filtradas por el estado especificado en el endpoint (ACTIVE, EXPIRED, CLOSED). Incluir TODOS LOS DATOS DE SESSION, numero de mesa.
+
+# CERRAR TABLE SESSION 
+    - METODO: PUT
+    - ENDPOINT: api/table-sessions/{id}/close
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    **IMPORTANTE**: Cambiar el estado de la session a CLOSED (ENUM: ["ACTIVE", "EXPIRED", "CLOSED"]).
+    Esto se usa para cerrar una session de mesa desde el admin por alguna razon. 
+
+    -IMPORTANTE: NO SE NECESITA NADA MAS EN TABBLE SESSION POR AHORA, NI METODOS PARA CREAR EDITAR NI NADA  
+
 ## - ORDERS:
 
 # - RUTA BASE ESPERADA: api/orders/
@@ -854,3 +883,81 @@ Y asociar a cada pedido el id del mesero que se envia.
     asi que no se pueden hacer joins, deben consultarse los datos de forma independiente.
 
 ## mas adelante se hara mas robusta esta funcionalidad para enviar notificaciones de todo tipo, pero por ahora se maneja de forma basica solo para ordenes entre meseros y cocineros.
+
+
+
+
+# OBTENER TODAS LAS NOTIFICACIONES:
+
+    - METODO: GET
+    - ENDPOINT: api/notifications/
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Devolver una lista de todas las notificaciones con sus respectivos estados y datos de la notificacion, incluyendo el tipo, mensaje, id de la orden asociada y data del empleado que disparo la notificacion.
+    recordar que la tabla no tieene relaciones con otras tablas, se maneja de forma independiente.
+    asi que no se pueden hacer joins, deben consultarse los datos de forma independiente.               
+
+## UNITS OF MEASURE:
+
+# - RUTA BASE ESPERADA: api/units-of-measure/
+
+# - OBTENER TODAS LAS UNIDADES DE MEDIDA:
+
+    - METODO: GET
+    - ENDPOINT: api/units-of-measure/
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Devolver una lista de todas las unidades de medida con sus respectivos estados y datos de la unidad de medida, incluyendo el id y el nombre de la unidad de medida y sus abreviaturas.
+
+**SOLO SE NECESITA OBTENERLAS TODAS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
+
+
+
+## EMPLOYEES ROLES:
+# - RUTA BASE ESPERADA: api/employees/roles/
+
+# - OBTENER TODOS LOS ROLES DE EMPLEADOS:
+
+    - METODO: GET
+    - ENDPOINT: api/employees/roles/
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Devolver una lista de todos los roles de empleados con sus respectivos datos del rol, incluyendo el id y el nombre del rol.
+
+**SOLO SE NECESITA OBTENERLOS TODOS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
+
+
+## EMPLOYEES STATUSES:
+# - RUTA BASE ESPERADA: api/employees/statuses/
+# - OBTENER TODOS LOS ESTADOS DE EMPLEADOS:
+
+    - METODO: GET
+    - ENDPOINT: api/employees/statuses/
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Devolver una lista de todos los estados de empleados con sus respectivos datos del estado, incluyendo el id y el nombre del estado.
+
+**SOLO SE NECESITA OBTENERLOS TODOS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
+
+## PRODUCT TYPES:
+# - RUTA BASE ESPERADA: api/products/types/
+
+
+# - OBTENER TODOS LOS TIPOS DE PRODUCTOS:
+
+    - METODO: GET
+    - ENDPOINT: api/products/types/
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Devolver una lista de todos los tipos de productos con sus respectivos datos del tipo, incluyendo el id y el nombre del tipo.
+
+**SOLO SE NECESITA OBTENERLOS TODOS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
+
+
+
+
+
+
+
+
+
