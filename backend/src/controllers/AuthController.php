@@ -12,59 +12,134 @@ class AuthController extends BaseController
 
     public function __construct()
     {
+        parent::__construct();
         $this->userModel = new User();
     }
 
     public function login()
     {
-        try {
-            // 1. Recibir datos del POST (en formato JSON)
+        return $this->executeWithErrorHandling(function() {
+            // 1. Recibir y validar datos del POST
             $input = $this->getRequestData();
-            $email = $input['email'] ?? '';
-            $password = $input['password'] ?? '';
-
-            // 2. Validar campos
+            
+            // 2. Validar campos requeridos
             $requiredFields = ['email', 'password'];
             $missingFields = $this->validateRequiredFields($input, $requiredFields);
             if (!empty($missingFields)) {
-                $this->handleResponse(false, 'Email y contraseña son requeridos.', [], 400);
+                $this->handleMissingFieldsError($missingFields);
                 return;
             }
 
-            // 3. Buscar usuario en la base de datos
+            // 3. Sanitizar y validar email
+            $email = $this->validateEmail($input['email']);
+            if (!$email) {
+                $this->handleInvalidEmailError();
+                return;
+            }
+
+            // 4. Validar contraseña
+            $password = $this->sanitizeString($input['password']);
+            if (strlen($password) < 1) {
+                $this->handleValidationError('La contraseña es requerida');
+                return;
+            }
+
+            // 5. Buscar usuario en la base de datos
             $user = $this->userModel->findByEmail($email);
-
-            // 4. Verificar si el usuario existe y la contraseña es correcta
-            if (!$user || !password_verify($password, $user['password'])) {
-                $this->handleResponse(false, 'Credenciales inválidas.', [], 401);
+            if (!$user) {
+                $this->handleInvalidCredentialsError();
                 return;
             }
 
-            // 5. Si todo es correcto, crear el JWT
-            $secretKey  = $_ENV['JWT_SECRET'];
-            $issuedAt   = time();
-            $expire     = $issuedAt + ($_ENV['JWT_EXPIRATION_HOURS'] * 60 * 60); // expira en N horas
+            // Validar que el usuario tenga un ID válido
+            if (!isset($user['id_employe']) || empty($user['id_employe'])) {
+                $this->handleResponse(false, 'Error en los datos del usuario', [], 500, self::ERROR_CODES['CONFIGURATION_ERROR']);
+                return;
+            }
+
+            // 6. Verificar contraseña
+            if (!password_verify($password, $user['password'])) {
+                $this->handleInvalidCredentialsError();
+                return;
+            }
+
+            // 7. Generar JWT
+            $secretKey = $_ENV['JWT_SECRET'] ?? '';
+            if (empty($secretKey)) {
+                $this->handleJwtConfigError();
+                return;
+            }
+
+            $issuedAt = time();
+            $expirationHours = isset($_ENV['JWT_EXPIRATION_HOURS']) ? (int)$_ENV['JWT_EXPIRATION_HOURS'] : 24;
+            $expire = $issuedAt + ($expirationHours * 60 * 60);
 
             $payload = [
-                'iat'  => $issuedAt,         // Issued at: momento en que se generó el token
-                'exp'  => $expire,           // Expire: momento en que expira el token
-                'data' => [                  // Datos personalizados
-                    'userId' => $user['id_employe'], // Corregido: PK es id_employe
-                    'email' => $user['employe_email'], // Corregido: email es employe_email
-                    'role'   => $user['rol_name']  // Corregido: rol viene del JOIN
+                'iat' => $issuedAt,
+                'exp' => $expire,
+                'data' => [
+                    'userId' => (int)$user['id_employe'],
+                    'email' => $this->sanitizeString($user['employe_email']),
+                    'role' => $this->sanitizeString($user['rol_name'])
                 ]
             ];
 
-            // 6. Codificar el JWT
+            // 8. Codificar JWT
             $jwt = JWT::encode($payload, $secretKey, 'HS256');
 
-            // 7. Enviar la respuesta
-            $this->handleResponse(true, 'Login exitoso.', ['token' => $jwt], 200);
+            // 9. Respuesta exitosa
+            $this->handleResponse(true, 'Login exitoso.', [
+                'token' => $jwt,
+                'user' => [
+                    'id' => (int)$user['id_employe'],
+                    'name' => $this->sanitizeString($user['employe_name']),
+                    'email' => $this->sanitizeString($user['employe_email']),
+                    'role' => $this->sanitizeString($user['rol_name'])
+                ]
+            ], 200);
 
-        } catch (Exception $e) {
-            $this->handleResponse(false, 'Ocurrió un error en el servidor.', [
-                'error' => $e->getMessage()
-            ], 500);
-        }
+        }, 'Error en el proceso de autenticación');
+    }
+
+    public function profile()
+    {
+        return $this->executeWithErrorHandling(function() {
+            // Validar autenticación
+            $this->validateAuthentication();
+            
+            // Obtener datos del usuario desde el token JWT
+            // (Esto se implementaría con el middleware de autenticación)
+            
+            $this->handleResponse(true, 'Perfil obtenido correctamente.', [
+                'message' => 'Funcionalidad de perfil en desarrollo'
+            ], 200);
+
+        }, 'Error al obtener el perfil');
+    }
+
+    public function refresh()
+    {
+        return $this->executeWithErrorHandling(function() {
+            // Validar autenticación
+            $this->validateAuthentication();
+            
+            // Lógica para renovar token
+            $this->handleResponse(true, 'Token renovado correctamente.', [
+                'message' => 'Funcionalidad de renovación en desarrollo'
+            ], 200);
+
+        }, 'Error al renovar el token');
+    }
+
+    public function logout()
+    {
+        return $this->executeWithErrorHandling(function() {
+            // Validar autenticación
+            $this->validateAuthentication();
+            
+            // Lógica para invalidar token
+            $this->handleResponse(true, 'Logout exitoso.', [], 200);
+
+        }, 'Error en el proceso de logout');
     }
 } 
