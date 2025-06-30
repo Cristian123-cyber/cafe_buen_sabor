@@ -22,15 +22,21 @@ class User extends BaseModel
     public function findByEmail($email)
     {
         // Actualizado: Se une con la tabla de roles para obtener el nombre del rol.
-        $query = "SELECT e.*, r.rol_name 
-                  FROM {$this->table_name} e
-                  LEFT JOIN employees_rol r ON e.employees_rol_id_rol = r.id_rol
-                  WHERE e.employe_email = :email 
-                  LIMIT 1";
-                  
+        $query = "SELECT e.*, 
+                        r.rol_name, 
+                        s.id_status AS status_id,
+                        s.status_name AS status_name
+                    FROM {$this->table_name} e
+                    LEFT JOIN employees_rol r 
+                        ON e.employees_rol_id_rol = r.id_rol
+                    LEFT JOIN employees_statuses s 
+                        ON e.employees_statuses_id_status = s.id_status
+                    WHERE e.employe_email = :email 
+                    LIMIT 1;";
+
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':email', $email);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-} 
+}
