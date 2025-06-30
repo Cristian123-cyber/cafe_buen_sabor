@@ -1,5 +1,9 @@
 # explicacion de logica y flujo de los endpoints
 
+# ASEGURARSE DE SERGUIR LAS CONVENCIONES TANTO EN NOMBRES Y ENDPOINTS DE RUTAS COMO EN METODOS HTTP, Y EN SEPARACION DE RUTAS
+# YA QUE CON LAS CONVENCIONES DEFININAS EN ESTE DOCUMENTO DE TRABAJARA LA LOGICA DEL MIDDLEWARE DEL ROUTER PARA PROTEGER 
+# LAS RUTAS DE FORMA AGRUPADA (FUNCIONALIDAD MIDDLEWARE Y AUTH IMPLEMENTADA POR CRISTIAN)
+
 ## EMPLOYEES:
 
 # - RUTA BASE ESPERADA: api/employees/
@@ -680,19 +684,39 @@
 
 # EDITAR UN PEDIDO: **POR MOTIVOS DE SEGURIDAD NO SE PODRA EDITAR LA DATA DE LOS PEDIDOS, EN CASO DE QUE LOS CLIENTES QUIERAN CAMBIAR LA DATA DE PEDIDO DESPUES DE HABERLO HECHO, SOLO SE CANCELARA EL PEDIDO Y SE LE PEDIRA QUE VUELVA A REALIZAR EL PEDIDO**
 
-# CAMBIAR ESTADO UN PEDIDO:
+# CAMBIAR ESTADO UN PEDIDO A CONFIRMADO:
 
     - METODO: PUT
-    - ENDPOINT: api/orders/{id}
-    - ESTRUCTURA DE DATOS ENVIADA:
+    - ENDPOINT: api/orders/{id}/confirm
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
 
-```json
-        {
-            "order_status": "CANCELED" -- Cambiar el estado del pedido a CANCELED (ENUM: ["PENDING", "CONFIRM", "READY", "CANCELED", "COMPLETED"])
-        }
-```
+    -IMPORTANTE: Cambiar estado del pedido a confirmado CONFIRMED ID **2**
 
-    -IMPORTANTE: Se debe validar que el pedido no este en estado READY o COMPLETED antes de cancelarlo.
+# CAMBIAR ESTADO UN PEDIDO A CANCELADO:
+
+    - METODO: PUT
+    - ENDPOINT: api/orders/{id}/cancel
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Cambiar estado del pedido a confirmado CANCELED ID **3**
+
+# CAMBIAR ESTADO UN PEDIDO A READY:
+
+    - METODO: PUT
+    - ENDPOINT: api/orders/{id}/ready
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Cambiar estado del pedido a confirmado READY ID **4**
+
+# CAMBIAR ESTADO UN PEDIDO A COMPLETED:
+
+    - METODO: PUT
+    - ENDPOINT: api/orders/{id}/complete
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    -IMPORTANTE: Cambiar estado del pedido a confirmado COMPLETED ID **5**
+
+**ESTAS ACCIONES DE ESTADO SE DEBEN HACER POR ENDPOINTS SEPARADOS YA QUE CADA ACCION DEBE PROTEGERSE SEGUN EL ROL
 
 # OBTENER TODOS LOS PEDIDOS:
 
@@ -952,7 +976,6 @@ Y asociar a cada pedido el id del mesero que se envia.
     -IMPORTANTE: Devolver una lista de todos los tipos de productos con sus respectivos datos del tipo, incluyendo el id y el nombre del tipo.
 
 **SOLO SE NECESITA OBTENERLOS TODOS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
-
 
 
 
