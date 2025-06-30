@@ -4,6 +4,9 @@
 # YA QUE CON LAS CONVENCIONES DEFININAS EN ESTE DOCUMENTO DE TRABAJARA LA LOGICA DEL MIDDLEWARE DEL ROUTER PARA PROTEGER 
 # LAS RUTAS DE FORMA AGRUPADA (FUNCIONALIDAD MIDDLEWARE Y AUTH IMPLEMENTADA POR CRISTIAN)
 
+## EJEMPLO DE COMO QUEDARA EL ROUTER AL FINAL CUANDO ESTEN TODAS LAS RUTAS DEFINIDAS EN EL FINAL DEL DOCUMENTO
+## SOLO REGISTRAR LAS RUTAS POR AHORA, DESPUES SE PROTEGERAN AGRUPADAMENTE CON EL MIDDLEWARE PARA EVITAR CONFLICTOS MIENTRAS SE DESARROLLA
+
 ## EMPLOYEES:
 
 # - RUTA BASE ESPERADA: api/employees/
@@ -984,3 +987,115 @@ Y asociar a cada pedido el id del mesero que se envia.
 
 
 
+### EJEMPLO ROUTER IMPLEMENTACION:
+```php
+<?php
+// src/router.php
+
+use Bramus\Router\Router;
+use App\Middleware\AccessControlMiddleware;
+
+$router = new Router();
+$router->setNamespace('\App\Controllers');
+
+// ========================================
+// 1. RUTAS PÚBLICAS
+// ========================================
+// Estas rutas NO están protegidas y son los puntos de entrada.
+// ----------------------------------------
+
+// El login maneja tanto empleados como dispositivos.
+$router->post('/api/auth/login', 'AuthController@login'); 
+
+// La validación del QR para iniciar la sesión del cliente.
+$router->post('/api/sessions/validate-qr', 'TableSessionController@validateQrAndStartSession');
+
+
+// ========================================
+// 2. REGISTRO DE RUTAS PROTEGIDAS
+// ========================================
+
+
+// --- Rutas de Productos ---
+// Accesibles para Clientes y cualquier Empleado.
+$router->before('GET', '/api/products.*', function() {
+    AccessControlMiddleware::handle([], true); // Roles: [], allowClient: true
+});
+$router->get('/api/products', 'ProductController@index');
+$router->get('/api/products/(\d+)', 'ProductController@show');
+
+// El CRUD de productos solo para Administradores.
+$router->before('POST|PUT|DELETE', '/api/products.*', function() {
+    AccessControlMiddleware::handle(['Administrador']);
+});
+$router->post('/api/products', 'ProductController@store');
+$router->put('/api/products/(\d+)', 'ProductController@update');
+$router->delete('/api/products/(\d+)', 'ProductController@delete');
+
+
+// --- Rutas de Pedidos ---
+// Crear un pedido: solo clientes.
+$router->before('POST', '/api/orders', function() {
+    AccessControlMiddleware::handle([], true);
+});
+$router->post('/api/orders', 'OrderController@create');
+
+// Ver pedidos: Clientes ven los suyos, Empleados ven según su rol.
+$router->before('GET', '/api/orders.*', function() {
+    AccessControlMiddleware::handle(['Mesero', 'Cocinero', 'Cajero', 'Administrador'], true);
+});
+$router->get('/api/orders', 'OrderController@index');
+$router->get('/api/orders/(\d+)', 'OrderController@show');
+
+// Actualizar estado de pedidos: solo empleados con roles específicos.
+$router->before('PATCH', '/api/orders/(\d+)/confirm', function() {
+    AccessControlMiddleware::handle(['Mesero', 'Administrador']);
+});
+$router->patch('/api/orders/(\d+)/confirm', 'OrderController@confirm');
+
+$router->before('PATCH', '/api/orders/(\d+)/ready', function() {
+    AccessControlMiddleware::handle(['Cocinero', 'Administrador']);
+});
+$router->patch('/api/orders/(\d+)/ready', 'OrderController@markAsReady');
+
+$router->before('PATCH', '/api/orders/(\d+)/delivered', function() {
+    AccessControlMiddleware::handle(['Mesero', 'Administrador']);
+});
+$router->patch('/api/orders/(\d+)/delivered', 'OrderController@markAsDelivered');
+
+
+// --- Rutas de Perfil y Sesión de Empleado ---
+// Accesible para cualquier empleado logueado.
+$router->before('GET|POST', '/api/auth/(profile|refresh|logout)', function() {
+    AccessControlMiddleware::handle(); // Roles: [], allowClient: false (por defecto)
+});
+$router->get('/api/auth/profile', 'AuthController@profile');
+$router->post('/api/auth/refresh', 'AuthController@refresh');
+$router->post('/api/auth/logout', 'AuthController@logout');
+
+
+// --- Rutas de Gestión (Ej: Empleados, Mesas, Roles) ---
+// solo para Administradores.
+$router->before('GET|POST|PUT|DELETE', '/api/(employees|tables|roles).*', function() {
+    AccessControlMiddleware::handle(['Administrador']);
+});
+
+$router->get('/api/employees', 'EmployeesController@index');
+$router->post('/api/employees', 'EmployeesController@store');
+// ... y así sucesivamente con el resto de rutas de gestión
+
+
+
+// ========================================
+// MANEJO DE ERRORES GLOBALES
+// ========================================
+$router->set404(function() {
+    http_response_code(404);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['success' => false, 'message' => 'Ruta no encontrada', 'error_code' => 'RES001']);
+});
+
+
+// Ejecutar el router
+$router->run();
+```

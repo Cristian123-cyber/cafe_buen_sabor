@@ -101,45 +101,4 @@ class AuthController extends BaseController
         }, 'Error en el proceso de autenticación');
     }
 
-    public function profile()
-    {
-        return $this->executeWithErrorHandling(function() {
-            // Validar autenticación
-            $this->validateAuthentication();
-            
-            // Obtener datos del usuario desde el token JWT
-            // (Esto se implementaría con el middleware de autenticación)
-            
-            $this->handleResponse(true, 'Perfil obtenido correctamente.', [
-                'message' => 'Funcionalidad de perfil en desarrollo'
-            ], 200);
-
-        }, 'Error al obtener el perfil');
-    }
-
-    public function refresh()
-    {
-        return $this->executeWithErrorHandling(function() {
-            // Validar autenticación
-            $this->validateAuthentication();
-            
-            // Lógica para renovar token
-            $this->handleResponse(true, 'Token renovado correctamente.', [
-                'message' => 'Funcionalidad de renovación en desarrollo'
-            ], 200);
-
-        }, 'Error al renovar el token');
-    }
-
-    public function logout()
-    {
-        return $this->executeWithErrorHandling(function() {
-            // Validar autenticación
-            $this->validateAuthentication();
-            
-            // Lógica para invalidar token
-            $this->handleResponse(true, 'Logout exitoso.', [], 200);
-
-        }, 'Error en el proceso de logout');
-    }
 } 

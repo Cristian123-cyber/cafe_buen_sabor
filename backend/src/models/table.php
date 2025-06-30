@@ -2,11 +2,18 @@
 
 namespace App\Models;
 
+use PDO;
+
+
 class Table extends BaseModel
 {
-    protected $table_name = 'tables';
-    protected $primary_key = 'id_table';
-
+    
+    public function __construct()
+    {
+        parent::__construct(); // Llama al constructor de BaseModel
+        $this->table_name = 'tables';
+        $this->primary_key = 'id_table';
+    }
     // Obtener todas las mesas
     public function all()
     {
@@ -22,6 +29,7 @@ class Table extends BaseModel
     // Crear nueva mesa
     public function createTable($data)
     {
+          // El método create de BaseModel ya devuelve el lastInsertId
         $id = $this->create($data);
         if ($id) {
             return $this->getById($id);
@@ -52,5 +60,47 @@ class Table extends BaseModel
         $stmt->bindParam(':qr_token', $qr_token);
         $stmt->execute();
         return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    // --- MÉTODO CORREGIDO ---
+
+    /**
+     * Valida si un token de QR específico corresponde a una mesa específica.
+     *
+     * @param string $qrToken El token QR a validar.
+     * @param int $idTable El ID de la mesa con la que se debe comparar el token.
+     * @return array|false Devuelve los datos de la mesa si la validación es exitosa, de lo contrario devuelve false.
+     */
+    public function validateQRTokenTable(string $qrToken, int $idTable)
+    {
+        $sql = "SELECT id_table, table_number, token_expiration 
+                FROM {$this->table_name} 
+                WHERE {$this->primary_key} = :id_table AND qr_token = :qr_token";
+
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':id_table', $idTable, PDO::PARAM_INT);
+            $stmt->bindParam(':qr_token', $qrToken, PDO::PARAM_STR);
+            $stmt->execute();
+
+            $table = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$table) {
+                return false;
+            }
+
+            // Verificación de expiración
+            if (isset($table['token_expiration'])) {
+                $expirationTime = strtotime($table['token_expiration']);
+                if (time() > $expirationTime) {
+                    return false; 
+                }
+            }
+            
+            return $table;
+
+        } catch (\PDOException $e) {
+            return false;
+        }
     }
 }

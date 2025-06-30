@@ -71,6 +71,15 @@ Este documento describe todos los códigos de error utilizados en la API para fa
 | `SYS002` | Error de configuración | 500 |
 | `SYS003` | Servicio no disponible | 503 |
 
+
+### ⚙️ Errores de QR invalido (SYS)
+
+| Código | Descripción | HTTP Status |
+|--------|-------------|-------------|
+| `E_INVALID_QR` | QR invalido | 404 |
+| `SYS002` | Error de configuración | 500 |
+| `SYS003` | Servicio no disponible | 503 |
+
 ## Ejemplos de Uso
 
 ### Error de Validación

@@ -1,0 +1,108 @@
+@theme {
+  /* 
+   * PALETA DE COLORES - CAFÉ BUEN SABOR
+   * Instrucciones de uso:
+   * 1. Para fondos oscuros: Usar --color-primary y variantes
+   * 2. Para fondos claros: Usar --color-surface y variantes
+   * 3. Para acentos y acciones importantes: Usar --color-accent
+   * 4. Para texto: --color-text (oscuro) o --color-text-light (claro)
+   * 5. Para bordes y líneas divisorias: --color-border
+   */
+
+  /* COLORES PRINCIPALES (3 variantes cada uno) */
+  --color-primary: #212121;       /* Color principal oscuro (normal) */
+  --color-primary-light: #424242; /* Versión clara para hover/estados */
+  --color-primary-dark: #0d0d0d;  /* Versión oscura para énfasis */
+  
+  --color-secondary: #F5F5F5;     /* Color secundario claro (normal) */
+  --color-secondary-light: #FFFFFF; /* Versión más clara */
+  --color-secondary-dark: #EDEDED; /* Versión ligeramente más oscura */
+  
+  --color-accent: #CBA135;        /* Color de acento dorado (normal) */
+  --color-accent-light: #FFD75C;  /* Versión clara para highlights */
+  --color-accent-dark: #9D7D2A;   /* Versión oscura para hover/active */
+
+  /* 
+   * COLORES DE TEXTO 
+   * Uso:
+   * - --color-text: Para texto normal sobre fondos claros
+   * - --color-text-light: Para texto sobre fondos oscuros
+   * - --color-text-muted: Para texto secundario/desactivado
+   */
+  --color-text: #212121;
+  --color-text-light: #EDEDED;
+  --color-text-muted: #BDBDBD;
+  
+  /* 
+   * COLORES SEMÁNTICOS (para estados/alerts)
+   * Uso:
+   * - --color-success: Operaciones exitosas
+   * - --color-error: Mensajes de error
+   * - --color-warning: Advertencias
+   * - --color-info: Información destacada
+   */
+  --color-success: #22c55e;
+  --color-error: #D32F2F;
+  --color-warning: #FFA000;
+  --color-info: #1976D2;
+ --color-success-light: #bdf3d5;   /* Antes: #d9fbe7 */
+  --color-error-light:   #f4baba;   /* Antes: #fbdcdc */
+  --color-warning-light: #ffe8a3;   /* Antes: #fff4d2 */
+  --color-info-light:    #a7d2f8;   /* Antes: #d6eaff */
+  
+  /* 
+   * COLORES DE SUPERFICIE (fondos)
+   * Uso:
+   * - --color-surface: Fondo principal claro
+   * - --color-surface-dark: Fondo secundario
+   * - --color-surface-darker: Fondo terciario
+   */
+  --color-surface: #FFFFFF;
+  --color-surface-dark: #F5F5F5;
+  --color-surface-darker: #EDEDED;
+  
+  /* 
+   * BORDES Y LÍNEAS
+   * Uso:
+   * - --color-border: Borde normal
+   * - --color-border-light: Bordes sutiles
+   * - --color-border-dark: Bordes destacados
+   */
+  --color-border: #BDBDBD;
+  --color-border-light: #E0E0E0;
+  --color-border-dark: #757575;
+  
+  /* 
+   * ESTADOS DE INTERACCIÓN (transparencias sobre acento)
+   * Uso:
+   * - --color-hover: Efecto hover sutil
+   * - --color-active: Estado activo/presionado
+   * - --color-focus: Foco en inputs/botones
+   */
+  --color-hover: rgba(203, 161, 53, 0.1);
+  --color-active: rgba(203, 161, 53, 0.2);
+  --color-focus: rgba(203, 161, 53, 0.3);
+
+  /*
+   * EJEMPLOS DE APLICACIÓN (copiar en CSS):
+   * 
+   * Barra de navegación:
+   * @apply bg-primary text-text-light;
+   *
+   * Botón primario:
+   * @apply bg-accent text-text hover:bg-accent-dark;
+   *
+   * Tarjeta de producto:
+   * @apply bg-surface border border-border hover:shadow-md;
+   *
+   * Input de formulario:
+   * @apply bg-surface border border-border focus:border-accent focus:ring-1 focus:ring-accent-light;
+   */
+}
+
+
+/* ==========================================================================
+   1. BACKGROUNS ESPECIALES - Estilos y variantes
+   ========================================================================== */
+
+   

@@ -10,60 +10,41 @@ use Exception;
 class AuthMiddleware
 {
     /**
-     * Maneja la verificación del token JWT en la petición.
+     * Verifica que el request contenga un token JWT de empleado válido.
      */
     public static function handle()
     {
-        // 1. Obtener la cabecera de autorización
-        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? null;
-
-        if (!$authHeader) {
-            self::unauthorized('Token no proporcionado.');
+        $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            self::sendUnauthorized('Token no proporcionado.');
         }
 
-        // 2. Extraer el token (formato "Bearer <token>")
-        // Usamos sscanf que es más seguro que explode para este caso.
-        list($jwt) = sscanf($authHeader, 'Bearer %s');
-
-        if (!$jwt) {
-            self::unauthorized('Formato de token inválido.');
-        }
+        $jwt = $matches[1];
+        $secretKey = $_ENV['JWT_SECRET'];
 
         try {
-            // 3. Decodificar y verificar el token
-            $secretKey = $_ENV['JWT_SECRET'];
-            // El tercer argumento de decode ahora es un objeto Key
             $decoded = JWT::decode($jwt, new Key($secretKey, 'HS256'));
 
-            // Si se quisiera, aquí se podrían hacer más validaciones,
-            // como comprobar si el usuario sigue existiendo en la BD.
+            // Opcional pero recomendado: Verificar que el token es de un empleado
+            if (isset($decoded->data->type) && $decoded->data->type === 'client_session') {
+                throw new Exception('Se requiere un token de empleado, no de sesión de cliente.');
+            }
+            
+            // Podrías añadir más validaciones, como verificar el rol del usuario contra una lista de roles permitidos.
+            // Por ejemplo: self::checkRole($decoded->data->role, ['Administrador', 'Mesero']);
 
-            // También se podría hacer que los datos del usuario estén
-            // disponibles globalmente para los controladores, pero para
-            // este caso, con validar el token es suficiente.
-            return true;
+            // Hacemos los datos del usuario disponibles globalmente para los controladores
+            $GLOBALS['user_data'] = $decoded->data;
 
-        } catch (ExpiredException $e) {
-            self::unauthorized('Token expirado.');
         } catch (Exception $e) {
-            // Esto captura otros errores de JWT (firma inválida, malformado, etc.)
-            self::unauthorized('Token inválido.');
+            self::sendUnauthorized('Acceso no autorizado: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Envía una respuesta de error 401 Unauthorized y termina la ejecución.
-     * @param string $message Mensaje de error específico.
-     */
-    private static function unauthorized($message)
-    {
+    private static function sendUnauthorized(string $message) {
         http_response_code(401);
-        // Es una buena práctica no revelar detalles internos en los mensajes de error.
-        echo json_encode([
-            'success' => false,
-            'message' => 'Acceso no autorizado. pai',
-            'error' => $message
-        ]);
+        header('Content-Type: application/json; charset=UTF-8');
+        echo json_encode(['success' => false, 'message' => $message]);
         exit();
     }
-} 
+}
