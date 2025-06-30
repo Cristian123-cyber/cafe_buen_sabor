@@ -121,9 +121,9 @@ class TablesController extends BaseController
             
             if (isset($data['table_status'])) {
                 $status = $this->sanitizeString($data['table_status']);
-                $validStatuses = ['FREE', 'OCCUPIED', 'INACTIVE'];
+                $validStatuses = ['ACTIVE', 'CLOSED', 'EXPIRED'];
                 if (!in_array($status, $validStatuses)) {
-                    $this->handleResponse(false, 'Estado de mesa inválido. Debe ser: FREE, OCCUPIED o INACTIVE', [], 400);
+                    $this->handleResponse(false, 'Estado de mesa inválido. Debe ser: ACTIVE, CLOSED, EXPIRED', [], 400);
                     return;
                 }
                 $updateData['table_status'] = $status;

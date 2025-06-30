@@ -24,6 +24,17 @@ class EmployeesController extends BaseController
         }, 'Error al obtener los empleados');
     }
 
+    // Filtrar usuarios por rol y estado
+    public function filter()
+    {
+    return $this->executeWithErrorHandling(function() {
+        $rol = isset($_GET['rol']) ? $this->validateId($_GET['rol']) : null;
+        $status = isset($_GET['status']) ? $this->validateId($_GET['status']) : null;
+
+        $usuarios = $this->usuarioModel->filterBy($rol, $status);
+        $this->handleResponse(true, 'Empleados filtrados correctamente.', $usuarios);
+    }, 'Error al filtrar empleados');
+    }
     // Obtener un usuario por ID
     public function show($id)
     {
@@ -69,7 +80,15 @@ class EmployeesController extends BaseController
                 'employees_rol_id_rol' => $this->validateId($data['employees_rol_id_rol']),
                 'employees_statuses_id_status' => $this->validateId($data['employees_statuses_id_status'])
             ];
+            
+            
+            if (isset($data['employee_cc'])) {
+            $employeeData['employee_cc'] = $this->sanitizeString($data['employee_cc']);
+            }
 
+            if (isset($data['table_id_device'])) {
+            $employeeData['table_id_device'] = $this->validateId($data['table_id_device']);
+            }
             // Validar email
             if (!$employeeData['employe_email']) {
                 $this->handleResponse(false, 'Formato de email inválido', [], 400);
@@ -137,7 +156,13 @@ class EmployeesController extends BaseController
                 }
                 $updateData['employe_email'] = $email;
             }
+            if (isset($data['employee_cc'])) {
+            $updateData['employee_cc'] = $this->sanitizeString($data['employee_cc']);
+            }
 
+            if (isset($data['table_id_device'])) {
+            $updateData['table_id_device'] = $this->validateId($data['table_id_device']);
+            }
             if (isset($data['password']) && !empty($data['password'])) {
                 $password = $this->sanitizeString($data['password']);
                 if (strlen($password) < 6) {

@@ -81,6 +81,7 @@ abstract class RouteGroup {
         TableSessionRoutes::register($router);
         SaleRoutes::register($router);
         SaleOrderRoutes::register($router);
+        OrdersRoutes::register($router);
     }
 }
 /**
@@ -93,6 +94,8 @@ class EmployeeRoutes {
         $router->post('/api/employees', 'EmployeesController@store');
         $router->put('/api/employees/(\d+)', 'EmployeesController@update');
         $router->delete('/api/employees/(\d+)', 'EmployeesController@delete');
+
+        $router->get('/api/employees/filter', 'EmployeesController@filter');
     }
 }
 /**
@@ -236,6 +239,17 @@ class SaleOrderRoutes {
         $router->get('/api/sales-orders/order/(\d+)', 'SaleOrderController@byOrder');
         $router->post('/api/sales-orders', 'SaleOrderController@add');
         $router->delete('/api/sales-orders', 'SaleOrderController@remove');
+    }
+}
+// Rutas relacionadas con pedidos
+class OrdersRoutes {
+    public static function register($router) {
+        $router->get('/api/orders', 'OrdersController@index');//mostrar todos
+        $router->get('/api/orders/(\d+)', 'OrdersController@show');//filtrar por id
+        $router->post('/api/orders', 'OrdersController@store');//agregar
+        $router->put('/api/orders/(\d+)', 'OrdersController@update');//actualizar
+        $router->delete('/api/orders/(\d+)', 'OrdersController@delete');//eliminar
+        $router->patch('/api/orders/(\d+)/status', 'OrdersController@updateStatus');//actualizar estado
     }
 }
 RouteGroup::registerAll($router);

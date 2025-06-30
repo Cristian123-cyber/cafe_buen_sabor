@@ -49,7 +49,26 @@ class Employees extends BaseModel
         }
         return false;
     }
+    //filtrar empleados por rol y estado
+    public function filterBy($rol = null, $status = null)
+    {
+    $query = "SELECT * FROM employees WHERE 1=1";
+    $params = [];
 
+    if ($rol !== null) {
+        $query .= " AND employees_rol_id_rol = ?";
+        $params[] = $rol;
+    }
+    if ($status !== null) {
+        $query .= " AND employees_statuses_id_status = ?";
+        $params[] = $status;
+    }
+
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute($params);
+    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    
     public function update($id, $data)
     {
         $query = "UPDATE employees SET 
