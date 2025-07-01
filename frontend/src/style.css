@@ -3,7 +3,7 @@
 
 @source inline("animate-shake");
 
-
+@reference './assets/styles/app.css';
 @import './assets/styles/components.css';
 
 

@@ -22,6 +22,7 @@ const appStore = useLoadingStore();
       <component :is="Component" />
     </transition>
   </RouterView>
+   <ToastManager />
   <GlobalAlertPresenter />
 </template>
 
