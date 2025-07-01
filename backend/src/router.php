@@ -3,7 +3,8 @@
 // Router principal con agrupación de rutas por recursos usando clases
 
 use Bramus\Router\Router;
-use App\Middleware\AuthMiddleware;
+
+use App\Middleware\AccessControlMiddleware;
 
 $router = new Router();
 
@@ -32,7 +33,7 @@ $router->before('POST|PUT|DELETE|GET', '/api/.*', function() {
     if (strpos($_SERVER['REQUEST_URI'], '/api/auth/login') === 0) {
         return;
     }
-    //AuthMiddleware::handle();  // SE USA AQUI EL MIDDLEWAR
+    //AccessControlMiddleware::handle([5, 2], false);
 });
 
 // --- Rutas de Productos ---

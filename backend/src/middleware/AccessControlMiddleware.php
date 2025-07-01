@@ -21,6 +21,8 @@ class AccessControlMiddleware
             self::sendUnauthorized('Token no proporcionado.');
         }
 
+        file_put_contents('../logs/debug.log', "\nAuthHeader: {$authHeader}\n", FILE_APPEND);
+
         $jwt = $matches[1];
         $secretKey = $_ENV['JWT_SECRET'];
 
@@ -30,7 +32,7 @@ class AccessControlMiddleware
 
             // Determinar el tipo de token
             $isClientSession = isset($tokenData->type) && $tokenData->type === 'client_session';
-            $isEmployee = !$isClientSession && isset($tokenData->role);
+            $isEmployee = isset($tokenData->type) && $tokenData->type === 'employee_session';
 
             // 1. Verificar si se permite sesión de cliente
             if ($isClientSession) {
@@ -61,7 +63,7 @@ class AccessControlMiddleware
             throw new Exception('Formato de token desconocido.');
 
         } catch (Exception $e) {
-            self::sendUnauthorized('Acceso no autorizado: ' . $e->getMessage());
+            self::sendUnauthorized('Acceso pa no autorizado: ' . $e->getMessage());
         }
     }
 

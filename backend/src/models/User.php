@@ -23,7 +23,8 @@ class User extends BaseModel
     {
         // Actualizado: Se une con la tabla de roles para obtener el nombre del rol.
         $query = "SELECT e.*, 
-                        r.rol_name, 
+                        r.rol_name,
+                        r.id_rol AS role_id,
                         s.id_status AS status_id,
                         s.status_name AS status_name
                     FROM {$this->table_name} e
@@ -36,6 +37,28 @@ class User extends BaseModel
 
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':email', $email);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function findById($id)
+    {
+        // Actualizado: Se une con la tabla de roles para obtener el nombre del rol.
+        $query = "SELECT e.*, 
+                        r.rol_name,
+                        r.id_rol AS role_id,
+                        s.id_status AS status_id,
+                        s.status_name AS status_name
+                    FROM {$this->table_name} e
+                    LEFT JOIN employees_rol r 
+                        ON e.employees_rol_id_rol = r.id_rol
+                    LEFT JOIN employees_statuses s 
+                        ON e.employees_statuses_id_status = s.id_status
+                    WHERE e.employe_id = :id 
+                    LIMIT 1;";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
