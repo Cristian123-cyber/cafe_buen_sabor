@@ -922,7 +922,10 @@ Y asociar a cada pedido el id del mesero que se envia.
 
     -IMPORTANTE: Devolver una lista de todas las notificaciones con sus respectivos estados y datos de la notificacion, incluyendo el tipo, mensaje, id de la orden asociada y data del empleado que disparo la notificacion.
     recordar que la tabla no tieene relaciones con otras tablas, se maneja de forma independiente.
-    asi que no se pueden hacer joins, deben consultarse los datos de forma independiente.               
+    asi que no se pueden hacer joins, deben consultarse los datos de forma independiente.     
+
+    
+              
 
 ## UNITS OF MEASURE:
 

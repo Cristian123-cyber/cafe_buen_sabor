@@ -42,10 +42,17 @@ export default defineConfig(({ mode }) => {
       // Usamos la variable de entorno para el puerto.
       // Hacemos un parseInt para asegurarnos de que es un número.
       port: parseInt(env.VITE_PORT) || 5173,
-
       watch: {
+        // ---- ESTE ES EL BLOQUE IMPORTANTE ----
+        // Reactivamos el polling porque los eventos nativos no funcionan
         usePolling: true,
+        
+        // Le decimos a Vite que revise los archivos cada 500 milisegundos (medio segundo)
+        // Puedes ajustar este valor. 1000ms (1 segundo) también es una buena opción.
+        // ¡Esto es lo que reduce drásticamente el uso de CPU!
+        interval: 1000, 
       },
+
       proxy: {
         "/api": {
           // Usamos la variable de entorno para el target del proxy

@@ -14,7 +14,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   // --- GETTERS ---
   const isAuthenticated = computed(() => !!accessToken.value && !!user.value);
-  const userRole = computed(() => user.value?.role_name || null); // Ajusta a tu estructura de user
+  const userRole = computed(() => user.value?.role_name || 5); // Ajusta a tu estructura de user
 
   // --- ACTIONS ---
 

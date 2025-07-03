@@ -478,7 +478,7 @@
 
 /* Estilos del Overlay */
 .overlay {
-  @apply absolute inset-0 bg-primary/70 backdrop-blur-sm; /* Aumenté un poco la opacidad para un mejor efecto */
+  @apply absolute inset-0 bg-primary/70; /* Aumenté un poco la opacidad para un mejor efecto */
 
 }
 

@@ -1,13 +1,16 @@
 <template>
-  <div class="p-4">
-    <h1 class="text-3xl font-bold text-text">Mesa 5</h1>
-    <!-- ... otros detalles de la mesa ... -->
-    <button @click="confirmOrder"
+
+  
+
+    <div class="p-4">
+      <h1 class="text-3xl font-bold text-text">Mesa 5</h1>
+      <!-- ... otros detalles de la mesa ... -->
+      <button @click="confirmOrder"
       class="px-6 py-3 rounded-lg text-white font-bold bg-accent hover:bg-accent-dark transition-colors">
       Confirmar Pedido para Cocina
     </button>
-
-
+    
+    
     <!-- En cualquier vista, por ej: src/views/waiter/DashboardView.vue -->
     <div class="flex items-center gap-4 p-4">
       <BaseBadge color="success">Completado</BaseBadge>
@@ -16,7 +19,7 @@
       <BaseBadge color="info">En cocina</BaseBadge>
       <BaseBadge color="accent">VIP</BaseBadge>
       <BaseBadge color="primary">Nuevo</BaseBadge>
-
+      
       <span class="relative">
         <i-mdi-bell class="w-6 h-6" />
         <BaseBadge color="error" dot class="absolute -top-1 -right-1" />
@@ -25,36 +28,37 @@
         Usuario Activo
         <BaseBadge color="success" dot />
       </span>
-
+      
       <BaseBadge color="success">
         <template #icon><i-mdi-check-circle class="w-4 h-4" /></template>
         Pago Verificado
       </BaseBadge>
-
+      
       <BaseBadge color="error" variant="outline">
         <template #icon><i-mdi-alert-circle class="w-4 h-4" /></template>
         Stock Bajo
       </BaseBadge>
-
+      
       <BaseBadge color="info">
         <template #icon><i-mdi-fire class="w-4 h-4" /></template>
         En preparación
       </BaseBadge>
-
-
+      
+      
       <!-- Nuestro nuevo componente en acción! -->
       <NotificationBell
-        :count="7"
-        @click="" 
+      :count="7"
+      :maxCount="2"
       />
-
-
+      
+      
     </div>
-
-
-
-
+    
+    
+    
+    
   </div>
+  
 
 
 </template>
@@ -64,6 +68,8 @@ import { useAlert } from '../../composables/useAlert';
 import { useToasts } from '../../composables/useToast'; // Importamos el composable
 
 const alert = useAlert();
+
+
 
 // Simula una llamada a la API
 const sendOrderToKitchenAPI = async () => {
@@ -133,3 +139,9 @@ const confirmOrder = async () => {
   }
 };
 </script>
+
+
+<style scoped>
+
+
+</style>

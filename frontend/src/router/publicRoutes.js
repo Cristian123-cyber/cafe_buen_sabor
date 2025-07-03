@@ -1,12 +1,18 @@
 export default [
   {
     path: "/",
-    redirect: "/auth/login", // Redirigir la raíz al login por defecto
+    redirect: "/test/dashboard", // Redirigir la raíz al login por defecto
   },
   {
     path: "/auth/login",
     name: "Login",
     component: () => import("../views/auth/TryView.vue"),
+    meta: { requiresGuest: true }, // Solo accesible para no autenticados
+  },
+  {
+    path: "/test/dashboard",
+    name: "TestDashboard",
+    component: () => import("../views/test/TestView.vue"),
     meta: { requiresGuest: true }, // Solo accesible para no autenticados
   },
   {
