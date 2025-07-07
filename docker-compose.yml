@@ -63,6 +63,21 @@ services:
     command: npm run dev
     networks:
       - cafeteria_net
+  cron:
+    build: ./cron
+    container_name: cafeteria_cron
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_NAME: ${DB_NAME:-cafeteria_db}
+      DB_USER: ${DB_USER:-cafeuser}
+      DB_PASSWORD: ${DB_PASSWORD:-12345}
+    volumes:
+      - ./backend:/var/www/html   # Solo se monta como volumen, NO se copia
+    networks:
+      - cafeteria_net
+
 
 volumes:
   cafeteria_mysql_data:

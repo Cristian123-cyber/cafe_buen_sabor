@@ -1,0 +1,1 @@
+*/10 * * * * root /usr/local/bin/php /var/www/html/scripts/regenerate_tokens.php >> /var/log/mesa_cron.log 2>&1
