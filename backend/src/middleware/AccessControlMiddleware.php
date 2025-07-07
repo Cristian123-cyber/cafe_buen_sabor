@@ -21,8 +21,7 @@ class AccessControlMiddleware
             self::sendUnauthorized('Token no proporcionado.');
         }
 
-        file_put_contents('../logs/debug.log', "\nAuthHeader: {$authHeader}\n", FILE_APPEND);
-
+       
         $jwt = $matches[1];
         $secretKey = $_ENV['JWT_SECRET'];
 
@@ -63,7 +62,7 @@ class AccessControlMiddleware
             throw new Exception('Formato de token desconocido.');
 
         } catch (Exception $e) {
-            self::sendUnauthorized('Acceso pa no autorizado: ' . $e->getMessage());
+            self::sendUnauthorized('Acceso no autorizado pai: ' . $e->getMessage());
         }
     }
 

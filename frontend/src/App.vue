@@ -17,7 +17,7 @@ const appStore = useLoadingStore();
   
   
     
-  <router-view v-slot="{ Component }">
+  <router-view v-slot="{ Component }" class="bg-primary">
     
   </router-view>
    <ToastManager />
@@ -27,13 +27,4 @@ const appStore = useLoadingStore();
 <style scoped>
 
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.15s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
 </style>

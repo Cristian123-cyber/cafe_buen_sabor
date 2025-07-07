@@ -9,6 +9,20 @@ export const navigationConfig = {
     { label: 'Productos', to: { name: 'Login' }, icon: iconsMap['mdi-food-outline'] },
     { label: 'Reportes', to: { name: 'Login' }, icon: iconsMap['mdi-chart-line'] },
   ],
+  3: [
+    { label: 'Dashboard', to: { name: 'Login' }, icon: 'i-mdi-view-dashboard-outline' },
+    { label: 'Mesas', to: { name: 'Login'}, icon: 'i-mdi-table-chair' },
+    { label: 'Facturas', to: { name: 'Login' }, icon: 'i-mdi-receipt-text-outline' },
+  ],
+  2: [
+    { label: 'Cola de Pedidos', to: { name: 'Login' }, icon: 'i-mdi-stove' },
+    { label: 'Activos', to: { name: 'Login' }, icon: 'i-mdi-fire' },
+  ],
+  1: [
+    { label: 'Dashboard', to: { name: 'Login' }, icon: iconsMap['mdi-view-dashboard-outline'] },
+    { label: 'Mesas', to: { name: 'Login' }, icon: iconsMap['mdi-account-group-outline'] },
+    { label: 'Pedidos', to: { name: 'Login' }, icon: iconsMap['mdi-table-chair'] }
+  ],
   // ... lo mismo para los demás roles
 };
 /* export const navigationConfig = {

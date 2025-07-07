@@ -1,0 +1,31 @@
+/* Personalización visual de NProgress */
+#nprogress .bar {
+  height: 4px;
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 9999;
+  box-shadow: 0 0 10px #00c6ff, 0 0 5px #0072ff;
+}
+
+#nprogress .peg {
+  display: block;
+  position: absolute;
+  right: 0px;
+  width: 100px;
+  height: 100%;
+  box-shadow: 0 0 10px #00c6ff, 0 0 5px #0072ff;
+  opacity: 1.0;
+  transform: rotate(3deg) translate(0px, -4px);
+}
+
+@keyframes shine {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}

@@ -1,6 +1,7 @@
 
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
+import NProgress from '../plugins/nprogress.js'; // 👈
 
 export const useLoadingStore = defineStore('loading', () => {
   // --- STATE ---
@@ -20,15 +21,25 @@ export const useLoadingStore = defineStore('loading', () => {
     activeRequests.value++;
   }
 
+  
   /**
    * Se llama cuando una petición a la API termina (éxito o error).
-   */
-  function requestFinished() {
-    // Nos aseguramos de que el contador nunca sea negativo.
-    if (activeRequests.value > 0) {
-      activeRequests.value--;
+  */
+ function requestFinished() {
+   // Nos aseguramos de que el contador nunca sea negativo.
+   if (activeRequests.value > 0) {
+     activeRequests.value--;
     }
   }
+  
+  // 👀 Watcher para controlar NProgress automáticamente
+  watch(isLoading, (loading) => {
+    if (loading) {
+      NProgress.start();
+    } else {
+      NProgress.done();
+    }
+  });
 
   return { 
     isLoading, 

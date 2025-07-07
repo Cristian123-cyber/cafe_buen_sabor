@@ -57,7 +57,7 @@ class TableSession extends BaseModel
      */
     public function findActiveByTableId(int $tableId)
     {
-        $sql = "SELECT id_session, tables_id_table, session_status 
+        $sql = "SELECT id_session, tables_id_table AS id_table, session_status 
                 FROM {$this->table_name} 
                 WHERE tables_id_table = :id_table AND session_status = 'ACTIVE' 
                 LIMIT 1";

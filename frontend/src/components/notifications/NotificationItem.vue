@@ -35,7 +35,6 @@
 
 <script setup>
 import { computed } from 'vue';
-import { useRouter } from 'vue-router';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -58,7 +57,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['read']);
-const router = useRouter();
+
 
 // iconData y formattedTimestamp no cambian, los omito por brevedad...
 const iconData = computed(() => {
@@ -77,9 +76,6 @@ const formattedTimestamp = computed(() => {
 });
 
 
-/**
- * LÓGICA ACTUALIZADA: Separamos la navegación de la acción de marcar como leído.
- */
 
 // Se dispara al hacer clic en el botón de check
 const handleMarkAsRead = () => {

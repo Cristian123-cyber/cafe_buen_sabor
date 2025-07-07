@@ -1,8 +1,8 @@
 
 
 .btn {
-  @apply inline-flex items-center justify-center rounded-md font-semibold text-sm;
-  @apply rounded-md font-semibold text-sm;
+  @apply inline-flex items-center justify-center font-semibold text-sm;
+  @apply rounded-xl font-semibold text-sm;
   @apply transition-all duration-200;
   @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
   @apply disabled:opacity-50 disabled:pointer-events-none;
@@ -90,112 +90,6 @@
    Formularios - Estilos para Inputs, Labels, etc.
    ========================================================================== */
 
-/* 1. Contenedor del Grupo de Formulario */
-.form-group {
-  @apply w-full;
-}
-
-/* 2. Etiqueta (Label) */
-.form-label {
-  @apply block mb-1 text-sm font-medium text-text;
-}
-
-/* 3. El Input en sí */
-.form-input {
-  /*
-   * Apariencia base:
-   * - `block w-full`: Ocupa todo el ancho disponible.
-   * - `rounded-md`: Bordes redondeados consistentes con los botones.
-   * - `border`: Define el borde. Usamos `border-transparent` en el estado de foco para que el "ring" se vea mejor.
-   * - `bg-surface-darker`: Un fondo ligeramente gris para que se distinga del fondo principal.
-   */
-  @apply block w-full rounded-md border border-border-light bg-surface-dark px-3 py-2 text-sm text-text placeholder:text-text-muted;
-  
-  /*
-   * Estado de Foco (PREMIUM):
-   * - `focus:outline-none`: Quitamos el feo outline por defecto.
-   * - `focus:border-accent`: Cambiamos el color del borde al color de acento.
-   * - `focus:ring-2 focus:ring-accent/30`: Añadimos un "resplandor" (ring) sutil usando nuestro color de acento con opacidad.
-   */
-  @apply focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30;
-
-  /*
-   * Transición suave para una mejor UX
-   */
-  @apply transition-all duration-200;
-}
-
-/* 4. Clase Modificadora para el Estado de Error */
-.form-input.is-invalid {
-  /*
-   * Sobrescribimos los estilos de borde y foco cuando hay un error.
-   * `!border-error` usa `!important` para asegurar que este estilo prevalezca.
-   */
-  @apply !border-error;
-  @apply focus:!ring-error/30;
-}
-
-/* 5. Contenedor para adornos (iconos, texto) */
-.form-input-wrapper {
-  /*
-   * Es crucial que sea `relative` para que los adornos (prefix/suffix)
-   * que serán `absolute` se posicionen correctamente dentro de este contenedor.
-   */
-  @apply relative;
-}
-
-/* 6. Adornos (Prefix y Suffix) */
-.form-input-adornment {
-  /*
-   * Posicionamiento absoluto, centrado verticalmente.
-   * `pointer-events-none` permite hacer clic "a través" del icono para enfocar el input.
-   */
-  @apply absolute top-0 bottom-0 flex items-center pointer-events-none;
-  @apply text-text-muted;
-}
-.form-input-prefix {
-  @apply left-3; /* Posición para el prefijo */
-}
-.form-input-suffix {
-  @apply right-3; /* Posición para el sufijo */
-}
-
-/* 7. Texto de Ayuda y Error */
-.form-help-text {
-  @apply mt-1 text-xs text-text-muted;
-}
-
-.form-error-text {
-  @apply mt-1 text-xs text-error;
-}
-
-.pl-10 {
-  padding-left: 2.5rem; /* 10 * 0.25rem */
-}
-.pr-10 {
-  padding-right: 2.5rem; /* 10 * 0.25rem */
-}
-/* 9. Utilidad para ocultar flechas de input numérico (Sin cambios) */
-.hide-number-spinners,
-.hide-number-spinners::-webkit-outer-spin-button,
-.hide-number-spinners::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.hide-number-spinners[type='number'] {
-  -moz-appearance: textfield;
-}
-
-/* 8. Animación de Sacudida (Shake) - ¡NUEVO! */
-@keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-4px); }
-  40%, 60% { transform: translateX(4px); }
-}
-.animate-shake {
-  animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
 
 @keyframes bounce-scale {
   0%, 100% {
@@ -374,12 +268,12 @@
 }
 
 .form-row {
-  @apply grid grid-cols-1 md:grid-cols-[repeat(var(--grid-cols),_minmax(0,_1fr))] gap-4;
+  @apply grid grid-cols-1 md:grid-cols-[repeat(var(--grid-cols),_minmax(0,_1fr))] gap-4 mb-3;
 }
 
 /* ... mismos estilos que en la respuesta anterior ... */
-.form-header { @apply border-b border-border-dark pb-4 mb-4; }
-.form-actions { @apply flex justify-end gap-3 pt-4 border-t border-border-dark; }
+.form-header { @apply border-b border-border-light pb-4 mb-4 text-center; }
+.form-actions {  @apply flex flex-col items-center gap-3 pt-4; }
 .form-disabled { @apply opacity-70 cursor-not-allowed; }
 
 
@@ -509,3 +403,13 @@
 
 
 
+/* Animación */
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}

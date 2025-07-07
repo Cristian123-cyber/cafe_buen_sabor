@@ -27,8 +27,13 @@ class TableSessionController extends BaseController
         return $this->executeWithErrorHandling(function() {
             // 1. Recibir y validar campos requeridos del POST
             $input = $this->getRequestData();
-            $this->validateRequiredFields($input, ['qr_token', 'id_table']);
 
+            $missingFields = $this->validateRequiredFields($input, ['qr_token', 'id_table']);
+            
+            if (!empty($missingFields)) {
+               $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+               return;
+           }
             // 2. Sanitizar y validar los datos de entrada
             $qrToken = $this->sanitizeString($input['qr_token']);
             $idTable = filter_var($input['id_table'], FILTER_VALIDATE_INT);
@@ -50,7 +55,7 @@ class TableSessionController extends BaseController
             // 4. Buscar una sesión activa para esta mesa o crear una nueva
             $session = $this->tableSessionModel->findActiveByTableId($tableData['id_table']);
             
-            if (!$session || $session === false) {
+            if (!$session || $session === false || empty($session)) {
                 // Si no hay sesión activa, creamos una nueva.
                 $sessionId = $this->tableSessionModel->createSession($tableData['id_table']);
                 if (!$sessionId || $sessionId === false) {
@@ -58,7 +63,7 @@ class TableSessionController extends BaseController
                     $this->handleResponse(false, 'No se pudo iniciar la sesión de la mesa.', [], 500);
                     return;
                 }
-                $session = ['id_table_session' => $sessionId, 'id_table' => $tableData['id_table']];
+                $session = ['id_session' => $sessionId, 'id_table' => $tableData['id_table']];
             }
 
             // 5. Generar el JWT de Sesión de Mesa (Session-JWT)
@@ -72,7 +77,7 @@ class TableSessionController extends BaseController
                 'exp' => $expire,
                 'data' => [
                     'type'      => 'client_session',
-                    'sessionId' => (int)$session['id_table_session'],
+                    'sessionId' => (int)$session['id_session'],
                     'tableId'   => (int)$session['id_table']
                 ]
             ];

@@ -1,13 +1,31 @@
+import axios from "axios";
 import api from "./api.js";
+import { API_CONFIG } from "../utils/constants";
+import { useLoadingStore } from "../stores/loadingS.js";
+
+
+// Instancia separada para operaciones de autenticación (sin interceptors)
+const authApi = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+});
 
 export const authService = {
   // Login
   login: async (credentials) => {
+
     try {
-      const response = await api.post("/auth/login", credentials);
+
+
+      const response = await authApi.post("/auth/login", credentials);
       return response.data;
     } catch (error) {
-      throw error;
+      return error?.response.data;
     }
   },
 
@@ -21,12 +39,14 @@ export const authService = {
     }
   },
 
-  // Refresh token
+  // 🔥 Refresh token - usa la instancia separada para evitar bucles
   refreshToken: async () => {
     try {
-      const response = await api.post("/auth/refresh");
+      
+      const response = await authApi.post("/auth/refresh");
       return response.data;
     } catch (error) {
+      console.log('Error en refresh service:', error);
       throw error;
     }
   },

@@ -2,7 +2,11 @@
 import { computed } from 'vue';
 import { useAuthStore } from '../../stores/authS';
 import { getNavigationForRole } from '../../router/navigation';
-import { resolveDynamicComponent } from 'vue';
+
+import { useAuth } from '../../composables/useAuth';
+
+const { logout } = useAuth();
+
 
 const props = defineProps({
     isOpen: {
@@ -15,7 +19,7 @@ const emit = defineEmits(['close']);
 const authStore = useAuthStore();
 
 const navigationLinks = computed(() => {
-    return getNavigationForRole(authStore.userRole);
+    return getNavigationForRole(authStore.user?.role_id);
 });
 
 const handleLinkClick = (event, link) => {
@@ -76,7 +80,7 @@ const handleLinkClick = (event, link) => {
                         <span class="user-role">{{ authStore.userRole || 'Rol' }}</span>
                     </div>
                 </div>
-                <button @click="authStore.logout()" class="logout-button">
+                <button @click="logout()" class="logout-button">
                     <i-mdi-logout class="logout-icon" />
                     <span>Cerrar Sesión</span>
                 </button>

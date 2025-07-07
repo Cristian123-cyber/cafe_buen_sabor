@@ -1,11 +1,15 @@
 <template>
-    <div>
-        <h1>FUNCIONAAAAA EL TO DEL POLIMORFISMO</h1>
-    </div>
+  <AuthLayout>
+    <LoginForm>
+      
+    </LoginForm>
+  </AuthLayout>
 </template>
 
 <script setup>
 
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped>
+
+</style>

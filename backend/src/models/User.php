@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use PDO;
+use PDOException;
 
 class User extends BaseModel
 {
@@ -54,12 +55,17 @@ class User extends BaseModel
                         ON e.employees_rol_id_rol = r.id_rol
                     LEFT JOIN employees_statuses s 
                         ON e.employees_statuses_id_status = s.id_status
-                    WHERE e.employe_id = :id 
+                    WHERE e.id_employe = :id 
                     LIMIT 1;";
 
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':id', $id);
-        $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+
+       
+            $stmt = $this->conn->prepare($query);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT); // Asegurate que sea entero
+            $stmt->execute();
+            return $stmt->fetch(PDO::FETCH_ASSOC);
+        
+
+        
     }
 }

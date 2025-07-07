@@ -1,41 +1,39 @@
-<!-- src/components/ui/BaseForm.vue -->
+<!-- src/components/ui/BaseForm.vue (REDISENADO Y SIMPLIFICADO) -->
 <template>
-  <!-- Este componente 'Form' de VeeValidate es el cerebro -->
-  <Form
-    @submit="handleSubmit"
-    :validation-schema="validationSchema"
-    :initial-values="initialValues"
-    :validate-on-mount="false"
-    :validate-on-blur="false"
-    :validate-on-input="false"
-    :validate-on-change="false"
-    v-slot="{ errors }"
-  >
+  <!-- El componente 'Form' de VeeValidate sigue siendo el cerebro -->
+  <Form @submit="handleSubmit" :validation-schema="validationSchema" :initial-values="initialValues"
+    v-slot="{ errors }">
     <div class="relative" :class="{ 'form-disabled': disabled }">
-      <!-- Overlay de Carga -->
-      <div
-        v-if="isSubmitting"
-        class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 dark:bg-neutral-dark/70"
-        aria-live="assertive"
-        role="status"
-      >
-        <i-svg-spinners-gooey-balls-2 class="h-5 w-5" />
+      <!-- Overlay de Carga se mantiene, es una excelente funcionalidad -->
+      <div v-if="isSubmitting"
+        class="fixed inset-0 z-50 flex items-center rounded-xl justify-center bg-white/30 dark:bg-neutral-900/50 rouded"
+        aria-live="assertive" role="status">
+       
       </div>
 
-      <!-- El fieldset deshabilita todos los campos hijos a la vez -->
-      <fieldset :disabled="isSubmitting || disabled" class="space-y-6">
-        <header v-if="$slots.header" class="form-header">
-          <slot name="header"></slot>
-        </header>
+      <!-- El fieldset es crucial para deshabilitar todos los campos a la vez -->
+      <fieldset :disabled="isSubmitting || disabled" class="flex flex-col gap-y-6">
 
-        <div class="form-fields">
-          <!-- Pasamos los errores combinados al slot -->
+        <!-- Slot para el header del formulario -->
+        <div v-if="$slots.header">
+          <slot name="header"></slot>
+        </div>
+
+        <!-- Slot por defecto para los campos del formulario -->
+        <div class="space-y-5">
           <slot :errors="getCombinedErrors(errors)"></slot>
         </div>
 
-        <footer v-if="$slots.actions" class="form-actions">
+        <!-- Slot para los botones de acción -->
+        <div v-if="$slots.actions">
           <slot name="actions" :is-submitting="isSubmitting" :disabled="disabled"></slot>
-        </footer>
+        </div>
+
+        <!-- Slot opcional para contenido extra (ej. links) -->
+        <div v-if="$slots.footer" class="pt-4">
+          <slot name="footer"></slot>
+        </div>
+
       </fieldset>
     </div>
   </Form>
@@ -43,36 +41,18 @@
 
 <script setup>
 import { Form } from 'vee-validate';
-import { computed } from 'vue';
-
 
 const props = defineProps({
-  initialValues: {
-    type: Object,
-    default: () => ({}),
-  },
-  isSubmitting: {
-    type: Boolean,
-    default: false,
-  },
-  disabled: {
-    type: Boolean,
-    default: false,
-  },
-  serverErrors: {
-    type: Object,
-    default: () => ({}),
-  },
-  validationSchema: {
-    type: Object,
-    default: null,
-  },
+  initialValues: { type: Object, default: () => ({}) },
+  isSubmitting: { type: Boolean, default: false },
+  disabled: { type: Boolean, default: false },
+  serverErrors: { type: Object, default: () => ({}) },
+  validationSchema: { type: Object, default: null },
 });
 
 const emit = defineEmits(['submit']);
 
 const getCombinedErrors = (veeErrors) => {
-  // En un futuro, podrías combinar los errores de VeeValidate con los del servidor
   return { ...veeErrors, ...props.serverErrors };
 };
 
@@ -82,6 +62,13 @@ const handleSubmit = (values) => {
 </script>
 
 <style scoped>
+/*
+  IMPORTANTE: Esta ruta debe ser correcta desde /src/components/ui/
+  hasta /src/assets/styles/.
+*/
+@reference "../../../style.css";
 
-
+.form-disabled {
+  @apply opacity-60 cursor-not-allowed;
+}
 </style>

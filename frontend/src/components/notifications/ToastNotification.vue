@@ -130,10 +130,22 @@ const toastClass = computed(() => `toast--${props.type}`);
 }
 
 .toast-card {
-  @apply relative flex w-full max-w-sm items-start gap-3 p-4 rounded-xl shadow-lg;
+  @apply relative flex items-start gap-3 p-4 rounded-xl shadow-lg;
   @apply bg-surface border border-none;
   @apply transform-gpu transition-all duration-300 ease-in-out;
   @apply overflow-hidden;
+  
+  /* Ancho responsive para evitar desbordamiento */
+  @apply w-full;
+  
+  /* Dispositivos muy pequeños (<375px) */
+  @apply max-w-[calc(100vw-2rem)];
+  
+  /* Dispositivos pequeños (≥375px) */
+  @apply min-[375px]:max-w-[320px];
+  
+  /* Dispositivos medianos (≥480px) */
+  @apply min-[480px]:max-w-sm;
 }
 
 /* --- Variantes de Color --- */
@@ -192,12 +204,15 @@ const toastClass = computed(() => `toast--${props.type}`);
 /* Contenido */
 .toast-content {
   @apply flex-grow py-0.5;
+  @apply min-w-0; /* Permite que el texto se ajuste */
 }
 .toast-title {
   @apply font-semibold text-sm leading-tight;
+  @apply break-words; /* Permite división de palabras largas */
 }
 .toast-message {
   @apply text-sm text-text-muted leading-tight mt-0.5;
+  @apply break-words; /* Permite división de palabras largas */
 }
 
 /* Botón de cierre */
@@ -233,5 +248,21 @@ const toastClass = computed(() => `toast--${props.type}`);
 }
 .toast--info .toast-progress-bar {
   @apply bg-info;
+}
+
+/* Media queries para casos extremos */
+@media (max-width: 320px) {
+  .toast-card {
+    /* En dispositivos ultra pequeños, reduce aún más el ancho */
+    @apply max-w-[calc(100vw-1rem)] p-3;
+  }
+  
+  .toast-title {
+    @apply text-xs;
+  }
+  
+  .toast-message {
+    @apply text-xs;
+  }
 }
 </style>

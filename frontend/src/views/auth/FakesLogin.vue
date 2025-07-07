@@ -10,135 +10,19 @@
       <p class="text-sm text-gray-600 mb-4">Usa estos botones para entrar como diferentes roles sin necesidad del
         backend.</p>
       <div class="flex gap-4">
-        <button @click="authStore.fakeLogin('Device')" class="bg-blue-500 text-white px-4 py-2 rounded">Entrar como
+        <button @click="fakeLogin('Device')" class="bg-blue-500 text-white px-4 py-2 rounded">Entrar como
           Device</button>
-        <button @click="authStore.fakeLogin('Mesero')" class="bg-blue-500 text-white px-4 py-2 rounded">Entrar como
+        <button @click="fakeLogin('Mesero')" class="bg-blue-500 text-white px-4 py-2 rounded">Entrar como
           Mesero</button>
-        <button @click="authStore.fakeLogin('Cocinero')" class="bg-green-500 text-white px-4 py-2 rounded">Entrar como
+        <button @click="fakeLogin('Cocinero')" class="bg-green-500 text-white px-4 py-2 rounded">Entrar como
           Cocinero</button>
-        <button @click="authStore.fakeLogin('Administrador')" class="bg-gray-800 text-white px-4 py-2 rounded">Entrar
+        <button @click="fakeLogin('Administrador')" class="bg-gray-800 text-white px-4 py-2 rounded">Entrar
           como Admin</button>
+        <button @click="fakeLogin('Cajero')" class="bg-gray-800 text-white px-4 py-2 rounded">Entrar
+          como Cajero</button>
       </div>
     </div>
 
-    <div class="p-8 max-w-lg mx-auto bg-surface space-y-8">
-
-      <!-- 1. Uso Básico con v-model -->
-      <div>
-        <h3 class="font-bold mb-2">Uso Básico</h3>
-        <BaseInput :error="errors.product_name" v-model="product.name" :id="dataInputs.productName.id"
-          @refresh="refreshErrors" label="Nombre del Producto" placeholder="Ej: Café de Origen Único" />
-      </div>
-
-      <!-- 2. Con Texto de Ayuda -->
-      <div>
-        <h3 class="font-bold mb-2">Con Texto de Ayuda</h3>
-        <BaseInput :error="errors.product_sku" v-model="product.sku" :id="dataInputs.productSku.id"
-          @refresh="refreshErrors" label="SKU" help-text="El código único de producto no se puede cambiar después." />
-      </div>
-
-      <!-- 3. Con Estado de Error -->
-      <div>
-        <h3 class="font-bold mb-2">Con Estado de Error</h3>
-        <BaseInput v-model="product.email" label="Email de Notificación" :id="dataInputs.productEmail.id"
-          @refresh="refreshErrors" type="email" :error="errors.product_email">
-          <template #prefix>
-            <i-mdi-currency-usd class="h-5 w-5" />
-          </template>
-        </BaseInput>
-      </div>
-
-      <!-- 4. PREMIUM: Con Adornos (Prefix y Suffix) -->
-      <div>
-        <h3 class="font-bold mb-2">Con Adornos</h3>
-        <BaseInput v-model="product.price" :id="dataInputs.productPrice.id" @refresh="refreshErrors"
-          :error="errors.product_price" label="Precio" type="number" placeholder="0.00">
-          <template #prefix>
-            <i-mdi-currency-usd class="h-5 w-5" />
-          </template>
-          <template #suffix>
-            <span class="text-sm font-semibold">USD</span>
-          </template>
-        </BaseInput>
-      </div>
-
-
-      <!-- EJEMPLO 1: Textarea básico para una descripción simple -->
-      <div>
-        <h3 class="font-semibold text-lg mb-2">Descripción Corta</h3>
-        <BaseTextArea id="shortDescription" label="Resumen del producto" v-model="product.shortDescription"
-          :error="errors.shortDescription" @refresh="refreshErrors"
-          help-text="Un resumen breve para la vista de lista." />
-      </div>
-
-      <!-- EJEMPLO 2: Textarea con auto-redimensionamiento para notas -->
-      <div>
-        <h3 class="font-semibold text-lg mb-2">Notas de Preparación</h3>
-        <BaseTextArea id="notes" label="Notas internas" v-model="product.notes" :auto-resize="true"
-          :error="errors.notes" @refresh="refreshErrors"
-          help-text="El campo crecerá automáticamente con el contenido." />
-      </div>
-
-      <!-- EJEMPLO 3: Textarea con contador de caracteres -->
-      <div>
-        <h3 class="font-semibold text-lg mb-2">Descripción para Redes Sociales</h3>
-        <BaseTextArea id="socialDescription" label="Texto para publicación" v-model="product.socialDescription"
-          :show-counter="true" :max-length="280" :error="errors.socialDescription" @refresh="refreshErrors"
-          help-text="Optimizado para Twitter/X." />
-      </div>
-
-      <div>
-        <h3 class="font-semibold text-lg mb-2">Asignar Rol (Básico)</h3>
-
-        <BaseSelect id="roleSelect" v-model="product.role" :options="options" label="Selecciona un rol"
-          placeholder="Elige un rol" :error="errors.role" @refresh="refreshErrors" optionValue="value"
-          optionLabel="label" />
-
-
-      </div>
-
-     
-
-
-
-      <BaseButton variant="gradient-terciary-3" @click="verify">
-        <template #icon-left>
-          <i-mdi-check class="h-5 w-5" />
-        </template>
-
-        Validar
-
-      </BaseButton>
-
-    </div>
-    <div class="p-8 max-w-2xl mx-auto bg-surface rounded-lg shadow-lg">
-      <h1 class="text-2xl font-bold mb-8">Configuración</h1>
-
-      <div class="space-y-10">
-
-        <!-- EJEMPLO DE USO DE BaseRadioGroup -->
-        <BaseRadio name="delivery-method" label="Método de Entrega Preferido" v-model="settings.delivery"
-          :options="deliveryOptions" direction="vertical" />
-
-        <hr />
-
-        <!-- EJEMPLO DE USO DE BaseCheckbox (con lógica corregida para 'Seleccionar Todo') -->
-        <div>
-          <h3 class="form-label mb-2 font-semibold">Notificaciones a Activar</h3>
-          <div class="space-y-3">
-            <BaseCheckBox v-model="selectAllNotifications" :indeterminate="isIndeterminate">
-              <strong>Todas las Notificaciones</strong>
-            </BaseCheckBox>
-            <div class="pl-8 space-y-3 border-l-2 ml-2 border-border-light">
-              <BaseCheckBox v-model="notifications.orderConfirmed">Pedido Confirmado</BaseCheckBox>
-              <BaseCheckBox v-model="notifications.orderReady">Pedido Listo para Recoger</BaseCheckBox>
-              <BaseCheckBox v-model="notifications.orderDelivered">Pedido Entregado</BaseCheckBox>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
 
 
   </div>
@@ -149,6 +33,10 @@
 <script setup>
 import { reactive, ref, watch, computed } from 'vue';
 import { useAuthStore } from '../../stores/authS';
+
+import { useAuth } from '../../composables/useAuth';
+
+const { fakeLogin } = useAuth()
 
 
 // --- Estado para RadioGroup ---
@@ -352,4 +240,4 @@ const handleVerifyEmail = (value) => {
 
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped></style>

@@ -20,6 +20,14 @@ COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 # ya tiene "AllowOverride All", pero no hace daño dejarla.
 RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
+
+# Configurar zona horaria
+RUN apt-get update && apt-get install -y tzdata
+ENV TZ=America/Bogota
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Configurar zona horaria en PHP
+RUN echo "date.timezone = America/Bogota" > /usr/local/etc/php/conf.d/timezone.ini
 # Establecer directorio de trabajo
 WORKDIR /var/www/html
 

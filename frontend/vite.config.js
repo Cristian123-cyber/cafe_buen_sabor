@@ -46,11 +46,11 @@ export default defineConfig(({ mode }) => {
         // ---- ESTE ES EL BLOQUE IMPORTANTE ----
         // Reactivamos el polling porque los eventos nativos no funcionan
         usePolling: true,
-        
+
         // Le decimos a Vite que revise los archivos cada 500 milisegundos (medio segundo)
         // Puedes ajustar este valor. 1000ms (1 segundo) también es una buena opción.
         // ¡Esto es lo que reduce drásticamente el uso de CPU!
-        interval: 1000, 
+        interval: 1000,
       },
 
       proxy: {

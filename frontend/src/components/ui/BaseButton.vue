@@ -8,7 +8,7 @@
 
     <!-- Spinner de carga -->
     <div v-if="loading" class="absolute">
-      <i-svg-spinners-gooey-balls-2 class="h-5 w-5" />
+      <i-svg-spinners-270-ring-with-bg class="h-7 w-7" />
     </div>
 
     <!-- Contenido principal del botón (texto) -->

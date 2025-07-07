@@ -5,8 +5,11 @@ import { API_CONFIG, ERROR_MESSAGES } from "../utils/constants";
 // ... importaciones ...
 import { useAuthStore } from "../stores/authS.js";
 import { useLoadingStore } from "../stores/loadingS";
+import { useAuth } from "../composables/useAuth";
 
-import { useNotificationStore } from "../stores/notificationsS.js";
+import { useAlert } from "../composables/useAlert";
+
+import router from "../router/index.js";
 
 const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -37,7 +40,7 @@ api.interceptors.request.use(
   (error) => {
     const appStore = useLoadingStore();
     appStore.requestFinished(); // <--- AÑADIDO
-    Promise.reject(error);
+    return Promise.reject(error);
   }
 );
 
@@ -50,35 +53,37 @@ api.interceptors.response.use(
 
     const appStore = useLoadingStore();
     appStore.requestFinished();
-    const notificationStore = useNotificationStore();
-    notificationStore.addNotification({
-      message: "MELO todo.jjjjjjjjjjjjjjjjjjjjjjjjjjjjj",
-      type: "info",
-      duration: 10000,
-    });
 
     return response;
   },
   async (error) => {
-    const notificationStore = useNotificationStore();
     const appStore = useLoadingStore();
+    const alert = useAlert();
+
     appStore.requestFinished(); // Decrementamos el contador de peticiones activas al recibir un error
 
     const originalRequest = error.config;
     // Error de red (sin respuesta del servidor)
     if (!error.response) {
-      notificationStore.addNotification({
-        message: "Error de red. Inténtalo de nuevo.",
-        type: "error",
+      alert.show({
+        variant: "error",
+        title: "Error de red",
+        message: "Ha ocurrido un error, verifica tu conexion",
+        confirmButtonText: "Aceptar",
+        cancelButtonText: "Cancelar",
       });
+
       return Promise.reject(error);
     }
     // Si el error no es 401 o la petición ya es un reintento, lo dejamos pasar.
     if (error.response?.status !== 401 || originalRequest._retry) {
       if (error.response.status === 500) {
-        notificationStore.addNotification({
-          message: "Error interno del servidor.",
-          type: "error",
+        alert.show({
+          variant: "error",
+          title: "Error interno del servidor",
+          message: "Ha ocurrido un error.",
+          confirmButtonText: "Aceptar",
+          cancelButtonText: "Cancelar",
         });
       }
       return Promise.reject(error);
@@ -96,12 +101,12 @@ api.interceptors.response.use(
     }
 
     originalRequest._retry = true;
-    const authStore = useAuthStore();
+    const { handleRefreshToken } = useAuth();
 
     // Creamos una nueva promesa para el refresh y la guardamos
-    refreshTokenPromise = authStore.handleRefreshToken();
 
     try {
+      refreshTokenPromise = handleRefreshToken();
       const newToken = await refreshTokenPromise;
       // Reseteamos la promesa una vez resuelta
       refreshTokenPromise = null;
@@ -110,12 +115,22 @@ api.interceptors.response.use(
       originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
       return api(originalRequest);
     } catch (refreshError) {
+      console.error("Error en refresh API INTERCEPTOR", refreshError);
       refreshTokenPromise = null;
       // aquí podríamos añadir una notificación si quisiéramos.
-      notificationStore.addNotification({
-        message: "Tu sesión ha expirado.",
-        type: "error",
+      await alert.show({
+        variant: "error",
+        title: "Tu sesion ha expirado.",
+        message: "Por favor, intentea iniciar sesion nuevamente",
+        confirmButtonText: "Aceptar",
+        cancelButtonText: "Cancelar",
       });
+
+      // 🔥 Acción extra recomendada:
+      const authStore = useAuthStore();
+      authStore.clearAuthData();
+      router.replace({ name: "Login" });
+
       return Promise.reject(refreshError);
     }
   }

@@ -147,8 +147,8 @@ export const notificationService = {
    */
   markAsRead: async (notificationId) => {
     try {
-      const response = await api.put(`/notifications/${notificationId}/read`);
-      return response.data;
+      /* const response = await api.put(`/notifications/${notificationId}/read`);
+      return response.data; */
     } catch (error) {
       console.error(
         `Error al marcar la notificación ${notificationId} como leída:`,
@@ -158,20 +158,5 @@ export const notificationService = {
     }
   },
 
-  /**
-   * Marca todas las notificaciones del usuario como leídas.
-   * @returns {Promise<Object>} La respuesta de la API.
-   */
-  markAllAsRead: async () => {
-    try {
-      const response = await api.put("/notifications/mark-all-read");
-      return response.data;
-    } catch (error) {
-      console.error(
-        "Error al marcar todas las notificaciones como leídas:",
-        error
-      );
-      throw error;
-    }
-  },
+  
 };

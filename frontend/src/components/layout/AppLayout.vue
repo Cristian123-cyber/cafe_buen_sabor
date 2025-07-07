@@ -1,7 +1,6 @@
 <script setup>
 import { ref, watch, onBeforeUnmount } from 'vue'
-import AppSidebar from './AppSidebar.vue'
-import AppHeader from './AppHeader.vue'
+
 
 // Estado del sidebar en móvil
 const isSidebarOpen = ref(false)
@@ -13,7 +12,7 @@ function closeSidebar() {
   isSidebarOpen.value = false
 }
 
-const mainContent = ref(null);
+
 
 // Bloquea scroll cuando el sidebar está abierto (solo en móvil)
 watch(isSidebarOpen, (open) => {
@@ -40,7 +39,7 @@ onBeforeUnmount(() => {
       <AppHeader @toggle-sidebar="toggleSidebar" />
 
       <!-- El slot para el contenido de la vista -->
-      <main class="main-content" ref="mainContent">
+      <main class="main-content">
         <slot></slot>
       </main>
     </div>

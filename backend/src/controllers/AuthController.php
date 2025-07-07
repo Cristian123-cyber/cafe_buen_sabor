@@ -68,7 +68,7 @@ class AuthController extends BaseController
             // Generar tokens
             $accessToken = $this->generateAccessToken($user);
             $refreshToken = $this->getOrCreateRefreshToken($user['id_employe']);
-            file_put_contents('../logs/debug.log', "refresh access generado " . $refreshToken, FILE_APPEND);
+
 
 
             if (!$refreshToken) {
@@ -85,7 +85,8 @@ class AuthController extends BaseController
                     'id' => (int)$user['id_employe'],
                     'name' => $this->sanitizeString($user['employe_name']),
                     'email' => $this->sanitizeString($user['employe_email']),
-                    'role_name' => $this->sanitizeString($user['rol_name'])
+                    'role_name' => $this->sanitizeString($user['rol_name']),
+                    'role_id' => (int) $this->sanitizeString($user['role_id'])
                 ]
             ]);
         });
@@ -126,25 +127,20 @@ class AuthController extends BaseController
                 return;
             }
 
-            $userData = $this->getCurrentUser();
-
-
-            if ((int) $userData['userId'] !== (int) $tokenData['employe_id']) {
-                $this->clearRefreshTokenCookie();
-                $this->handleResponse(false, 'Token no pertenece a este usuario', [], 403);
-                return;
-            }
 
 
 
+            
             // Obtener usuario
             $user = $this->userModel->findById($tokenData['employe_id']);
+    
             if (!$user || (int)$user['status_id'] !== 1) {
                 $this->refreshTokenModel->revokeToken($refreshToken);
                 $this->clearRefreshTokenCookie();
                 $this->handleResponse(false, 'Usuario inválido', [], 401);
                 return;
             }
+
 
             // Generar nuevo access token
             $newAccessToken = $this->generateAccessToken($user);
@@ -155,7 +151,8 @@ class AuthController extends BaseController
                     'id' => (int)$user['id_employe'],
                     'name' => $this->sanitizeString($user['employe_name']),
                     'email' => $this->sanitizeString($user['employe_email']),
-                    'role_name' => $this->sanitizeString($user['rol_name'])
+                    'role_name' => $this->sanitizeString($user['rol_name']),
+                    'role_id' => (int) $this->sanitizeString($user['role_id'])
                 ]
             ]);
         });
@@ -194,7 +191,8 @@ class AuthController extends BaseController
                 'id' => (int)$user['id_employe'],
                 'name' => $this->sanitizeString($user['employe_name']),
                 'email' => $this->sanitizeString($user['employe_email']),
-                'role_name' => $this->sanitizeString($user['rol_name'])
+                'role_name' => $this->sanitizeString($user['rol_name']),
+                'role_id' => (int) $this->sanitizeString($user['role_id'])
             ]);
         });
     }
@@ -203,7 +201,7 @@ class AuthController extends BaseController
     {
         $secretKey = $_ENV['JWT_SECRET'];
         $issuedAt = time();
-        $expire = $issuedAt + ($_ENV['JWT_EXPIRATION_HOURS'] * 3600);
+        $expire = $issuedAt + (int) ($_ENV['JWT_EXPIRATION_HOURS'] * 3600);
 
         $payload = [
             'iat' => $issuedAt,

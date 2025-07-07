@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../stores/authS";
+import { useAuth } from "../composables/useAuth";
+import { useSessionStore } from "../stores/clientSessionS.js";
 
 // Importa tus archivos de rutas
 import publicRoutes from "./publicRoutes.js";
@@ -14,12 +16,7 @@ const routes = [
   ...waiterRoutes,
   ...kitchenRoutes,
   ...adminRoutes,
-  {
-    path: "/auth/login333",
-    name: "LoginPR",
-    component: () => import("../views/auth/LoginView.vue"),
-  }
-  
+
   // Aquí puedes añadir más rutas de otros roles o componentes
 ];
 
@@ -31,25 +28,49 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
 
-  // 1. Asegurar que el estado de auth está inicializado antes de continuar.
-  if (authStore.authStatus === "idle") {
-    await authStore.checkAuth();
+  const sessionStore = useSessionStore();
+  const { checkAuth } = useAuth();
+
+  // Esto solo se ejecuta una vez por carga de la página.
+  if (!authStore.isAuthCheckComplete) {
+    // checkAuth ahora validará el token del localStorage.
+    await checkAuth();
+    // Marcamos que la validación (exitosa o fallida) ya se hizo.
+    authStore.isAuthCheckComplete = true;
   }
 
   const isAuthenticated = authStore.isAuthenticated;
   const userRole = authStore.userRole;
+  const isClientSession = sessionStore.isSessionActive;
 
-  // 2. Redirigir si el usuario está logueado pero intenta acceder a una ruta de "invitado" (como el login).
-  if (to.meta.requiresGuest && isAuthenticated) {
-    // Lo enviamos a su dashboard correspondiente.
-    return next(authStore.getDashboardRouteByRole(userRole));
+  if (
+    to.meta.requiresClientSession &&
+    !sessionStore.isSessionActive &&
+    !authStore.isAuthenticated
+  ) {
+    return next(authStore.getUnauthorized());
+  }
+
+  // 🔐 Bloquear acceso a rutas solo para invitados (login, etc.)
+  if (to.meta.requiresGuest) {
+    if (isAuthenticated) {
+      console.log("ya estas melo");
+      return next({
+        ...authStore.getDashboardRouteByRole(authStore.user.role_id),
+        replace: true,
+      });
+    }
+
+    if (isClientSession) {
+      return next({ name: "ClientMenu", replace: true }); // Redirigís al menú del cliente
+    }
   }
 
   // 3. Proteger rutas que requieren autenticación.
   if (to.meta.requiresAuth) {
     if (!isAuthenticated) {
-      // No está autenticado, redirigir al login guardando la ruta a la que quería ir.
-      return next({ name: "Login", query: { redirect: to.fullPath } });
+      // No está autenticado, redirigir al login
+      return next({ name: "Login", replace: true });
     }
 
     // Si está autenticado, verificar si tiene el rol requerido.

@@ -1,14 +1,256 @@
 
 @import "tailwindcss";
-
-@source inline("animate-shake");
-
 @reference './assets/styles/app.css';
 @import './assets/styles/components.css';
+@source inline("animate-shake");
 
 
 
+/* 👇 Evita margen por defecto */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+    @apply bg-primary-dark;
+  overscroll-behavior: none; /* evita el efecto rebote que muestra blanco en iOS */
+}
 
+/* 👇 Esto asegura que #app también ocupe todo */
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+html, body, #app, .auth-container {
+  overflow-x: hidden;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+/* ===== SCROLLBAR PERSONALIZADA GLOBAL SIN FLECHAS ===== */
+
+/* Para navegadores WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  @apply w-2 h-2; /* 8px de ancho y alto */
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent rounded-sm;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-accent rounded-sm transition-colors duration-200;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-accent-dark;
+}
+
+::-webkit-scrollbar-corner {
+  @apply bg-transparent;
+}
+
+/* ===== QUITAR FLECHAS DEL SCROLLBAR CON !IMPORTANT ===== */
+/* Esta es la regla clave para eliminar las flechas */
+::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Asegurarse de que se aplique a todos los estados */
+::-webkit-scrollbar-button:start:decrement,
+::-webkit-scrollbar-button:end:increment {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Versión más específica para mayor compatibilidad */
+::-webkit-scrollbar-button:vertical:start:decrement,
+::-webkit-scrollbar-button:vertical:end:increment,
+::-webkit-scrollbar-button:horizontal:start:decrement,
+::-webkit-scrollbar-button:horizontal:end:increment {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Fuerza la aplicación con selectores más específicos */
+html ::-webkit-scrollbar-button,
+body ::-webkit-scrollbar-button,
+* ::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Regla ultra específica para casos extremos */
+html body *::-webkit-scrollbar-button:start:decrement,
+html body *::-webkit-scrollbar-button:end:increment {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* ===== SCROLLBAR PARA FIREFOX ===== */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #CBA135 transparent;
+}
+
+/* ===== SCROLLBAR PERSONALIZADA PARA CONTENEDORES ESPECÍFICOS ===== */
+
+/* Scrollbar más delgada para modales/overlays */
+.modal-scroll::-webkit-scrollbar,
+.overlay-scroll::-webkit-scrollbar {
+  @apply w-1.5 h-1.5;
+}
+
+.modal-scroll::-webkit-scrollbar-track,
+.overlay-scroll::-webkit-scrollbar-track {
+  @apply bg-primary rounded-sm;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb,
+.overlay-scroll::-webkit-scrollbar-thumb {
+  @apply bg-accent rounded-sm opacity-70 transition-opacity duration-200;
+}
+
+.modal-scroll::-webkit-scrollbar-thumb:hover,
+.overlay-scroll::-webkit-scrollbar-thumb:hover {
+  @apply opacity-100;
+}
+
+/* Asegurar que no aparezcan flechas en contenedores específicos */
+.modal-scroll::-webkit-scrollbar-button,
+.overlay-scroll::-webkit-scrollbar-button,
+.menu-scroll::-webkit-scrollbar-button,
+.table-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Fuerza la aplicación en clases específicas */
+.modal-scroll::-webkit-scrollbar-button:start:decrement,
+.modal-scroll::-webkit-scrollbar-button:end:increment,
+.overlay-scroll::-webkit-scrollbar-button:start:decrement,
+.overlay-scroll::-webkit-scrollbar-button:end:increment,
+.menu-scroll::-webkit-scrollbar-button:start:decrement,
+.menu-scroll::-webkit-scrollbar-button:end:increment,
+.table-scroll::-webkit-scrollbar-button:start:decrement,
+.table-scroll::-webkit-scrollbar-button:end:increment {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* ===== SCROLLBAR INVISIBLE (PARA CASOS ESPECÍFICOS) ===== */
+.scrollbar-hidden::-webkit-scrollbar {
+  @apply hidden;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none; /* IE y Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+/* ===== SCROLLBAR TEMÁTICA DE CAFÉ ===== */
+
+/* Scrollbar especial para secciones del menú */
+.menu-scroll::-webkit-scrollbar {
+  @apply w-2;
+}
+
+.menu-scroll::-webkit-scrollbar-track {
+  @apply bg-primary-light rounded-full;
+}
+
+.menu-scroll::-webkit-scrollbar-thumb {
+  @apply bg-accent rounded-full shadow-sm;
+}
+
+.menu-scroll::-webkit-scrollbar-thumb:hover {
+  @apply bg-accent-dark shadow-md;
+}
+
+/* Quitar flechas del menu-scroll */
+.menu-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Scrollbar para tablas/listas */
+.table-scroll::-webkit-scrollbar {
+  @apply w-1.5 h-1.5;
+}
+
+.table-scroll::-webkit-scrollbar-track {
+  @apply bg-secondary-dark;
+}
+
+.table-scroll::-webkit-scrollbar-thumb {
+  @apply bg-accent rounded-sm;
+}
+
+.table-scroll::-webkit-scrollbar-thumb:hover {
+  @apply bg-accent-dark;
+}
+
+/* Quitar flechas del table-scroll */
+.table-scroll::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* ===== SOLUCIÓN ALTERNATIVA SI AÚN APARECEN FLECHAS ===== */
+/* Aplica esto como último recurso - Fuerza la aplicación global */
+* {
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar-button {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Regla nuclear - para casos extremos */
+html *::-webkit-scrollbar-button:start:decrement,
+html *::-webkit-scrollbar-button:end:increment {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+/* Sobreescribe cualquier estilo de framework */
+*::-webkit-scrollbar-button:vertical:start:decrement,
+*::-webkit-scrollbar-button:vertical:end:increment,
+*::-webkit-scrollbar-button:horizontal:start:decrement,
+*::-webkit-scrollbar-button:horizontal:end:increment {
+  display: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
 
 
 

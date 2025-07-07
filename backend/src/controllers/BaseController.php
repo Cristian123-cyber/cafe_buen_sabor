@@ -336,7 +336,7 @@ class BaseController {
      * Maneja errores de credenciales inválidas
      */
     protected function handleInvalidCredentialsError() {
-        $this->handleResponse(false, 'Credenciales inválidas', [], 401, self::ERROR_CODES['INVALID_CREDENTIALS']);
+        $this->handleResponse(false, 'Credenciales inválidas', [], 400, self::ERROR_CODES['INVALID_CREDENTIALS']);
     }
 
     /**

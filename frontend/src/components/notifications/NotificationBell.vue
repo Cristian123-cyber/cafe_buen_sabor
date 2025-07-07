@@ -134,7 +134,7 @@ function stopShaking() {
   /* Efecto de hover (usando variables del tema) */
   @apply hover:bg-primary-dark/10;
   /* Estilos de foco para accesibilidad (usando variables del tema) */
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent;
+  @apply focus:outline-none;
 }
 
 /* Badge de notificaciones rediseñado */
