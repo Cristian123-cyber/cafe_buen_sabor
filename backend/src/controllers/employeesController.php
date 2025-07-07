@@ -224,8 +224,8 @@ class EmployeesController extends BaseController
                 return;
             }
 
-            // Cambiar estado a inactivo (ID 2 según la base de datos)
-            $updated = $this->usuarioModel->update($employeeId, ['employees_statuses_id_status' => 2]);
+            // Cambiar estado a inactivo (ID 3 según la base de datos)
+            $updated = $this->usuarioModel->update($employeeId, ['employees_statuses_id_status' => 3]);
 
             if ($updated) {
                 $this->handleResponse(true, 'Empleado desactivado exitosamente', []);
