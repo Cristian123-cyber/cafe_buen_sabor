@@ -7,7 +7,7 @@ if (php_sapi_name() !== 'cli') {
 require_once __DIR__ . '/../src/config/database.php';
 use Config\Database;
 
-function generarTokenSeguro(): string {
+function generarTokenSeguro() {
     return bin2hex(random_bytes(32));
 }
 
