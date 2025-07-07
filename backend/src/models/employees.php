@@ -14,85 +14,129 @@ class Employees extends BaseModel
         $this->table_name = 'employees';
     }
 
-    public function getAll($page = 1, $limit = 10, $orderBy = null)
-    {
+    // Obtener todos los empleados
+
+public function getAll($page = 1, $limit = 10, $orderBy = null)
+{
     $offset = ($page - 1) * $limit;
-    $order = $orderBy ? "ORDER BY $orderBy" : "";
-    $query = "SELECT * FROM employees $order LIMIT :limit OFFSET :offset";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-    $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-    $stmt->execute();
-    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    // Opcional: valida que $orderBy sea un campo permitido
+    $allowedOrderFields = ['id_employe', 'employe_name', 'employe_email', 'created_date'];
+    $order = '';
+    if ($orderBy && in_array($orderBy, $allowedOrderFields)) {
+        $order = "ORDER BY $orderBy";
     }
+    // Interpola solo enteros controlados
+    $query = "
+        SELECT e.*, r.rol_name, s.status_name
+        FROM employees e
+        JOIN employees_rol r ON e.employees_rol_id_rol = r.id_rol
+        JOIN employees_statuses s ON e.employees_statuses_id_status = s.id_status
+        $order
+        LIMIT $limit OFFSET $offset
+    ";
+    try {
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $empleados = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($empleados as &$empleado) {
+            unset($empleado['password']);
+        }
+        return $empleados;
+    }
+    catch (\PDOException $e) {
+    die("Error en getAll: " . $e->getMessage());
+}
+}
 
     public function getById($id)
     {
-        $stmt = $this->conn->prepare("SELECT * FROM employees WHERE id_employe = ?");
+        $stmt = $this->conn->prepare("
+            SELECT e.*, r.rol_name, s.status_name
+            FROM employees e
+            JOIN employees_rol r ON e.employees_rol_id_rol = r.id_rol
+            JOIN employees_statuses s ON e.employees_statuses_id_status = s.id_status
+            WHERE e.id_employe = ?
+        ");
         $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $empleado = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($empleado) {
+            unset($empleado['password']);
+        }
+        return $empleado;
     }
 
     public function create($data)
-    {
-        $query = "INSERT INTO employees 
-            (employe_name, employe_email, password, employees_rol_id_rol, employees_statuses_id_status) 
-            VALUES (:employe_name, :employe_email, :password, :employees_rol_id_rol, :employees_statuses_id_status)";
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':employe_name', $data['employe_name']);
-        $stmt->bindParam(':employe_email', $data['employe_email']);
-        $stmt->bindParam(':password', $data['password']);
-        $stmt->bindParam(':employees_rol_id_rol', $data['employees_rol_id_rol']);
-        $stmt->bindParam(':employees_statuses_id_status', $data['employees_statuses_id_status']);
-        if ($stmt->execute()) {
-            return $this->conn->lastInsertId();
-        }
-        return false;
+{
+    $query = "INSERT INTO employees 
+        (employe_name, employe_email, password, employees_rol_id_rol, employees_statuses_id_status, employee_cc, table_id_device) 
+        VALUES (:employe_name, :employe_email, :password, :employees_rol_id_rol, :employees_statuses_id_status, :employee_cc, :table_id_device)";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':employe_name', $data['employe_name']);
+    $stmt->bindParam(':employe_email', $data['employe_email']);
+    $stmt->bindParam(':password', $data['password']);
+    $stmt->bindParam(':employees_rol_id_rol', $data['employees_rol_id_rol']);
+    $stmt->bindParam(':employees_statuses_id_status', $data['employees_statuses_id_status']);
+    $stmt->bindParam(':employee_cc', $data['employee_cc']);
+    $stmt->bindParam(':table_id_device', $data['table_id_device']);
+    if ($stmt->execute()) {
+        return $this->conn->lastInsertId();
     }
-    //filtrar empleados por rol y estado
+    return false;
+}
+    // Filtrar empleados por rol y estado con JOIN y sin password
     public function filterBy($rol = null, $status = null)
     {
-    $query = "SELECT * FROM employees WHERE 1=1";
-    $params = [];
+        $query = "
+            SELECT e.*, r.rol_name, s.status_name
+            FROM employees e
+            JOIN employees_rol r ON e.employees_rol_id_rol = r.id_rol
+            JOIN employees_statuses s ON e.employees_statuses_id_status = s.id_status
+            WHERE 1=1
+        ";
+        $params = [];
 
-    if ($rol !== null) {
-        $query .= " AND employees_rol_id_rol = ?";
-        $params[] = $rol;
-    }
-    if ($status !== null) {
-        $query .= " AND employees_statuses_id_status = ?";
-        $params[] = $status;
-    }
+        if ($rol !== null) {
+            $query .= " AND e.employees_rol_id_rol = ?";
+            $params[] = $rol;
+        }
+        if ($status !== null) {
+            $query .= " AND e.employees_statuses_id_status = ?";
+            $params[] = $status;
+        }
 
-    $stmt = $this->conn->prepare($query);
-    $stmt->execute($params);
-    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute($params);
+        $empleados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($empleados as &$empleado) {
+            unset($empleado['password']);
+        }
+        return $empleados;
     }
     
+
     public function update($id, $data)
     {
-        $query = "UPDATE employees SET 
-            employe_name = :employe_name, 
-            employe_email = :employe_email, 
-            password = :password, 
-            employees_rol_id_rol = :employees_rol_id_rol, 
-            employees_statuses_id_status = :employees_statuses_id_status
-            WHERE id_employe = :id";
+        $fields = [];
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = :$key";
+        }
+        $fields_sql = implode(', ', $fields);
+        $query = "UPDATE employees SET $fields_sql WHERE id_employe = :id";
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':employe_name', $data['employe_name']);
-        $stmt->bindParam(':employe_email', $data['employe_email']);
-        $stmt->bindParam(':password', $data['password']);
-        $stmt->bindParam(':employees_rol_id_rol', $data['employees_rol_id_rol']);
-        $stmt->bindParam(':employees_statuses_id_status', $data['employees_statuses_id_status']);
-        $stmt->bindParam(':id', $id);
+        foreach ($data as $key => $value) {
+            $stmt->bindValue(":$key", $value);
+        }
+        $stmt->bindValue(':id', $id);
         return $stmt->execute();
     }
 
     public function delete($id)
     {
-        $stmt = $this->conn->prepare("DELETE FROM employees WHERE id_employe = ?");
-        return $stmt->execute([$id]);
-    }
+    $query = "UPDATE employees SET employees_statuses_id_status = 3 WHERE id_employe = :id";
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':id', $id);
+    return $stmt->execute();
+}
 
     // Búsqueda por nombre o email
     public function buscarUsuarios($termino)
