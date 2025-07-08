@@ -24,6 +24,7 @@ export const useAuthStore = defineStore("auth", () => {
   const userName = computed(() => user.value?.name || "");
 
   const setAuthData = (userData, token) => {
+    console.log('seteando session data', userData);
     user.value = userData;
     accessToken.value = token;
     localStorage.setItem("user", JSON.stringify(userData));
@@ -46,7 +47,7 @@ export const useAuthStore = defineStore("auth", () => {
       1: { name: "WaiterDashboard" },
       2: { name: "KitchenDashboard" },
       3: { name: "CashierDashboard" },
-      4: { name: "CashierDashboard" },
+      4: { name: "DevicesQR", params: { table_id: user.value?.table_id} },
     };
     return roleRoutes[role] || { name: "Login" };
   };

@@ -9,6 +9,7 @@ import cashierRoutes from "./chasierRoutes.js";
 import waiterRoutes from "./waiterRoutes.js";
 import kitchenRoutes from "./kitchenRoutes.js";
 import adminRoutes from "./adminRoutes.js";
+import devicesRoutes from "./deviceRoutes.js";
 
 const routes = [
   ...publicRoutes,
@@ -16,8 +17,7 @@ const routes = [
   ...waiterRoutes,
   ...kitchenRoutes,
   ...adminRoutes,
-
-  // Aquí puedes añadir más rutas de otros roles o componentes
+  ...devicesRoutes
 ];
 
 const router = createRouter({
@@ -54,7 +54,6 @@ router.beforeEach(async (to, from, next) => {
   // 🔐 Bloquear acceso a rutas solo para invitados (login, etc.)
   if (to.meta.requiresGuest) {
     if (isAuthenticated) {
-      console.log("ya estas melo");
       return next({
         ...authStore.getDashboardRouteByRole(authStore.user.role_id),
         replace: true,

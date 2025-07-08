@@ -1,10 +1,13 @@
 # explicacion de logica y flujo de los endpoints
 
 # ASEGURARSE DE SERGUIR LAS CONVENCIONES TANTO EN NOMBRES Y ENDPOINTS DE RUTAS COMO EN METODOS HTTP, Y EN SEPARACION DE RUTAS
-# YA QUE CON LAS CONVENCIONES DEFININAS EN ESTE DOCUMENTO DE TRABAJARA LA LOGICA DEL MIDDLEWARE DEL ROUTER PARA PROTEGER 
+
+# YA QUE CON LAS CONVENCIONES DEFININAS EN ESTE DOCUMENTO DE TRABAJARA LA LOGICA DEL MIDDLEWARE DEL ROUTER PARA PROTEGER
+
 # LAS RUTAS DE FORMA AGRUPADA (FUNCIONALIDAD MIDDLEWARE Y AUTH IMPLEMENTADA POR CRISTIAN)
 
 ## EJEMPLO DE COMO QUEDARA EL ROUTER AL FINAL CUANDO ESTEN TODAS LAS RUTAS DEFINIDAS EN EL FINAL DEL DOCUMENTO
+
 ## SOLO REGISTRAR LAS RUTAS POR AHORA, DESPUES SE PROTEGERAN AGRUPADAMENTE CON EL MIDDLEWARE PARA EVITAR CONFLICTOS MIENTRAS SE DESARROLLA
 
 ## EMPLOYEES:
@@ -613,34 +616,44 @@
 
     -Si el token es inválido o ha expirado, devolver un mensaje de unauthorized con codigo de estado 401.
 
+# OBTENER TOKEN QR DE UNA MESA POR ID
+
+    - METODO: GET
+    - ENDPOINT: api/tables/{id}/qr
+    - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
+
+    
 
 ## TABLE_SESSIONS:
+
 # - RUTA BASE ESPERADA: api/table-sessions/
 
-# OBTENER TODAS LAS SESSIONES DE MESA 
+# OBTENER TODAS LAS SESSIONES DE MESA
+
     - METODO: GET
     - ENDPOINT: api/table-sessions/
     - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
 
     **IMPORTANTE**: Devolver una lista de todas las sesiones de mesa con sus respectivos estados y datos de la mesa asociada a la session (JOINS) NO IMPORTA EL ESTADO, DEVOLVER TODAS LAS SESSIONES EXISTENTES.
 
-
 # OBTENER SESIONES DE MESA POR ESTADO
+
     - METODO: GET
     - ENDPOINT: api/table-sessions/status/{status}
     - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
 
     **IMPORTANTE**: Devolver una lista de todas las sesiones de mesa filtradas por el estado especificado en el endpoint (ACTIVE, EXPIRED, CLOSED). Incluir TODOS LOS DATOS DE SESSION, numero de mesa.
 
-# CERRAR TABLE SESSION 
+# CERRAR TABLE SESSION
+
     - METODO: PUT
     - ENDPOINT: api/table-sessions/{id}/close
     - ESTRUCTURA DE DATOS ENVIADA: **NO APLICA**
 
     **IMPORTANTE**: Cambiar el estado de la session a CLOSED (ENUM: ["ACTIVE", "EXPIRED", "CLOSED"]).
-    Esto se usa para cerrar una session de mesa desde el admin por alguna razon. 
+    Esto se usa para cerrar una session de mesa desde el admin por alguna razon.
 
-    -IMPORTANTE: NO SE NECESITA NADA MAS EN TABBLE SESSION POR AHORA, NI METODOS PARA CREAR EDITAR NI NADA  
+    -IMPORTANTE: NO SE NECESITA NADA MAS EN TABBLE SESSION POR AHORA, NI METODOS PARA CREAR EDITAR NI NADA
 
 ## - ORDERS:
 
@@ -719,7 +732,7 @@
 
     -IMPORTANTE: Cambiar estado del pedido a confirmado COMPLETED ID **5**
 
-**ESTAS ACCIONES DE ESTADO SE DEBEN HACER POR ENDPOINTS SEPARADOS YA QUE CADA ACCION DEBE PROTEGERSE SEGUN EL ROL
+\*\*ESTAS ACCIONES DE ESTADO SE DEBEN HACER POR ENDPOINTS SEPARADOS YA QUE CADA ACCION DEBE PROTEGERSE SEGUN EL ROL
 
 # OBTENER TODOS LOS PEDIDOS:
 
@@ -911,9 +924,6 @@ Y asociar a cada pedido el id del mesero que se envia.
 
 ## mas adelante se hara mas robusta esta funcionalidad para enviar notificaciones de todo tipo, pero por ahora se maneja de forma basica solo para ordenes entre meseros y cocineros.
 
-
-
-
 # OBTENER TODAS LAS NOTIFICACIONES:
 
     - METODO: GET
@@ -922,10 +932,10 @@ Y asociar a cada pedido el id del mesero que se envia.
 
     -IMPORTANTE: Devolver una lista de todas las notificaciones con sus respectivos estados y datos de la notificacion, incluyendo el tipo, mensaje, id de la orden asociada y data del empleado que disparo la notificacion.
     recordar que la tabla no tieene relaciones con otras tablas, se maneja de forma independiente.
-    asi que no se pueden hacer joins, deben consultarse los datos de forma independiente.     
+    asi que no se pueden hacer joins, deben consultarse los datos de forma independiente.
 
-    
-              
+
+
 
 ## UNITS OF MEASURE:
 
@@ -941,9 +951,8 @@ Y asociar a cada pedido el id del mesero que se envia.
 
 **SOLO SE NECESITA OBTENERLAS TODAS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
 
-
-
 ## EMPLOYEES ROLES:
+
 # - RUTA BASE ESPERADA: api/employees/roles/
 
 # - OBTENER TODOS LOS ROLES DE EMPLEADOS:
@@ -956,9 +965,10 @@ Y asociar a cada pedido el id del mesero que se envia.
 
 **SOLO SE NECESITA OBTENERLOS TODOS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
 
-
 ## EMPLOYEES STATUSES:
+
 # - RUTA BASE ESPERADA: api/employees/statuses/
+
 # - OBTENER TODOS LOS ESTADOS DE EMPLEADOS:
 
     - METODO: GET
@@ -970,8 +980,8 @@ Y asociar a cada pedido el id del mesero que se envia.
 **SOLO SE NECESITA OBTENERLOS TODOS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
 
 ## PRODUCT TYPES:
-# - RUTA BASE ESPERADA: api/products/types/
 
+# - RUTA BASE ESPERADA: api/products/types/
 
 # - OBTENER TODOS LOS TIPOS DE PRODUCTOS:
 
@@ -983,14 +993,8 @@ Y asociar a cada pedido el id del mesero que se envia.
 
 **SOLO SE NECESITA OBTENERLOS TODOS NO SE NECESITAN CREAR NI EDITAR NI NADA MAS**
 
-
-
-
-
-
-
-
 ### EJEMPLO ROUTER IMPLEMENTACION:
+
 ```php
 <?php
 // src/router.php
@@ -1008,7 +1012,7 @@ $router->setNamespace('\App\Controllers');
 // ----------------------------------------
 
 // El login maneja tanto empleados como dispositivos.
-$router->post('/api/auth/login', 'AuthController@login'); 
+$router->post('/api/auth/login', 'AuthController@login');
 
 // La validación del QR para iniciar la sesión del cliente.
 $router->post('/api/sessions/validate-qr', 'TableSessionController@validateQrAndStartSession');

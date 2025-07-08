@@ -103,7 +103,7 @@ const credentialSchema = toTypedSchema(
 const handleLogin = async (values) => {
     isLoading.value = true;
     try {
-        await login(values, router);
+        await login(values);
 
 
     } catch (error) {

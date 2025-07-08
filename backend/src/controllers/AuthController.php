@@ -86,7 +86,8 @@ class AuthController extends BaseController
                     'name' => $this->sanitizeString($user['employe_name']),
                     'email' => $this->sanitizeString($user['employe_email']),
                     'role_name' => $this->sanitizeString($user['rol_name']),
-                    'role_id' => (int) $this->sanitizeString($user['role_id'])
+                    'role_id' => (int) $this->sanitizeString($user['role_id']),
+                    'table_id' => (int) $this->sanitizeString(($user['table_id_device']))
                 ]
             ]);
         });
@@ -192,7 +193,9 @@ class AuthController extends BaseController
                 'name' => $this->sanitizeString($user['employe_name']),
                 'email' => $this->sanitizeString($user['employe_email']),
                 'role_name' => $this->sanitizeString($user['rol_name']),
-                'role_id' => (int) $this->sanitizeString($user['role_id'])
+                'role_id' => (int) $this->sanitizeString($user['role_id']),
+                'table_id' => (int) $this->sanitizeString($user['table_id_device']),
+                
             ]);
         });
     }

@@ -1,10 +1,8 @@
-
-
 export default [
   {
-  path: "/",
-  redirect: { name: 'Login' }
-},
+    path: "/",
+    redirect: { name: "Login" },
+  },
   {
     path: "/auth/login",
     name: "Login",
