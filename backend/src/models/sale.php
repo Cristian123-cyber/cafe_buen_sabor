@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Exception;
+
 class Sale extends BaseModel
 {
     protected $table_name = 'sales';
@@ -19,23 +21,215 @@ class Sale extends BaseModel
 
     public function createSale($data)
     {
-        $id = $this->create($data);
-        if ($id) {
-            return $this->getById($id);
+        try {
+            $this->conn->beginTransaction();
+            
+            // Validar que las órdenes existan
+            $orderIds = $data['orders'];
+            $placeholders = str_repeat('?,', count($orderIds) - 1) . '?';
+            $orderQuery = "SELECT id_order, total_amount FROM orders WHERE id_order IN ($placeholders)";
+            $stmt = $this->conn->prepare($orderQuery);
+            $stmt->execute($orderIds);
+            $orders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            
+            if (count($orders) !== count($orderIds)) {
+                throw new Exception('Una o más órdenes no existen');
+            }
+            
+            // Calcular total automáticamente
+            $totalAmount = array_sum(array_column($orders, 'total_amount'));
+            
+            // Crear la venta
+            $saleData = [
+                'cashier_id' => $data['cashier_id'],
+                'payment_method' => $data['payment_method'],
+                'total_amount' => $totalAmount,
+                'sale_status' => 'COMPLETED',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            
+            $saleId = $this->create($saleData);
+            
+            // Asociar órdenes con la venta en sales_has_orders
+            $associationQuery = "INSERT INTO sales_has_orders (sale_id, order_id) VALUES (?, ?)";
+            $stmt = $this->conn->prepare($associationQuery);
+            
+            foreach ($orderIds as $orderId) {
+                $stmt->execute([$saleId, $orderId]);
+            }
+            
+            $this->conn->commit();
+            
+            // Retornar la venta creada con sus datos
+            return $this->findWithFullDetails($saleId);
+            
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            throw $e;
         }
-        return false;
     }
 
     public function updateSale($id, $data)
     {
-        if ($this->update($id, $data)) {
-            return $this->getById($id);
+        // Por motivos de seguridad, solo se permite cancelar
+        if (isset($data['sale_status']) && $data['sale_status'] === 'CANCELED') {
+            return $this->cancelSale($id);
         }
-        return false;
+        throw new Exception('No se permite editar ventas por motivos de seguridad');
     }
 
     public function deleteSale($id)
     {
-        return $this->delete($id);
+        throw new Exception('No se permite eliminar ventas por motivos de seguridad');
+    }
+
+    /**
+     * Obtener todas las ventas con datos básicos de pedidos asociados (sin productos)
+     * Para el endpoint GET /api/sales/
+     */
+    public function getAllWithOrders()
+    {
+        $query = "SELECT 
+                    s.id_sale,
+                    s.cashier_id,
+                    s.payment_method,
+                    s.total_amount,
+                    s.sale_status,
+                    s.created_at,
+                    e.name as cashier_name,
+                    e.email as cashier_email
+                  FROM {$this->table_name} s
+                  LEFT JOIN employees e ON s.cashier_id = e.id_employee
+                  ORDER BY s.created_at DESC";
+        
+        $stmt = $this->conn->query($query);
+        $sales = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // Para cada venta, obtener sus órdenes básicas
+        foreach ($sales as &$sale) {
+            $ordersQuery = "SELECT 
+                              o.id_order,
+                              o.total_amount
+                            FROM sales_has_orders sho
+                            JOIN orders o ON sho.order_id = o.id_order
+                            WHERE sho.sale_id = ?";
+            
+            $stmt = $this->conn->prepare($ordersQuery);
+            $stmt->execute([$sale['id_sale']]);
+            $sale['orders'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+        
+        return $sales;
+    }
+
+    /**
+     * Obtener venta específica con todos los detalles incluyendo productos
+     * Para el endpoint GET /api/sales/{id}
+     */
+    public function findWithFullDetails($id)
+    {
+        // Obtener datos básicos de la venta
+        $saleQuery = "SELECT 
+                        s.*,
+                        e.name as cashier_name,
+                        e.email as cashier_email
+                      FROM {$this->table_name} s
+                      LEFT JOIN employees e ON s.cashier_id = e.id_employee
+                      WHERE s.{$this->primary_key} = ?";
+        
+        $stmt = $this->conn->prepare($saleQuery);
+        $stmt->execute([$id]);
+        $sale = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        if (!$sale) {
+            return null;
+        }
+        
+        // Obtener pedidos asociados con sus productos
+        $ordersQuery = "SELECT 
+                          o.id_order,
+                          o.created_date,
+                          o.total_amount,
+                          o.order_statuses_id_status,
+                          o.table_sessions_id_session
+                        FROM sales_has_orders sho
+                        JOIN orders o ON sho.order_id = o.id_order
+                        WHERE sho.sale_id = ?
+                        ORDER BY o.id_order";
+        
+        $stmt = $this->conn->prepare($ordersQuery);
+        $stmt->execute([$id]);
+        $orders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // Para cada orden, obtener sus productos
+        foreach ($orders as &$order) {
+            $productsQuery = "SELECT 
+                                ohp.products_id_product,
+                                ohp.quantity,
+                                ohp.price as product_price,
+                                p.name as product_name,
+                                p.price as original_price
+                              FROM orders_has_products ohp
+                              JOIN products p ON ohp.products_id_product = p.id_product
+                              WHERE ohp.orders_id_order = ?";
+            
+            $stmt = $this->conn->prepare($productsQuery);
+            $stmt->execute([$order['id_order']]);
+            $order['products'] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        }
+        
+        $sale['orders'] = $orders;
+        
+        return $sale;
+    }
+
+    /**
+     * Cancelar una venta
+     * Para el endpoint PUT /api/sales/{id}
+     */
+    public function cancelSale($id)
+    {
+        // Verificar que la venta existe
+        $sale = $this->getById($id);
+        
+        if (!$sale) {
+            return null;
+        }
+        
+        if ($sale['sale_status'] === 'CANCELED') {
+            throw new Exception('La venta ya está cancelada');
+        }
+        
+        // Cancelar la venta
+        $updateQuery = "UPDATE {$this->table_name} SET sale_status = 'CANCELED' WHERE {$this->primary_key} = ?";
+        $stmt = $this->conn->prepare($updateQuery);
+        $stmt->execute([$id]);
+        
+        return $this->getById($id);
+    }
+
+    /**
+     * Obtener ventas por estado
+     * Para el endpoint GET /api/sales/status/{status}
+     */
+    public function getByStatus($status)
+    {
+        $query = "SELECT 
+                    s.id_sale,
+                    s.cashier_id,
+                    s.payment_method,
+                    s.total_amount,
+                    s.sale_status,
+                    s.created_at,
+                    e.name as cashier_name,
+                    e.email as cashier_email
+                  FROM {$this->table_name} s
+                  LEFT JOIN employees e ON s.cashier_id = e.id_employee
+                  WHERE s.sale_status = ?
+                  ORDER BY s.created_at DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$status]);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 }

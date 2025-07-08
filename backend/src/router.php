@@ -184,6 +184,13 @@ class TableRoutes
         $router->get('/api/tables/token/([a-zA-Z0-9_]+)', 'TablesController@findByToken');
         // Obtener token por id de mesa
         $router->get('/api/tables/(\d+)/qr', 'TablesController@getQrToken');
+        // Desactivar una mesa
+        $router->put('/api/tables/(\d+)/deactivate', 'TablesController@deactivate');
+        // Activar una mesa
+        $router->put('/api/tables/(\d+)/activate', 'TablesController@activate');
+        // validar token
+        $router->post('/api/tables/validate-token', 'TableSessionController@validateQrAndStartSession');
+
     }
 }
 
@@ -191,12 +198,16 @@ class TableSessionRoutes
 {
     public static function register($router)
     {
-        $router->get('/api/table-sessions', 'TableSessionController@index');
-        $router->get('/api/table-sessions/(\d+)', 'TableSessionController@show');
+        //$router->get('/api/table-sessions', 'TableSessionController@index');
+        //$router->get('/api/table-sessions/(\d+)', 'TableSessionController@show');
         $router->post('/api/table-sessions', 'TableSessionController@store');
         $router->put('/api/table-sessions/(\d+)', 'TableSessionController@update');
         $router->delete('/api/table-sessions/(\d+)', 'TableSessionController@delete');
         $router->get('/api/table-sessions/table/(\d+)', 'TableSessionController@byTable');
+
+        $router->get('/api/table-sessions/', 'TableSessionController@allWithTable');
+        $router->get('/api/table-sessions/status/([A-Z]+)', 'TableSessionController@byStatusWithTable');
+        $router->put('/api/table-sessions/(\d+)/close', 'TableSessionController@close');
     }
 }
 /**
@@ -260,6 +271,10 @@ class OrdersRoutes
         $router->put('/api/orders/(\d+)', 'OrdersController@update'); //actualizar
         $router->delete('/api/orders/(\d+)', 'OrdersController@delete'); //eliminar
         $router->patch('/api/orders/(\d+)/status', 'OrdersController@updateStatus'); //actualizar estado
+        $router->get('/api/orders/session/(\d+)', 'OrdersController@bySession');
+        $router->put('/api/orders/bind-waiter', 'OrdersController@bindWaiter');
+        $router->post('/api/orders/unify', 'OrdersController@unify');
+        $router->get('/api/orders/unified/(\d+)', 'OrdersController@byUnified');
     }
 }
 RouteGroup::registerAll($router);

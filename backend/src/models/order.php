@@ -43,6 +43,18 @@ class Order extends BaseModel
         return $this->getById($this->conn->lastInsertId());
     }
 
+    public function addProductToOrder($orderId, $productId, $quantity, $price)
+    {
+        $sql = "INSERT INTO orders_has_products (orders_id_order, products_id_product, quantity, price, created_at)
+                VALUES (:order_id, :product_id, :quantity, :price, NOW())";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            ':order_id' => $orderId,
+            ':product_id' => $productId,
+            ':quantity' => $quantity,
+            ':price' => $price
+        ]);
+    }
     public function update($id, $data)
     {
         $stmt = $this->conn->prepare(
@@ -69,5 +81,69 @@ class Order extends BaseModel
         $stmt = $this->conn->prepare("UPDATE orders SET order_statuses_id_status = ? WHERE id_order = ?");
         $stmt->execute([$status, $id]);
         return $this->getById($id);
+    }
+
+    // Obtener pedidos por estado
+    public function getByStatus($status)
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT o.*, ts.tables_id_table
+             FROM orders o
+             JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+             WHERE o.order_statuses_id_status = ?"
+        );
+        $stmt->execute([$status]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    // Obtener pedidos por sesión de mesa
+    public function getBySession($sessionId)
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT * FROM orders WHERE table_sessions_id_session = ?"
+        );
+        $stmt->execute([$sessionId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+    
+    // Asociar mesero a todos los pedidos de una sesión
+    public function bindWaiter($sessionId, $waiterId)
+    {
+        $stmt = $this->conn->prepare(
+            "UPDATE orders SET waiter_id = ? WHERE table_sessions_id_session = ?"
+        );
+        $stmt->execute([$waiterId, $sessionId]);
+        return ['updated' => $stmt->rowCount()];
+    }
+    
+    // Unificar pedidos (ejemplo básico, debes adaptar según tu modelo de datos)
+    public function unifyOrders($ordersToUnify)
+    {
+        // 1. Validar que todos los pedidos pertenezcan a la misma sesión (hazlo en el controlador si prefieres)
+        // 2. Crear registro en orders_unified
+        $stmt = $this->conn->prepare("INSERT INTO orders_unified (created_at) VALUES (NOW())");
+        $stmt->execute();
+        $unifiedId = $this->conn->lastInsertId();
+    
+        // 3. Asociar pedidos a la orden unificada
+        $stmtAssoc = $this->conn->prepare(
+            "INSERT INTO orders_has_unified_has_orders (orders_unified_id, orders_id_order) VALUES (?, ?)"
+        );
+        foreach ($ordersToUnify as $orderId) {
+            $stmtAssoc->execute([$unifiedId, $orderId]);
+        }
+        return $unifiedId;
+    }
+    
+    // Obtener pedidos de una orden unificada
+    public function getByUnified($unifiedId)
+    {
+        $stmt = $this->conn->prepare(
+            "SELECT o.* FROM orders o
+             JOIN orders_has_unified_has_orders uho ON o.id_order = uho.orders_id_order
+             WHERE uho.orders_unified_id = ?"
+        );
+        $stmt->execute([$unifiedId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

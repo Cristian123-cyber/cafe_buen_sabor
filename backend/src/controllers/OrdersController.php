@@ -1,93 +1,253 @@
 <?php
+
 namespace App\Controllers;
 
-use App\Models\Order;
+use App\Models\Sale;
+use App\Models\Employee;
 use Exception;
 
-class OrdersController extends BaseController
+class SalesController 
 {
-    private $orderModel;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->orderModel = new Order();
-    }
-
-    // Listar todos los pedidos
+    /**
+     * Obtener todas las ventas
+     * GET /api/sales/
+     */
     public function index()
     {
-        return $this->executeWithErrorHandling(function() {
-            $orders = $this->orderModel->getAll();
-            $this->handleResponse(true, 'Pedidos obtenidos correctamente.', $orders);
-        }, 'Error al obtener los pedidos');
+        try {
+            $saleModel = new Sale();
+            // Obtener ventas con datos básicos de pedidos asociados (sin productos)
+            $sales = $saleModel->getAllWithOrders();
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $sales
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al obtener las ventas',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
-    // Obtener un pedido por ID
+    /**
+     * Obtener una venta específica con todos los detalles
+     * GET /api/sales/{id}
+     */
     public function show($id)
     {
-        return $this->executeWithErrorHandling(function() use ($id) {
-            $order = $this->orderModel->getById($id);
-            if ($order) {
-                $this->handleResponse(true, 'Pedido obtenido correctamente.', $order);
+        try {
+            $saleModel = new Sale();
+            // Obtener venta con pedidos y productos asociados
+            $sale = $saleModel->findWithFullDetails($id);
+            
+            if ($sale) {
+                echo json_encode([
+                    'success' => true,
+                    'data' => $sale
+                ]);
             } else {
-                $this->handleResponse(false, 'Pedido no encontrado', [], 404);
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Venta no encontrada'
+                ]);
             }
-        }, 'Error al obtener el pedido');
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al obtener la venta',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
-    // Crear un nuevo pedido
+    /**
+     * Crear una nueva venta
+     * POST /api/sales/
+     */
     public function store()
     {
-        return $this->executeWithErrorHandling(function() {
-            $data = $this->getRequestData();
-            $requiredFields = ['total_amount', 'waiter_id', 'order_statuses_id_status', 'table_sessions_id_session'];
-            $missingFields = $this->validateRequiredFields($data, $requiredFields);
-
-            if (!empty($missingFields)) {
-                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validar datos requeridos
+            if (!$this->validateStoreData($data)) {
+                http_response_code(422);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Datos inválidos',
+                    'errors' => $this->getValidationErrors($data)
+                ]);
                 return;
             }
 
-            $order = $this->orderModel->create($data);
-            $this->handleResponse(true, 'Pedido creado exitosamente.', $order, 201);
-        }, 'Error al crear el pedido');
+            // Validar que el cashier_id corresponda a un empleado con rol de cajero
+            $employeeModel = new Employee();
+            $cashier = $employeeModel->findCashierById($data['cashier_id']);
+            
+            if (!$cashier) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'El empleado especificado no tiene rol de cajero'
+                ]);
+                return;
+            }
+
+            $saleModel = new Sale();
+            $sale = $saleModel->createSale($data);
+            
+            http_response_code(201);
+            echo json_encode([
+                'success' => true,
+                'message' => 'Venta creada exitosamente',
+                'data' => $sale
+            ]);
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al crear la venta',
+                'error' => $e->getMessage()
+            ]);
+        }
     }
 
-    // Actualizar un pedido
+    /**
+     * Cancelar una venta (solo permite cambiar a CANCELED)
+     * PUT /api/sales/{id}
+     */
     public function update($id)
     {
-        return $this->executeWithErrorHandling(function() use ($id) {
-            $data = $this->getRequestData();
-            $order = $this->orderModel->update($id, $data);
-            $this->handleResponse(true, 'Pedido actualizado exitosamente.', $order);
-        }, 'Error al actualizar el pedido');
-    }
-
-    // Eliminar un pedido
-    public function delete($id)
-    {
-        return $this->executeWithErrorHandling(function() use ($id) {
-            $deleted = $this->orderModel->delete($id);
-            if ($deleted) {
-                $this->handleResponse(true, 'Pedido eliminado correctamente.');
-            } else {
-                $this->handleResponse(false, 'No se pudo eliminar el pedido', [], 500);
-            }
-        }, 'Error al eliminar el pedido');
-    }
-
-    // Cambiar estado de pedido
-    public function updateStatus($id)
-    {
-        return $this->executeWithErrorHandling(function() use ($id) {
-            $data = $this->getRequestData();
-            if (!isset($data['order_statuses_id_status'])) {
-                $this->handleResponse(false, 'El campo order_statuses_id_status es requerido', [], 400);
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validar que solo se pueda cancelar
+            if (!isset($data['sale_status']) || $data['sale_status'] !== 'CANCELED') {
+                http_response_code(422);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Solo se permite cancelar ventas. El estado debe ser CANCELED'
+                ]);
                 return;
             }
-            $order = $this->orderModel->updateStatus($id, $data['order_statuses_id_status']);
-            $this->handleResponse(true, 'Estado del pedido actualizado.', $order);
-        }, 'Error al actualizar el estado del pedido');
+
+            $saleModel = new Sale();
+            $sale = $saleModel->cancelSale($id);
+            
+            if ($sale) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Venta cancelada exitosamente',
+                    'data' => $sale
+                ]);
+            } else {
+                http_response_code(404);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Venta no encontrada'
+                ]);
+            }
+        } catch (Exception $e) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al cancelar la venta',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Obtener ventas por estado
+     * GET /api/sales/status/{status}
+     */
+    public function getByStatus($status)
+    {
+        try {
+            // Validar estado
+            if (!in_array($status, ['COMPLETED', 'CANCELED'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Estado no válido. Debe ser COMPLETED o CANCELED'
+                ]);
+                return;
+            }
+
+            $saleModel = new Sale();
+            $sales = $saleModel->getByStatus($status);
+            
+            echo json_encode([
+                'success' => true,
+                'data' => $sales
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error al obtener las ventas',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Método eliminado según especificaciones
+     * NO SE PODRA ELIMINAR LA DATA DE LAS VENTAS POR MOTIVOS DE SEGURIDAD
+     */
+
+    /**
+     * Validar datos para crear venta
+     */
+    private function validateStoreData($data)
+    {
+        if (!isset($data['orders']) || !is_array($data['orders']) || empty($data['orders'])) {
+            return false;
+        }
+        
+        if (!isset($data['cashier_id']) || !is_numeric($data['cashier_id'])) {
+            return false;
+        }
+        
+        if (!isset($data['payment_method']) || !in_array($data['payment_method'], ['EFECTIVO', 'TRANSFERENCIA'])) {
+            return false;
+        }
+        
+        // Validar que todos los elementos del array orders sean números
+        foreach ($data['orders'] as $orderId) {
+            if (!is_numeric($orderId)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Obtener errores de validación
+     */
+    private function getValidationErrors($data)
+    {
+        $errors = [];
+        
+        if (!isset($data['orders']) || !is_array($data['orders']) || empty($data['orders'])) {
+            $errors['orders'] = 'El campo orders es requerido y debe ser un array no vacío';
+        }
+        
+        if (!isset($data['cashier_id']) || !is_numeric($data['cashier_id'])) {
+            $errors['cashier_id'] = 'El campo cashier_id es requerido y debe ser un número';
+        }
+        
+        if (!isset($data['payment_method']) || !in_array($data['payment_method'], ['EFECTIVO', 'TRANSFERENCIA'])) {
+            $errors['payment_method'] = 'El campo payment_method es requerido y debe ser EFECTIVO o TRANSFERENCIA';
+        }
+        
+        return $errors;
     }
 }

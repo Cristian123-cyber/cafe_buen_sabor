@@ -103,5 +103,37 @@ class TableSession extends BaseModel
         }
     }
 
+    //Obtener todas las sesiones de mesa (con datos de la mesa asociada)
+    public function allWithTable()
+    {
+    $sql = "SELECT ts.*, t.table_number, t.table_status
+            FROM {$this->table_name} ts
+            JOIN tables t ON ts.tables_id_table = t.id_table";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute();
+    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    //Obtener sesiones por estado (con datos de la mesa)
+    public function byStatusWithTable($status)
+    {
+    $sql = "SELECT ts.*, t.table_number, t.table_status
+            FROM {$this->table_name} ts
+            JOIN tables t ON ts.tables_id_table = t.id_table
+            WHERE ts.session_status = :status";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bindParam(':status', $status);
+    $stmt->execute();
+    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    //Cerrar una sesión de mesa
+    public function closeSession($id)
+{
+    $sql = "UPDATE {$this->table_name} SET session_status = 'CLOSED' WHERE id_session = :id";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bindParam(':id', $id, \PDO::PARAM_INT);
+    return $stmt->execute();
+}
 
 }
