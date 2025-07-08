@@ -56,73 +56,91 @@ class EmployeesController extends BaseController
         }, 'Error al obtener el empleado');
     }
 
+    //validar mail
+    public function existsEmail($email, $excludeId = null)
+    {
+        $query = "SELECT COUNT(*) FROM employees WHERE employe_email = :email";
+        if ($excludeId) {
+            $query .= " AND id_employe != :id";
+        }
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':email', $email);
+        if ($excludeId) {
+            $stmt->bindParam(':id', $excludeId);
+        }
+        $stmt->execute();
+        return $stmt->fetchColumn() > 0;
+    }
     // Crear un nuevo usuario
     public function store()
-    {
-        return $this->executeWithErrorHandling(function() {
-            $data = $this->getRequestData();
+{
+    return $this->executeWithErrorHandling(function() {
+        $data = $this->getRequestData();
 
-            $requiredFields = [
-                'employe_name', 'employe_email', 'password', 'employees_rol_id_rol', 'employees_statuses_id_status'
-            ];
-            $missingFields = $this->validateRequiredFields($data, $requiredFields);
+        $requiredFields = [
+            'employe_name', 'employe_email', 'password', 'employees_rol_id_rol', 'employees_statuses_id_status'
+        ];
+        $missingFields = $this->validateRequiredFields($data, $requiredFields);
 
-            if (!empty($missingFields)) {
-                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
-                return;
-            }
+        if (!empty($missingFields)) {
+            $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+            return;
+        }
 
-            // Sanitizar y validar datos
-            $employeeData = [
-                'employe_name' => $this->sanitizeString($data['employe_name']),
-                'employe_email' => $this->validateEmail($data['employe_email']),
-                'password' => $this->sanitizeString($data['password']),
-                'employees_rol_id_rol' => $this->validateId($data['employees_rol_id_rol']),
-                'employees_statuses_id_status' => $this->validateId($data['employees_statuses_id_status'])
-            ];
-            
-            
-            if (isset($data['employee_cc'])) {
+        // Primero sanitiza y valida los datos
+        $employeeData = [
+            'employe_name' => $this->sanitizeString($data['employe_name']),
+            'employe_email' => $this->validateEmail($data['employe_email']),
+            'password' => $this->sanitizeString($data['password']),
+            'employees_rol_id_rol' => $this->validateId($data['employees_rol_id_rol']),
+            'employees_statuses_id_status' => $this->validateId($data['employees_statuses_id_status'])
+        ];
+
+        // Ahora valida el email único
+        if ($this->usuarioModel->existsEmail($employeeData['employe_email'])) {
+            $this->handleResponse(false, 'El email ya está registrado', [], 400);
+            return;
+        }
+
+        if (isset($data['employee_cc'])) {
             $employeeData['employee_cc'] = $this->sanitizeString($data['employee_cc']);
-            }
+        } else {
+            $employeeData['employee_cc'] = null;
+        }
 
-            if (isset($data['table_id_device'])) {
+        if (isset($data['table_id_device'])) {
             $employeeData['table_id_device'] = $this->validateId($data['table_id_device']);
-            }
-            // Validar email
-            if (!$employeeData['employe_email']) {
-                $this->handleResponse(false, 'Formato de email inválido', [], 400);
-                return;
-            }
+        }
 
-            // Validar contraseña
-            if (strlen($employeeData['password']) < 6) {
-                $this->handleResponse(false, 'La contraseña debe tener al menos 6 caracteres', [], 400);
-                return;
-            }
+        if (!$employeeData['employe_email']) {
+            $this->handleResponse(false, 'Formato de email inválido', [], 400);
+            return;
+        }
 
-            // Validar roles y estados
-            if (!$employeeData['employees_rol_id_rol'] || !$employeeData['employees_statuses_id_status']) {
-                $this->handleResponse(false, 'Rol y estado de empleado son requeridos', [], 400);
-                return;
-            }
+        if (strlen($employeeData['password']) < 6) {
+            $this->handleResponse(false, 'La contraseña debe tener al menos 6 caracteres', [], 400);
+            return;
+        }
 
-            // Hashear la contraseña antes de guardar
-            $employeeData['password'] = password_hash($employeeData['password'], PASSWORD_DEFAULT);
+        if (!$employeeData['employees_rol_id_rol'] || !$employeeData['employees_statuses_id_status']) {
+            $this->handleResponse(false, 'Rol y estado de empleado son requeridos', [], 400);
+            return;
+        }
 
-            $usuarioId = $this->usuarioModel->create($employeeData);
+        $employeeData['password'] = password_hash($employeeData['password'], PASSWORD_DEFAULT);
 
-            if ($usuarioId) {
-                $usuario = $this->usuarioModel->getById($usuarioId);
-                $this->handleResponse(true, 'Empleado creado exitosamente', $usuario, 201);
-            } else {
-                $this->handleResponse(false, 'No se pudo crear el empleado', [], 500);
-            }
-            
-        }, 'Error al crear el empleado');
-    }
+        $usuarioId = $this->usuarioModel->create($employeeData);
 
+        if ($usuarioId) {
+            $usuario = $this->usuarioModel->getById($usuarioId);
+            $this->handleResponse(true, 'Empleado creado exitosamente', $usuario, 201);
+        } else {
+            $this->handleResponse(false, 'No se pudo crear el empleado', [], 500);
+        }
+    }, 'Error al crear el empleado');
+}
     // Actualizar un usuario existente
+        
     public function update($id)
     {
         return $this->executeWithErrorHandling(function() use ($id) {
@@ -132,37 +150,44 @@ class EmployeesController extends BaseController
                 $this->handleResponse(false, 'ID de empleado inválido', [], 400);
                 return;
             }
-
+    
             $data = $this->getRequestData();
-
+    
             $usuario = $this->usuarioModel->getById($employeeId);
             if (!$usuario) {
                 $this->handleResponse(false, 'Empleado no encontrado', [], 404);
                 return;
             }
-
+    
             // Sanitizar y validar datos de actualización
             $updateData = [];
-
+    
             if (isset($data['employe_name'])) {
                 $updateData['employe_name'] = $this->sanitizeString($data['employe_name']);
             }
-
+    
             if (isset($data['employe_email'])) {
                 $email = $this->validateEmail($data['employe_email']);
                 if (!$email) {
                     $this->handleResponse(false, 'Formato de email inválido', [], 400);
                     return;
                 }
+                // Validar que no exista en otro usuario
+                if ($this->usuarioModel->existsEmail($email, $employeeId)) {
+                    $this->handleResponse(false, 'El email ya está registrado por otro usuario', [], 400);
+                    return;
+                }
                 $updateData['employe_email'] = $email;
             }
-            if (isset($data['employee_cc'])) {
-            $updateData['employee_cc'] = $this->sanitizeString($data['employee_cc']);
+    
+            if (array_key_exists('employee_cc', $data)) {
+                $updateData['employee_cc'] = $data['employee_cc'] !== '' ? $this->sanitizeString($data['employee_cc']) : null;
             }
-
+    
             if (isset($data['table_id_device'])) {
-            $updateData['table_id_device'] = $this->validateId($data['table_id_device']);
+                $updateData['table_id_device'] = $this->validateId($data['table_id_device']);
             }
+    
             if (isset($data['password']) && !empty($data['password'])) {
                 $password = $this->sanitizeString($data['password']);
                 if (strlen($password) < 6) {
@@ -171,7 +196,7 @@ class EmployeesController extends BaseController
                 }
                 $updateData['password'] = password_hash($password, PASSWORD_DEFAULT);
             }
-
+    
             if (isset($data['employees_rol_id_rol'])) {
                 $roleId = $this->validateId($data['employees_rol_id_rol']);
                 if (!$roleId) {
@@ -180,7 +205,7 @@ class EmployeesController extends BaseController
                 }
                 $updateData['employees_rol_id_rol'] = $roleId;
             }
-
+    
             if (isset($data['employees_statuses_id_status'])) {
                 $statusId = $this->validateId($data['employees_statuses_id_status']);
                 if (!$statusId) {
@@ -189,21 +214,21 @@ class EmployeesController extends BaseController
                 }
                 $updateData['employees_statuses_id_status'] = $statusId;
             }
-
+    
             if (empty($updateData)) {
                 $this->handleResponse(false, 'No se proporcionaron datos para actualizar', [], 400);
                 return;
             }
-
+    
             $updated = $this->usuarioModel->update($employeeId, $updateData);
-
+    
             if ($updated) {
                 $usuario = $this->usuarioModel->getById($employeeId);
                 $this->handleResponse(true, 'Empleado actualizado exitosamente', $usuario);
             } else {
                 $this->handleResponse(false, 'No se pudo actualizar el empleado', [], 500);
             }
-            
+    
         }, 'Error al actualizar el empleado');
     }
 
