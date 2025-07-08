@@ -8,6 +8,7 @@ use Exception;
 
 class Employees extends BaseModel
 {
+   
     public function __construct()
     {
         parent::__construct();
@@ -114,6 +115,20 @@ public function getAll($page = 1, $limit = 10, $orderBy = null)
     }
     
 
+public function existsEmail($email, $excludeId = null)
+{
+    $query = "SELECT COUNT(*) FROM employees WHERE employe_email = :email";
+    if ($excludeId !== null) {
+        $query .= " AND id_employe != :id";
+    }
+    $stmt = $this->conn->prepare($query);
+    $stmt->bindParam(':email', $email);
+    if ($excludeId !== null) {
+        $stmt->bindParam(':id', $excludeId);
+    }
+    $stmt->execute();
+    return $stmt->fetchColumn() > 0;
+}
     public function update($id, $data)
     {
         $fields = [];

@@ -169,19 +169,21 @@ class TableRoutes
     public static function register($router)
     {
         // Listar todas las mesas
-        $router->get('/api/mesas', 'TablesController@index');
+        $router->get('/api/tables', 'TablesController@index');
         // Obtener una mesa por ID
-        $router->get('/api/mesas/(\d+)', 'TablesController@show');
+        $router->get('/api/tables/(\d+)', 'TablesController@show');
         // Crear una nueva mesa
-        $router->post('/api/mesas', 'TablesController@store');
+        $router->post('/api/tables', 'TablesController@store');
         // Actualizar una mesa
-        $router->put('/api/mesas/(\d+)', 'TablesController@update');
+        $router->put('/api/tables/(\d+)', 'TablesController@update');
         // Eliminar una mesa
-        $router->delete('/api/mesas/(\d+)', 'TablesController@delete');
+        $router->delete('/api/tables/(\d+)', 'TablesController@delete');
         // Cambiar estado de la mesa (ejemplo: ocupar/liberar)
-        $router->put('/api/mesas/(\d+)/estado', 'TablesController@updateStatus');
+        $router->put('/api/tables/(\d+)/estado', 'TablesController@updateStatus');
         // Buscar por token QR
-        $router->get('/api/mesas/token/([a-zA-Z0-9_]+)', 'TablesController@findByToken');
+        $router->get('/api/tables/token/([a-zA-Z0-9_]+)', 'TablesController@findByToken');
+        // Obtener token por id de mesa
+        $router->get('/api/tables/(\d+)/qr', 'TablesController@getQrToken');
     }
 }
 
