@@ -44,6 +44,27 @@ class TablesController extends BaseController
             
         }, 'Error al obtener la mesa');
     }
+    //traer token de la mesa por id
+    public function getQrToken($id)
+    {
+    return $this->executeWithErrorHandling(function() use ($id) {
+        $tableId = $this->validateId($id);
+        if (!$tableId) {
+            $this->handleResponse(false, 'ID de mesa inválido', [], 400);
+            return;
+        }
+
+        $table = $this->tableModel->find($tableId);
+        if ($table && isset($table['qr_token'])) {
+            $this->handleResponse(true, 'Token QR obtenido correctamente.', [
+                'qr_token' => $table['qr_token'],
+                'token_expiration' => $table['token_expiration'] ?? null
+            ]);
+        } else {
+            $this->handleResponse(false, 'Mesa no encontrada o sin token QR', [], 404);
+        }
+        }, 'Error al obtener el token QR de la mesa');
+    }
 
     // Crear una nueva mesa
     public function store()
