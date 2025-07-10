@@ -95,6 +95,8 @@ class EmployeeRoutes
         $router->delete('/api/employees/(\d+)', 'EmployeesController@delete');
 
         $router->get('/api/employees/filter', 'EmployeesController@filter');
+        $router->get('/api/employees/tables-served', 'SalesController@tablesServedByWaiter'); //cantidad de mesas atendidas por mesero 
+        $router->get('/api/employees/(\d+)/sales-summary', 'SalesController@employeeSalesSummary');
     }
 }
 /**
@@ -246,6 +248,10 @@ class SaleRoutes
         $router->post('/api/sales', 'SalesController@store');
         $router->put('/api/sales/(\d+)', 'SalesController@update');
         $router->delete('/api/sales/(\d+)', 'SalesController@delete');
+        $router->get('/api/sales/monthly-revenue', 'SalesController@monthlyRevenue'); //OBTENER RECAUDO MENSUAL
+        $router->get('/api/sales/revenue-by-date', 'SalesController@revenueByDate'); //Ingresos por fecha
+        $router->get('/api/sales/revenue-by-employee', 'SalesController@revenueByEmployee'); //ingreso por empleado
+        $router->get('/api/sales/revenue-by-table', 'SalesController@revenueByTable'); //ingresos por mesa
     }
 }
 

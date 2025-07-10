@@ -165,6 +165,7 @@ class TablesController extends BaseController
         }, 'Error al actualizar la mesa');
     }
 
+    
     // Eliminar una mesa
     public function delete($id)
     {

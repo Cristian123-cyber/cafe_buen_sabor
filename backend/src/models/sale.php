@@ -8,6 +8,12 @@ class Sale extends BaseModel
 {
     protected $table_name = 'sales';
     protected $primary_key = 'id_sale';
+    public function __construct()
+    {
+        parent::__construct();
+        $this->table_name = 'sales'; // Corregido: La tabla es 'employees'
+        $this->primary_key = 'id_sale'; // Corregido: La PK es 'id_employe'
+    }
 
     public function all()
     {
@@ -232,4 +238,116 @@ class Sale extends BaseModel
         $stmt->execute([$status]);
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
+
+    //visualización gráfica del recaudo mensual
+    public function getMonthlyRevenue()
+    {
+    $query = "SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') AS month,
+                SUM(total_amount) AS total
+              FROM {$this->table_name}
+              WHERE sale_status = 'COMPLETED'
+              GROUP BY month
+              ORDER BY month ASC";
+    $stmt = $this->conn->query($query);
+    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    //Ingresos por fecha
+    public function getRevenueByDate($from = null, $to = null)
+    {
+    $query = "SELECT DATE(created_at) as date, SUM(total_amount) as total
+              FROM {$this->table_name}
+              WHERE sale_status = 'COMPLETED'";
+    $params = [];
+    if ($from) {
+        $query .= " AND created_at >= ?";
+        $params[] = $from;
+    }
+    if ($to) {
+        $query .= " AND created_at <= ?";
+        $params[] = $to;
+    }
+    $query .= " GROUP BY date ORDER BY date ASC";
+    $stmt = $this->conn->prepare($query);
+    $stmt->execute($params);
+    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    //Ingresos por empleado
+    public function getRevenueByEmployee()
+    {
+        $query = "SELECT e.id_employe, e.employe_name as employee_name, SUM(s.total_amount) as total
+                  FROM {$this->table_name} s
+                  LEFT JOIN employees e ON s.cashier_id = e.id_employe
+                  WHERE s.sale_status = 'COMPLETED'
+                  GROUP BY e.id_employe, e.employe_name
+                  ORDER BY total DESC";
+        $stmt = $this->conn->query($query);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+    
+    //ingreso por mesa
+    public function revenueByTable()
+    {
+        $query = "SELECT t.id_table, t.table_number, SUM(s.total_amount) as total
+                  FROM {$this->table_name} s
+                  JOIN sales_has_orders sho ON s.id_sale = sho.sales_id_sale
+                  JOIN orders o ON sho.orders_id_order = o.id_order
+                  JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  JOIN tables t ON ts.tables_id_table = t.id_table
+                  WHERE s.sale_status = 'COMPLETED'
+                  GROUP BY t.id_table, t.table_number
+                  ORDER BY total DESC";
+        $stmt = $this->conn->query($query);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    //Cantidad de mesas atendidas por cada mesero
+    public function getTablesServedByWaiter()
+    {
+        $query = "SELECT 
+                    e.id_employe,
+                    e.employe_name,
+                    er.rol_name,
+                    COUNT(DISTINCT t.id_table) as mesas_atendidas,
+                    COUNT(DISTINCT o.id_order) as total_ordenes,
+                    COALESCE(SUM(o.total_amount), 0) as total_ventas_generadas
+                  FROM employees e
+                  INNER JOIN employees_rol er ON e.employees_rol_id_rol = er.id_rol
+                  LEFT JOIN orders o ON e.id_employe = o.waiter_id
+                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+                  WHERE e.employees_statuses_id_status = 1
+                  GROUP BY e.id_employe, e.employe_name, er.rol_name
+                  ORDER BY mesas_atendidas DESC";
+        $stmt = $this->conn->query($query);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    //para informe por empleado 
+    public function getEmployeeSalesSummary($employeeId)
+    {
+        $query = "SELECT 
+                    e.id_employe,
+                    e.employe_name,
+                    er.rol_name,
+                    COUNT(DISTINCT t.id_table) as mesas_atendidas,
+                    COUNT(DISTINCT s.id_sale) as total_ventas,
+                    COALESCE(SUM(s.total_amount), 0) as total_vendido,
+                    COUNT(DISTINCT o.id_order) as total_ordenes
+                  FROM employees e
+                  INNER JOIN employees_rol er ON e.employees_rol_id_rol = er.id_rol
+                  LEFT JOIN orders o ON e.id_employe = o.waiter_id
+                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+                  LEFT JOIN sales_has_orders sho ON o.id_order = sho.orders_id_order
+                  LEFT JOIN sales s ON sho.sales_id_sale = s.id_sale AND s.sale_status = 'COMPLETED'
+                  WHERE e.id_employe = ?
+                  GROUP BY e.id_employe, e.employe_name, er.rol_name";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$employeeId]);
+        return $stmt->fetch(\PDO::FETCH_ASSOC);
+    }
+
 }
