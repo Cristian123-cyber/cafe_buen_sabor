@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use PDO;
+
 /**
  * Modelo para la tabla table_sessions
  */
@@ -48,7 +49,7 @@ class TableSession extends BaseModel
         return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    
+
     /**
      * Busca una sesión de mesa activa para un ID de mesa específico.
      *
@@ -90,7 +91,7 @@ class TableSession extends BaseModel
         try {
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':id_table', $tableId, PDO::PARAM_INT);
-            
+
             if ($stmt->execute()) {
                 // Usamos la conexión para obtener el último ID insertado,
                 // tal como lo hace el método create() de en el BaseModel.
@@ -103,5 +104,25 @@ class TableSession extends BaseModel
         }
     }
 
+    public function validateSession(int $id)
+    {
+        $sql = "SELECT id_session, tables_id_table AS table_id FROM table_sessions WHERE id_session = :id AND session_status = 'ACTIVE'";
+       try {
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
 
+        // Verificar si se encontró una sesión activa
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result && !empty($result)) {
+            return $result; // La sesión es válida y está activa
+        } else {
+            return false; // No existe o está inactiva
+        }
+
+    } catch (\PDOException $e) {
+        // Log opcional: error_log($e->getMessage());
+        return false;
+    }
+    }
 }

@@ -5,6 +5,7 @@
 use Bramus\Router\Router;
 
 use App\Middleware\AccessControlMiddleware;
+use PHPUnit\Framework\Attributes\Before;
 
 $router = new Router();
 
@@ -20,6 +21,7 @@ $router->setNamespace('\App\Controllers');
 // La autenticación debe ser pública para poder obtener el token
 $router->post('/api/auth/login', 'AuthController@login');
 $router->post('/api/auth/refresh', 'AuthController@refresh');
+$router->post('/api/table-sessions/validate-qr', 'TableSessionController1@validateQrAndStartSession');
 // Aquí podrían ir otras rutas públicas como 'forgot-password'
 // $router->post('/api/auth/forgot-password', 'AuthController@forgotPassword');
 
@@ -194,6 +196,7 @@ class TableSessionRoutes
         $router->get('/api/table-sessions', 'TableSessionController@index');
         $router->get('/api/table-sessions/(\d+)', 'TableSessionController@show');
         $router->post('/api/table-sessions', 'TableSessionController@store');
+        $router->post('/api/table-sessions/validate-session', 'TableSessionController1@validateClientSession');
         $router->put('/api/table-sessions/(\d+)', 'TableSessionController@update');
         $router->delete('/api/table-sessions/(\d+)', 'TableSessionController@delete');
         $router->get('/api/table-sessions/table/(\d+)', 'TableSessionController@byTable');
@@ -262,6 +265,12 @@ class OrdersRoutes
         $router->patch('/api/orders/(\d+)/status', 'OrdersController@updateStatus'); //actualizar estado
     }
 }
+
+$router->before('POST', '/api/table-sessions/validate-session', function () {
+
+    AccessControlMiddleware::handle([], true);
+
+});
 RouteGroup::registerAll($router);
 
 $router->before('GET', '/api/auth/me', function () {

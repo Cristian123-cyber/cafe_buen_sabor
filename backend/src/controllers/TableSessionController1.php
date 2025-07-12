@@ -6,12 +6,13 @@ use App\Models\Table;
 use App\Models\TableSession;
 use Firebase\JWT\JWT;
 
-class TableSessionController extends BaseController
+class TableSessionController1 extends BaseController
 {
     private $tableModel;
     private $tableSessionModel;
 
     public function __construct()
+
     {
         parent::__construct();
         $this->tableModel = new Table();
@@ -25,7 +26,7 @@ class TableSessionController extends BaseController
     public function validateQrAndStartSession()
     {
         return $this->executeWithErrorHandling(function() {
-            // 1. Recibir y validar campos requeridos del POST
+            
             $input = $this->getRequestData();
 
             $missingFields = $this->validateRequiredFields($input, ['qr_token', 'id_table']);
@@ -48,7 +49,7 @@ class TableSessionController extends BaseController
 
             if (!$tableData || $tableData === false) {
                 // Mensaje más específico para el usuario.
-                $this->handleResponse(false, 'Código QR inválido.', [], 404, 'E_INVALID_QR');
+                $this->handleResponse(false, 'Código QR inválido.', [], 400, 'E_INVALID_QR');
                 return;
             }
 
@@ -90,10 +91,88 @@ class TableSessionController extends BaseController
                 'table_info' => [
                     'id'     => (int)$tableData['id_table'],
                     'number' => (int)$tableData['table_number']
+                ],
+                'session_info' => [
+                    'id' => (int)$session['id_session']
                 ]
             ], 200);
 
         }, 'Error al validar la sesión de mesa');
+    }
+
+
+    public function validateClientSession() {
+
+
+        return $this->executeWithErrorHandling(function() {
+
+            $input = $this->getRequestData();
+
+            $missingFields = $this->validateRequiredFields($input, ['session_id']);
+
+
+
+            
+            if (!empty($missingFields)) {
+               $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+               return;
+           }
+
+             $idSession = filter_var($input['session_id'], FILTER_VALIDATE_INT);
+
+             if ($idSession === false) {
+                $this->handleValidationError('El ID de Session no es valido.');
+                return;
+            }
+
+
+            $result = $this->tableSessionModel->validateSession((int) $idSession);
+
+            if (!$result || empty($result)){
+
+                $this->handleResponse(false, 'Acesso no autorizado, session expirada', [], 401);
+            }
+
+
+            $tableData = $this->tableModel->find($result['table_id']);
+
+            if (!$tableData || empty($tableData)){
+
+                $this->handleResponse(false, 'Acesso no autorizado, mesa no encontrada', [], 401);
+
+            }
+
+
+            // 6. Respuesta exitosa con el Session-JWT y la info de la mesa
+            $this->handleResponse(true, 'Sesión de mesa validada.', [
+                'table_info' => [
+                    'id'     => (int)$tableData['id_table'],
+                    'number' => (int)$tableData['table_number']
+                ],
+                'session_info' => [
+                    'id' => (int) $idSession
+                ]
+            ], 200);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        }, 'Error al validar sesion.');
+
+
+
+        
     }
 
     // ... otros métodos del controlador ...
