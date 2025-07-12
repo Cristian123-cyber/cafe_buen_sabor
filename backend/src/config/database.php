@@ -1,11 +1,13 @@
 <?php
+
 namespace Config;
 
 // Clase para manejar la conexión a la base de datos usando Singleton
-class Database {
+class Database
+{
     private static $instance = null;
     private $host = "cafeteria_mysql"; // Usa el nombre del servicio MySQL en Docker
-    private $db_name = "cafe_buen_sabor_db";
+    private $db_name = "cafe_buen_sabor_bd";
     private $username = "root";
     private $password = "root123";
     private $conn = null;
@@ -14,7 +16,8 @@ class Database {
     private function __construct() {}
 
     // Método para obtener la instancia única (Singleton)
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (self::$instance === null) {
             self::$instance = new self();
         }
@@ -22,7 +25,8 @@ class Database {
     }
 
     // Método para obtener la conexión PDO
-    public function getConnection() {
+    public function getConnection()
+    {
         if ($this->conn === null) {
             try {
                 $this->conn = new \PDO(
@@ -35,7 +39,7 @@ class Database {
                         \PDO::ATTR_EMULATE_PREPARES => false
                     )
                 );
-            } catch(\PDOException $e) {
+            } catch (\PDOException $e) {
                 // Lanza la excepción para que el controlador la maneje
                 throw $e;
             }
@@ -47,7 +51,8 @@ class Database {
     private function __clone() {}
 
     // Prevenir deserialización del objeto (debe ser público)
-    public function __wakeup() {
+    public function __wakeup()
+    {
         throw new \Exception("No se puede deserializar un singleton");
     }
 }
