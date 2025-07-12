@@ -22,10 +22,12 @@ class Producto extends BaseModel
         $offset = ($page - 1) * $limit;
         
         $query = "SELECT p.*, pt.type_name as categoria_nombre, 
-                        ist.name_status as estado_stock
+                        ist.name_status as estado_stock,
+                        pc.category_name
                  FROM products p
                  LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
                  LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
+                 LEFT JOIN products_category pc ON p.product_category = pc.id_category
                  ORDER BY p.created_date DESC
                  LIMIT :limit OFFSET :offset";
         
