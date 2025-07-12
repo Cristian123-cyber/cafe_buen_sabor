@@ -65,7 +65,9 @@ class TablesController extends BaseController
         }
         }, 'Error al obtener el token QR de la mesa');
     }
-
+    function generarTokenSeguro() {
+        return bin2hex(random_bytes(32));
+    }
     // Crear una nueva mesa
     public function store()
     {
@@ -84,8 +86,10 @@ class TablesController extends BaseController
             // Sanitizar y validar datos
             $tableData = [
                 'table_number' => $this->validateId($data['table_number']),
-                'table_status' => $this->sanitizeString($data['table_status'] ?? 'FREE')
-            ];
+                'table_status' => $this->sanitizeString($data['table_status'] ?? 'FREE'),
+                'qr_token' => $this->generarTokenSeguro(),
+                'token_expiration' => date('Y-m-d H:i:s', strtotime('+10 minutes'))
+            ];;
 
             // Validar número de mesa
             if (!$tableData['table_number']) {
@@ -142,11 +146,12 @@ class TablesController extends BaseController
             
             if (isset($data['table_status'])) {
                 $status = $this->sanitizeString($data['table_status']);
-                $validStatuses = ['ACTIVE', 'CLOSED', 'EXPIRED'];
-                if (!in_array($status, $validStatuses)) {
-                    $this->handleResponse(false, 'Estado de mesa inválido. Debe ser: ACTIVE, CLOSED, EXPIRED', [], 400);
-                    return;
-                }
+                $validStatuses = ['FREE', 'OCCUPIED', 'INACTIVE', 'DELETED'];
+               
+            if (!in_array($status, $validStatuses)) {
+            $this->handleResponse(false, 'Estado de mesa inválido. Debe ser: FREE, OCCUPIED, INACTIVE o DELETED', [], 400);
+            return;
+}
                 $updateData['table_status'] = $status;
             }
 
@@ -160,6 +165,7 @@ class TablesController extends BaseController
         }, 'Error al actualizar la mesa');
     }
 
+    
     // Eliminar una mesa
     public function delete($id)
     {
@@ -170,14 +176,15 @@ class TablesController extends BaseController
                 $this->handleResponse(false, 'ID de mesa inválido', [], 400);
                 return;
             }
-            
-            $deleted = $this->tableModel->deleteTable($tableId);
-            if ($deleted) {
-                $this->handleResponse(true, 'Mesa eliminada correctamente.', []);
+
+            // Borrado lógico: cambiar estado a DELETED
+            $table = $this->tableModel->updateTable($tableId, ['table_status' => 'DELETED']);
+            if ($table) {
+                $this->handleResponse(true, 'Mesa eliminada correctamente (borrado lógico).', $table);
             } else {
                 $this->handleResponse(false, 'Mesa no encontrada', [], 404);
             }
-            
+
         }, 'Error al eliminar la mesa');
     }
 
@@ -238,5 +245,42 @@ class TablesController extends BaseController
             }
             
         }, 'Error al buscar la mesa por token');
+    }
+    // Desactivar una mesa (cambiar estado a INACTIVE)
+    public function deactivate($id)
+    {
+        return $this->executeWithErrorHandling(function() use ($id) {
+            $tableId = $this->validateId($id);
+            if (!$tableId) {
+                $this->handleResponse(false, 'ID de mesa inválido', [], 400);
+                return;
+            }
+
+            $table = $this->tableModel->updateTable($tableId, ['table_status' => 'INACTIVE']);
+            if ($table) {
+                $this->handleResponse(true, 'Mesa desactivada correctamente.', $table);
+            } else {
+                $this->handleResponse(false, 'Mesa no encontrada', [], 404);
+            }
+        }, 'Error al desactivar la mesa');
+    }
+
+    // Activar una mesa (cambiar estado a FREE)
+    public function activate($id)
+    {
+        return $this->executeWithErrorHandling(function() use ($id) {
+            $tableId = $this->validateId($id);
+            if (!$tableId) {
+                $this->handleResponse(false, 'ID de mesa inválido', [], 400);
+                return;
+            }
+
+            $table = $this->tableModel->updateTable($tableId, ['table_status' => 'FREE']);
+            if ($table) {
+                $this->handleResponse(true, 'Mesa activada correctamente.', $table);
+            } else {
+                $this->handleResponse(false, 'Mesa no encontrada', [], 404);
+            }
+        }, 'Error al activar la mesa');
     }
 }

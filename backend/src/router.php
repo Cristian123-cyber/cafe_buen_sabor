@@ -97,6 +97,8 @@ class EmployeeRoutes
         $router->delete('/api/employees/(\d+)', 'EmployeesController@delete');
 
         $router->get('/api/employees/filter', 'EmployeesController@filter');
+        $router->get('/api/employees/tables-served', 'SalesController@tablesServedByWaiter'); //cantidad de mesas atendidas por mesero 
+        $router->get('/api/employees/(\d+)/sales-summary', 'SalesController@employeeSalesSummary');
     }
 }
 /**
@@ -186,6 +188,13 @@ class TableRoutes
         $router->get('/api/tables/token/([a-zA-Z0-9_]+)', 'TablesController@findByToken');
         // Obtener token por id de mesa
         $router->get('/api/tables/(\d+)/qr', 'TablesController@getQrToken');
+        // Desactivar una mesa
+        $router->put('/api/tables/(\d+)/deactivate', 'TablesController@deactivate');
+        // Activar una mesa
+        $router->put('/api/tables/(\d+)/activate', 'TablesController@activate');
+        // validar token
+        $router->post('/api/tables/validate-token', 'TableSessionController@validateQrAndStartSession');
+
     }
 }
 
@@ -193,13 +202,17 @@ class TableSessionRoutes
 {
     public static function register($router)
     {
-        $router->get('/api/table-sessions', 'TableSessionController@index');
-        $router->get('/api/table-sessions/(\d+)', 'TableSessionController@show');
+        //$router->get('/api/table-sessions', 'TableSessionController@index');
+        //$router->get('/api/table-sessions/(\d+)', 'TableSessionController@show');
         $router->post('/api/table-sessions', 'TableSessionController@store');
         $router->post('/api/table-sessions/validate-session', 'TableSessionController1@validateClientSession');
         $router->put('/api/table-sessions/(\d+)', 'TableSessionController@update');
         $router->delete('/api/table-sessions/(\d+)', 'TableSessionController@delete');
         $router->get('/api/table-sessions/table/(\d+)', 'TableSessionController@byTable');
+
+        $router->get('/api/table-sessions/', 'TableSessionController@allWithTable');
+        $router->get('/api/table-sessions/status/([A-Z]+)', 'TableSessionController@byStatusWithTable');
+        $router->put('/api/table-sessions/(\d+)/close', 'TableSessionController@close');
     }
 }
 /**
@@ -238,6 +251,10 @@ class SaleRoutes
         $router->post('/api/sales', 'SalesController@store');
         $router->put('/api/sales/(\d+)', 'SalesController@update');
         $router->delete('/api/sales/(\d+)', 'SalesController@delete');
+        $router->get('/api/sales/monthly-revenue', 'SalesController@monthlyRevenue'); //OBTENER RECAUDO MENSUAL
+        $router->get('/api/sales/revenue-by-date', 'SalesController@revenueByDate'); //Ingresos por fecha
+        $router->get('/api/sales/revenue-by-employee', 'SalesController@revenueByEmployee'); //ingreso por empleado
+        $router->get('/api/sales/revenue-by-table', 'SalesController@revenueByTable'); //ingresos por mesa
     }
 }
 
@@ -263,6 +280,10 @@ class OrdersRoutes
         $router->put('/api/orders/(\d+)', 'OrdersController@update'); //actualizar
         $router->delete('/api/orders/(\d+)', 'OrdersController@delete'); //eliminar
         $router->patch('/api/orders/(\d+)/status', 'OrdersController@updateStatus'); //actualizar estado
+        $router->get('/api/orders/session/(\d+)', 'OrdersController@bySession');
+        $router->put('/api/orders/bind-waiter', 'OrdersController@bindWaiter');
+        $router->post('/api/orders/unify', 'OrdersController@unify');
+        $router->get('/api/orders/unified/(\d+)', 'OrdersController@byUnified');
     }
 }
 

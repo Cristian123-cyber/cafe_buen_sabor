@@ -5,7 +5,7 @@ namespace Config;
 class Database {
     private static $instance = null;
     private $host = "cafeteria_mysql"; // Usa el nombre del servicio MySQL en Docker
-    private $db_name = "cafe_buen_sabor_bd";
+    private $db_name = "cafe_buen_sabor_db";
     private $username = "root";
     private $password = "root123";
     private $conn = null;

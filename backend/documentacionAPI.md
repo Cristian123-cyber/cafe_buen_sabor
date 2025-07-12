@@ -1105,4 +1105,134 @@ $router->set404(function() {
 
 // Ejecutar el router
 $router->run();
+
+
+
 ```
+
+
+## ESTADISTICAS
+
+### OBTENER RECAUDO MENSUAL (PARA GRÁFICAS)
+- **Método:** GET
+- **Endpoint:** `/api/sales/monthly-revenue`
+- **Descripción:** Devuelve el total recaudado por mes (solo ventas COMPLETED).
+- **Respuesta ejemplo:**
+```json
+[
+  { "month": "2024-01", "total": 1500000 },
+  { "month": "2024-02", "total": 2100000 }
+]
+```
+
+---
+
+### CONTROL DE INGRESOS POR FECHA
+- **Método:** GET
+- **Endpoint:** `/api/sales/revenue-by-date?from=YYYY-MM-DD&to=YYYY-MM-DD`
+- **Descripción:** Devuelve el total recaudado por día en el rango indicado.
+- **Respuesta ejemplo:**
+```json
+[
+  { "date": "2024-06-01", "total": 50000 },
+  { "date": "2024-06-02", "total": 70000 }
+]
+```
+
+---
+
+### CONTROL DE INGRESOS POR EMPLEADO
+- **Método:** GET
+- **Endpoint:** `/api/sales/revenue-by-employee`
+- **Descripción:** Devuelve el total recaudado por cada empleado (cajero).
+- **Respuesta ejemplo:**
+```json
+[
+  { "id_employee": 1, "employee_name": "Juan Pérez", "total": 120000 },
+  { "id_employee": 2, "employee_name": "Ana Ruiz", "total": 95000 }
+]
+```
+
+---
+
+### CONTROL DE INGRESOS POR MESA
+- **Método:** GET
+- **Endpoint:** `/api/sales/revenue-by-table`
+- **Descripción:** Devuelve el total recaudado por cada mesa.
+- **Respuesta ejemplo:**
+```json
+[
+  { "id_table": 1, "table_number": "A1", "total": 80000 },
+  { "id_table": 2, "table_number": "B2", "total": 65000 }
+]
+```
+
+### MESAS ATENDIDAS POR CADA MESERO
+
+- **Método:** GET  
+- **Endpoint:** `/api/employees/tables-served`  
+- **Descripción:** Devuelve la cantidad de mesas atendidas, total de órdenes y total de ventas generadas por cada mesero activo, junto con su nombre y rol.
+
+#### Respuesta de ejemplo:
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id_employe": 3,
+      "employe_name": "Carlos Gómez",
+      "rol_name": "Mesero",
+      "mesas_atendidas": 12,
+      "total_ordenes": 34,
+      "total_ventas_generadas": 150000
+    },
+    {
+      "id_employe": 5,
+      "employe_name": "Ana Ruiz",
+      "rol_name": "Mesero",
+      "mesas_atendidas": 8,
+      "total_ordenes": 20,
+      "total_ventas_generadas": 90000
+    }
+  ]
+}
+```
+
+- **Notas:**  
+  - Solo incluye empleados activos (`employees_statuses_id_status = 1`).
+  - El campo `mesas_atendidas` indica la cantidad de mesas distintas atendidas por el mesero.
+  - El campo `total_ordenes` es la cantidad de órdenes tomadas por el mesero.
+  - El campo `total_ventas_generadas` es la suma del monto total de todas las órdenes atendidas por el mesero.
+
+
+### RESUMEN DE VENTAS DE UN EMPLEADO
+
+- **Método:** GET  
+- **Endpoint:** `/api/employees/{id}/sales-summary`  
+- **Descripción:** Devuelve el resumen de ventas, mesas atendidas y órdenes gestionadas por un empleado específico (mesero o cajero).
+
+#### Parámetros:
+- **id**: ID del empleado (entero, requerido)
+
+#### Respuesta de ejemplo:
+```json
+{
+  "success": true,
+  "data": {
+    "id_employe": 1,
+    "employe_name": "Juan Pérez",
+    "rol_name": "Mesero",
+    "mesas_atendidas": 5,
+    "total_ventas": 12,
+    "total_vendido": 350000,
+    "total_ordenes": 15
+  }
+}
+```
+
+- **Notas:**  
+  - Solo incluye ventas con estado COMPLETED.
+  - El campo `mesas_atendidas` indica la cantidad de mesas distintas atendidas por el empleado.
+  - El campo `total_ventas` es la cantidad de ventas realizadas.
+  - El campo `total_vendido` es la suma del monto total de todas las ventas realizadas.
+  - El campo `total_ordenes` es la cantidad de órdenes gestionadas por el empleado.

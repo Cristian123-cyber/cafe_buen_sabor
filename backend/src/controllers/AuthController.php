@@ -48,6 +48,8 @@ class AuthController extends BaseController
 
             // Buscar usuario
             $user = $this->userModel->findByEmail($email);
+            
+
             if (!$user) {
                 $this->handleInvalidCredentialsError();
                 return;
