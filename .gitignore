@@ -19,3 +19,4 @@ logs/
 # Opcional: Si no quieres subir los datos de la BBDD local de Docker
 # (Generalmente es buena idea ignorarlo)
 cafeteria_mysql_data/
+database.php
