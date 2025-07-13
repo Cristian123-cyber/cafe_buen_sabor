@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Models\Order;
 use App\Models\TableSession;
-use App\Models\Employee;
+use App\Models\Employees;
 use Exception;
 
 class OrderController extends BaseController
@@ -18,7 +18,7 @@ class OrderController extends BaseController
         parent::__construct();
         $this->orderModel = new Order();
         $this->tableSessionModel = new TableSession();
-        $this->employeeModel = new Employee();
+        $this->employeeModel = new Employees();
     }
 
     /**
