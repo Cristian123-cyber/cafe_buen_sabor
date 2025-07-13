@@ -17,7 +17,7 @@ class ProductType extends BaseModel
     /**
      * Obtiene todos los tipos de productos
      */
-    public function getAll()
+    public function getAll($page = 1, $limit = 10, $orderBy = null): array
     {
         $query = "SELECT * FROM product_types ORDER BY type_name";
         $stmt = $this->conn->prepare($query);
