@@ -146,4 +146,167 @@ class Order extends BaseModel
         $stmt->execute([$unifiedId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Obtener todos los pedidos con detalles completos
+     */
+    public function getAllWithDetails()
+    {
+        $query = "SELECT o.*, os.status_name as order_status_name,
+                         ts.tables_id_table, t.table_number,
+                         e.employe_name as waiter_name
+                  FROM orders o
+                  LEFT JOIN order_statuses os ON o.order_statuses_id_status = os.id_status
+                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+                  LEFT JOIN employees e ON o.waiter_id = e.id_employe
+                  ORDER BY o.created_date DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtener un pedido por ID con detalles completos incluyendo productos
+     */
+    public function getByIdWithDetails($id)
+    {
+        // Obtener datos básicos del pedido
+        $query = "SELECT o.*, os.status_name as order_status_name,
+                         ts.tables_id_table, t.table_number,
+                         e.employe_name as waiter_name
+                  FROM orders o
+                  LEFT JOIN order_statuses os ON o.order_statuses_id_status = os.id_status
+                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+                  LEFT JOIN employees e ON o.waiter_id = e.id_employe
+                  WHERE o.id_order = ?";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$id]);
+        $order = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$order) {
+            return null;
+        }
+
+        // Obtener productos del pedido
+        $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc
+                         FROM orders_has_products ohp
+                         LEFT JOIN products p ON ohp.products_id_product = p.id_product
+                         WHERE ohp.orders_id_order = ?";
+        
+        $stmt = $this->conn->prepare($productsQuery);
+        $stmt->execute([$id]);
+        $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $order;
+    }
+
+    /**
+     * Obtener pedidos por estado con detalles
+     */
+    public function getByStatusWithDetails($status)
+    {
+        $query = "SELECT o.*, os.status_name as order_status_name,
+                         ts.tables_id_table, t.table_number,
+                         e.employe_name as waiter_name
+                  FROM orders o
+                  LEFT JOIN order_statuses os ON o.order_statuses_id_status = os.id_status
+                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+                  LEFT JOIN employees e ON o.waiter_id = e.id_employe
+                  WHERE os.status_name = ?
+                  ORDER BY o.created_date DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$status]);
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Agregar productos a cada pedido
+        foreach ($orders as &$order) {
+            $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc
+                             FROM orders_has_products ohp
+                             LEFT JOIN products p ON ohp.products_id_product = p.id_product
+                             WHERE ohp.orders_id_order = ?";
+            
+            $stmt = $this->conn->prepare($productsQuery);
+            $stmt->execute([$order['id_order']]);
+            $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+        return $orders;
+    }
+
+    /**
+     * Obtener pedidos por sesión con detalles
+     */
+    public function getBySessionWithDetails($sessionId)
+    {
+        $query = "SELECT o.*, os.status_name as order_status_name,
+                         ts.tables_id_table, t.table_number,
+                         e.employe_name as waiter_name
+                  FROM orders o
+                  LEFT JOIN order_statuses os ON o.order_statuses_id_status = os.id_status
+                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+                  LEFT JOIN employees e ON o.waiter_id = e.id_employe
+                  WHERE o.table_sessions_id_session = ?
+                  ORDER BY o.created_date DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$sessionId]);
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Agregar productos a cada pedido
+        foreach ($orders as &$order) {
+            $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc
+                             FROM orders_has_products ohp
+                             LEFT JOIN products p ON ohp.products_id_product = p.id_product
+                             WHERE ohp.orders_id_order = ?";
+            
+            $stmt = $this->conn->prepare($productsQuery);
+            $stmt->execute([$order['id_order']]);
+            $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+        return $orders;
+    }
+
+    /**
+     * Obtener pedidos de una orden unificada con detalles
+     */
+    public function getByUnifiedWithDetails($unifiedId)
+    {
+        $query = "SELECT o.*, os.status_name as order_status_name,
+                         ts.tables_id_table, t.table_number,
+                         e.employe_name as waiter_name
+                  FROM orders o
+                  JOIN orders_has_unified_has_orders uho ON o.id_order = uho.orders_id_order
+                  LEFT JOIN order_statuses os ON o.order_statuses_id_status = os.id_status
+                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+                  LEFT JOIN employees e ON o.waiter_id = e.id_employe
+                  WHERE uho.orders_unified_id = ?
+                  ORDER BY o.created_date DESC";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$unifiedId]);
+        $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Agregar productos a cada pedido
+        foreach ($orders as &$order) {
+            $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc
+                             FROM orders_has_products ohp
+                             LEFT JOIN products p ON ohp.products_id_product = p.id_product
+                             WHERE ohp.orders_id_order = ?";
+            
+            $stmt = $this->conn->prepare($productsQuery);
+            $stmt->execute([$order['id_order']]);
+            $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
+        return $orders;
+    }
 }

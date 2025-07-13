@@ -84,6 +84,7 @@ abstract class RouteGroup
         SaleRoutes::register($router);
         SaleOrderRoutes::register($router);
         OrdersRoutes::register($router);
+        UnitsOfMeasureRoutes::register($router);
     }
 }
 /**
@@ -102,6 +103,9 @@ class EmployeeRoutes
         $router->get('/api/employees/filter', 'EmployeesController@filter');
         $router->get('/api/employees/tables-served', 'SalesController@tablesServedByWaiter'); //cantidad de mesas atendidas por mesero 
         $router->get('/api/employees/(\d+)/sales-summary', 'SalesController@employeeSalesSummary');
+        
+        // Rutas para roles de empleados
+        $router->get('/api/employees/roles', 'RolesController@index');
     }
 }
 /**
@@ -133,6 +137,9 @@ class EmployeeStatusRoutes
         $router->post('/api/estados-empleados', 'EmployeesStatusesController@store');
         $router->put('/api/estados-empleados/(\d+)', 'EmployeesStatusesController@update');
         $router->delete('/api/estados-empleados/(\d+)', 'EmployeesStatusesController@delete');
+        
+        // Rutas para estados de empleados (solo lectura según documentación)
+        $router->get('/api/employees/statuses', 'EmployeesStatusesController@index');
     }
 }
 /**
@@ -169,6 +176,9 @@ class ProductRoutes
         // Rutas adicionales (mantener compatibilidad)
         $router->get('/api/productos/disponibles', 'ProductoController@getAvailable');
         $router->get('/api/productos/populares', 'ProductoController@getPopular');
+        
+        // Rutas para tipos de productos
+        $router->get('/api/products/types', 'ProductTypesController@index');
     }
 }
 
@@ -218,6 +228,18 @@ class IngredientRoutes
 
         // Rutas de estadísticas
         $router->get('/api/ingredientes/estadisticas', 'IngredientController@getStatistics');
+    }
+}
+
+/**
+ * Rutas relacionadas con unidades de medida
+ */
+class UnitsOfMeasureRoutes
+{
+    public static function register($router)
+    {
+        // Solo obtener todas las unidades de medida
+        $router->get('/api/units-of-measure', 'UnitsOfMeasureController@index');
     }
 }
 
@@ -367,16 +389,23 @@ class OrdersRoutes
 {
     public static function register($router)
     {
-        $router->get('/api/orders', 'OrdersController@index'); //mostrar todos
-        $router->get('/api/orders/(\d+)', 'OrdersController@show'); //filtrar por id
-        $router->post('/api/orders', 'OrdersController@store'); //agregar
-        $router->put('/api/orders/(\d+)', 'OrdersController@update'); //actualizar
-        $router->delete('/api/orders/(\d+)', 'OrdersController@delete'); //eliminar
-        $router->patch('/api/orders/(\d+)/status', 'OrdersController@updateStatus'); //actualizar estado
-        $router->get('/api/orders/session/(\d+)', 'OrdersController@bySession');
-        $router->put('/api/orders/bind-waiter', 'OrdersController@bindWaiter');
-        $router->post('/api/orders/unify', 'OrdersController@unify');
-        $router->get('/api/orders/unified/(\d+)', 'OrdersController@byUnified');
+        // CRUD básico
+        $router->get('/api/orders', 'OrderController@index'); //mostrar todos
+        $router->get('/api/orders/(\d+)', 'OrderController@show'); //filtrar por id
+        $router->post('/api/orders', 'OrderController@store'); //agregar
+        
+        // Rutas de estado de pedidos
+        $router->put('/api/orders/(\d+)/confirm', 'OrderController@confirm');
+        $router->put('/api/orders/(\d+)/cancel', 'OrderController@cancel');
+        $router->put('/api/orders/(\d+)/ready', 'OrderController@ready');
+        $router->put('/api/orders/(\d+)/complete', 'OrderController@complete');
+        
+        // Rutas específicas
+        $router->get('/api/orders/status/([A-Z]+)', 'OrderController@getByStatus');
+        $router->get('/api/orders/session/(\d+)', 'OrderController@getBySession');
+        $router->put('/api/orders/bind-waiter', 'OrderController@bindWaiter');
+        $router->post('/api/orders/unify', 'OrderController@unify');
+        $router->get('/api/orders/unified/(\d+)', 'OrderController@getUnified');
     }
 }
 

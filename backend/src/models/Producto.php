@@ -67,7 +67,7 @@ class Producto extends BaseModel
                         pc.category_name as category_name,
                         i.id_ingredient, i.ingredient_name, i.ingredient_stock,
                         phi.quantity as cantidad_ingrediente,
-                        uom.unit_name, uom.unit_abbreviation
+                        uom.unit_name, uom.unit_abbreviation, uom.id_unit as units_of_measure_id_unit
                  FROM products p
                  LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
                  LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
@@ -90,8 +90,10 @@ class Producto extends BaseModel
         $productos = [];
         foreach ($rows as $row) {
             $id = $row['id_product'];
+            $tipo = $row['product_types_id_type'];
+            
             if (!isset($productos[$id])) {
-                $productos[$id] = [
+                $base = [
                     'id_product' => $row['id_product'],
                     'product_name' => $row['product_name'],
                     'product_price' => $row['product_price'],
@@ -107,22 +109,38 @@ class Producto extends BaseModel
                     'category_name' => $row['category_name'],
                     'estado_stock' => $row['estado_stock'],
                     'product_types_id_type' => $row['product_types_id_type'],
-                    'product_category' => $row['product_category'],
-                    'ingredientes' => []
+                    'product_category' => $row['product_category']
                 ];
+                
+                // Solo agregar ingredients para productos preparados (tipo 1)
+                if ($tipo == 1) {
+                    $base['ingredients'] = [];
+                }
+                
+                $productos[$id] = $base;
             }
-            if ($row['id_ingredient']) {
-                $productos[$id]['ingredientes'][] = [
-                    'id_ingredient' => $row['id_ingredient'],
+            
+            // Solo agregar ingredientes para productos preparados
+            if ($tipo == 1 && $row['id_ingredient']) {
+                $productos[$id]['ingredients'][] = [
+                    'id' => $row['id_ingredient'],
+                    'cantidad' => $row['cantidad_ingrediente'],
                     'ingredient_name' => $row['ingredient_name'],
-                    'ingredient_stock' => $row['ingredient_stock'],
-                    'cantidad_ingrediente' => $row['cantidad_ingrediente'],
+                    'units_of_measure_id_unit' => $row['units_of_measure_id_unit'],
                     'unit_name' => $row['unit_name'],
                     'unit_abbreviation' => $row['unit_abbreviation']
                 ];
             }
         }
-        return array_values($productos);
+        
+        $result = array_values($productos);
+        
+        // Si se solicita un producto específico, devolver solo ese producto
+        if ($producto_id) {
+            return $result[0] ?? null;
+        }
+        
+        return $result;
     }
 
     /**

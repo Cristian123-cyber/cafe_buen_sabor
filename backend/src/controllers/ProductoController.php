@@ -38,17 +38,15 @@ class ProductoController extends BaseController
                 return;
             }
             
-            $producto = $this->productoModel->getById($productId);
+            // Obtener información del producto con ingredientes
+            $producto = $this->productoModel->getProductosConIngredientes($productId);
             
             if (!$producto) {
                 $this->handleResourceNotFoundError('Producto');
                 return;
             }
             
-            // Obtener información adicional del producto con ingredientes
-            $productoDetallado = $this->productoModel->getProductosConIngredientes($productId);
-            
-            $this->handleResponse(true, 'Producto obtenido correctamente.', $productoDetallado);
+            $this->handleResponse(true, 'Producto obtenido correctamente.', $producto);
             
         }, 'Error al obtener el producto');
     }
