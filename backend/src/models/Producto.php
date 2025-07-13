@@ -59,42 +59,70 @@ class Producto extends BaseModel
     }
 
     /**
-     * Obtiene productos con sus ingredientes
+     * Obtiene productos con sus ingredientes (ingredientes como array y category_name)
      */
     public function getProductosConIngredientes($producto_id = null) {
+        $query = "SELECT p.*, pt.type_name as categoria_nombre,
+                        ist.name_status as estado_stock,
+                        pc.category_name as category_name,
+                        i.id_ingredient, i.ingredient_name, i.ingredient_stock,
+                        phi.quantity as cantidad_ingrediente,
+                        uom.unit_name, uom.unit_abbreviation
+                 FROM products p
+                 LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
+                 LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
+                 LEFT JOIN products_category pc ON p.product_category = pc.id_category
+                 LEFT JOIN products_has_ingredients phi ON p.id_product = phi.products_id_product
+                 LEFT JOIN ingredients i ON phi.ingredients_id_ingredient = i.id_ingredient
+                 LEFT JOIN units_of_measure uom ON i.units_of_measure_id_unit = uom.id_unit";
         if ($producto_id) {
-            $query = "SELECT p.*, pt.type_name as categoria_nombre,
-                            ist.name_status as estado_stock,
-                            i.ingredient_name, i.ingredient_stock,
-                            phi.quantity as cantidad_ingrediente,
-                            uom.unit_name, uom.unit_abbreviation
-                     FROM products p
-                     LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
-                     LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
-                     LEFT JOIN products_has_ingredients phi ON p.id_product = phi.products_id_product
-                     LEFT JOIN ingredients i ON phi.ingredients_id_ingredient = i.id_ingredient
-                     LEFT JOIN units_of_measure uom ON i.units_of_measure_id_unit = uom.id_unit
-                     WHERE p.id_product = :producto_id";
-            
-            $stmt = $this->conn->prepare($query);
-            $stmt->bindParam(':producto_id', $producto_id);
-        } else {
-            $query = "SELECT p.*, pt.type_name as categoria_nombre,
-                            ist.name_status as estado_stock,
-                            GROUP_CONCAT(i.ingredient_name SEPARATOR ', ') as ingredientes
-                     FROM products p
-                     LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
-                     LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
-                     LEFT JOIN products_has_ingredients phi ON p.id_product = phi.products_id_product
-                     LEFT JOIN ingredients i ON phi.ingredients_id_ingredient = i.id_ingredient
-                     GROUP BY p.id_product
-                     ORDER BY p.product_name";
-            
-            $stmt = $this->conn->prepare($query);
+            $query .= " WHERE p.id_product = :producto_id";
         }
-        
+        $query .= " ORDER BY p.id_product";
+
+        $stmt = $this->conn->prepare($query);
+        if ($producto_id) {
+            $stmt->bindParam(':producto_id', $producto_id);
+        }
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $productos = [];
+        foreach ($rows as $row) {
+            $id = $row['id_product'];
+            if (!isset($productos[$id])) {
+                $productos[$id] = [
+                    'id_product' => $row['id_product'],
+                    'product_name' => $row['product_name'],
+                    'product_price' => $row['product_price'],
+                    'product_cost' => $row['product_cost'],
+                    'product_desc' => $row['product_desc'],
+                    'product_image_url' => $row['product_image_url'],
+                    'created_date' => $row['created_date'],
+                    'last_updated_date' => $row['last_updated_date'],
+                    'product_stock' => $row['product_stock'],
+                    'low_stock_level' => $row['low_stock_level'],
+                    'critical_stock_level' => $row['critical_stock_level'],
+                    'categoria_nombre' => $row['categoria_nombre'],
+                    'category_name' => $row['category_name'],
+                    'estado_stock' => $row['estado_stock'],
+                    'product_types_id_type' => $row['product_types_id_type'],
+                    'product_category' => $row['product_category'],
+                    'ingredientes' => []
+                ];
+            }
+            if ($row['id_ingredient']) {
+                $productos[$id]['ingredientes'][] = [
+                    'id_ingredient' => $row['id_ingredient'],
+                    'ingredient_name' => $row['ingredient_name'],
+                    'ingredient_stock' => $row['ingredient_stock'],
+                    'cantidad_ingrediente' => $row['cantidad_ingrediente'],
+                    'unit_name' => $row['unit_name'],
+                    'unit_abbreviation' => $row['unit_abbreviation']
+                ];
+            }
+        }
+        return array_values($productos);
     }
 
     /**
@@ -302,5 +330,86 @@ class Producto extends BaseModel
      */
     public function getHistorialStock($producto_id) {
         return $this->getHistorialMovimientosStock($producto_id);
+    }
+
+    /**
+     * Obtiene todos los productos agrupados por tipo y estructura compatible con la documentación
+     */
+    public function getProductosAgrupados() {
+        $query = "SELECT p.*, pt.type_name as categoria_nombre,
+                        ist.name_status as estado_stock,
+                        pc.category_name as category_name,
+                        i.id_ingredient, i.ingredient_name, i.ingredient_stock,
+                        phi.quantity as cantidad_ingrediente,
+                        uom.unit_name, uom.unit_abbreviation, uom.id_unit as units_of_measure_id_unit
+                 FROM products p
+                 LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
+                 LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
+                 LEFT JOIN products_category pc ON p.product_category = pc.id_category
+                 LEFT JOIN products_has_ingredients phi ON p.id_product = phi.products_id_product
+                 LEFT JOIN ingredients i ON phi.ingredients_id_ingredient = i.id_ingredient
+                 LEFT JOIN units_of_measure uom ON i.units_of_measure_id_unit = uom.id_unit
+                 ORDER BY p.id_product";
+
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $preparados = [];
+        $no_preparados = [];
+        $productos_tmp = [];
+
+        foreach ($rows as $row) {
+            $id = $row['id_product'];
+            $tipo = $row['product_types_id_type'];
+            if (!isset($productos_tmp[$id])) {
+                $base = [
+                    'id_product' => $row['id_product'],
+                    'product_name' => $row['product_name'],
+                    'product_price' => $row['product_price'],
+                    'product_cost' => $row['product_cost'],
+                    'product_desc' => $row['product_desc'],
+                    'product_image_url' => $row['product_image_url'],
+                    'created_date' => $row['created_date'],
+                    'last_updated_date' => $row['last_updated_date'],
+                    'product_stock' => $row['product_stock'],
+                    'low_stock_level' => $row['low_stock_level'],
+                    'critical_stock_level' => $row['critical_stock_level'],
+                    'categoria_nombre' => $row['categoria_nombre'],
+                    'category_name' => $row['category_name'],
+                    'estado_stock' => $row['estado_stock'],
+                    'product_types_id_type' => $row['product_types_id_type'],
+                    'product_category' => $row['product_category']
+                ];
+                if ($tipo == 1) {
+                    $base['ingredients'] = [];
+                }
+                $productos_tmp[$id] = $base;
+            }
+            if ($tipo == 1 && $row['id_ingredient']) {
+                $productos_tmp[$id]['ingredients'][] = [
+                    'id' => $row['id_ingredient'],
+                    'cantidad' => $row['cantidad_ingrediente'],
+                    'ingredient_name' => $row['ingredient_name'],
+                    'units_of_measure_id_unit' => $row['units_of_measure_id_unit'],
+                    'unit_name' => $row['unit_name'],
+                    'unit_abbreviation' => $row['unit_abbreviation']
+                ];
+            }
+        }
+        foreach ($productos_tmp as $prod) {
+            if ($prod['product_types_id_type'] == 1) {
+                $preparados[] = $prod;
+            } else if ($prod['product_types_id_type'] == 2) {
+                unset($prod['ingredients']);
+                $no_preparados[] = $prod;
+            }
+        }
+        return [
+            [
+                'productos_preparados' => $preparados,
+                'productos_no_preparados' => $no_preparados
+            ]
+        ];
     }
 } 

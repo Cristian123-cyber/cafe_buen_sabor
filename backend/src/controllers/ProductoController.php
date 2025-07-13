@@ -21,15 +21,8 @@ class ProductoController extends BaseController
     public function index()
     {
         return $this->executeWithErrorHandling(function() {
-            $page = $_GET['page'] ?? 1;
-            $limit = $_GET['limit'] ?? 10;
-            
-            // Sanitizar parámetros de paginación
-            list($page, $limit) = $this->handlePagination($page, $limit);
-            
-            $productos = $this->productoModel->getProductosConCategoria($page, $limit);
+            $productos = $this->productoModel->getProductosAgrupados();
             $this->handleResponse(true, 'Productos obtenidos correctamente.', $productos);
-            
         }, 'Error al obtener los productos');
     }
 

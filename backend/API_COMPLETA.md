@@ -44,8 +44,51 @@ Authorization: Bearer <token>
 
 ### Obtener Todos los Productos
 - **GET** `/api/productos`
-- **Query Params:** `page`, `limit`
-- **Respuesta:** Lista de productos con categoría y estado de stock
+- **Respuesta:**
+```json
+[
+  {
+    "productos_preparados": [
+      {
+        "id_product": 1,
+        "product_name": "Torta de chocolate",
+        "product_price": 15000.00,
+        "product_cost": 9000.00,
+        "product_desc": "Deliciosa torta de chocolate con crema",
+        ...otros campos del producto preparado,
+        "ingredients": [
+          {
+            "id": 1,
+            "cantidad": 100,
+            "ingredient_name": "Azúcar",
+            "units_of_measure_id_unit": 2,
+            "unit_name": "Gramo",
+            "unit_abbreviation": "g"
+          },
+          ...otros ingredientes
+        ]
+      }
+      ...otros productos preparados
+    ],
+    "productos_no_preparados": [
+      {
+        "id_product": 2,
+        "product_name": "Café americano",
+        "product_price": 4000.00,
+        "product_cost": 1500.00,
+        "product_desc": "Café negro sin azúcar",
+        ...otros campos del producto no preparado
+      }
+      ...otros productos no preparados
+    ]
+  }
+]
+```
+
+- **Notas:**
+  - Los productos preparados (tipo 1) incluyen el array `ingredients` con todos los datos de cada ingrediente.
+  - Los productos no preparados (tipo 2) no incluyen el array de ingredientes.
+  - Los nombres de las claves y la estructura coinciden con la documentación oficial.
 
 ### Obtener Producto por ID
 - **GET** `/api/productos/{id}`
