@@ -1,0 +1,125 @@
+import api from './api';
+
+/**
+ * Servicio para gestionar empleados de la API.
+ */
+export const employeService = {
+  /**
+   * Obtiene la lista completa de empleados.
+   */
+  async getAll() {
+    try {
+      const response = await api.get('/employees');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener empleados:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene un empleado por ID.
+   */
+  async getById(id) {
+    try {
+      const response = await api.get(`/employees/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al obtener el empleado ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Crea un nuevo empleado.
+   */
+  async create(data) {
+    try {
+      const response = await api.post('/employees', data);
+      return response.data;
+    } catch (error) {
+      console.error('Error al crear empleado:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Actualiza un empleado existente.
+   */
+  async update(id, data) {
+    try {
+      const response = await api.put(`/employees/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar el empleado ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Elimina (desactiva) un empleado.
+   */
+  async delete(id) {
+    try {
+      const response = await api.delete(`/employees/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al eliminar el empleado ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Filtra empleados por rol y/o estado.
+   */
+  async filter(params) {
+    try {
+      const response = await api.get('/employees/filter', { params });
+      return response.data;
+    } catch (error) {
+      console.error('Error al filtrar empleados:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene la cantidad de mesas atendidas por mesero.
+   */
+  async getTablesServed() {
+    try {
+      const response = await api.get('/employees/tables-served');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener mesas atendidas:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene el resumen de ventas de un empleado.
+   */
+  async getSalesSummary(id) {
+    try {
+      const response = await api.get(`/employees/${id}/sales-summary`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al obtener resumen de ventas del empleado ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtiene todos los roles de empleados.
+   */
+  async getRoles() {
+    try {
+      const response = await api.get('/employees/roles');
+      return response.data;
+    } catch (error) {
+      console.error('Error al obtener roles de empleados:', error);
+      throw error;
+    }
+  }
+};
+
+
