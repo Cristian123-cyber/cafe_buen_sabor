@@ -257,4 +257,50 @@ class Producto extends BaseModel
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Obtiene productos disponibles (con stock > 0)
+     */
+    public function getProductosDisponibles() {
+        $query = "SELECT p.*, pt.type_name as categoria_nombre,
+                        ist.name_status as estado_stock
+                 FROM products p
+                 LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
+                 LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
+                 WHERE p.product_stock > 0 OR p.product_stock IS NULL
+                 ORDER BY p.product_name";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene productos populares (más vendidos)
+     */
+    public function getProductosPopulares() {
+        $query = "SELECT p.*, pt.type_name as categoria_nombre,
+                        ist.name_status as estado_stock,
+                        COUNT(ohp.orders_id_order) as veces_vendido
+                 FROM products p
+                 LEFT JOIN product_types pt ON p.product_types_id_type = pt.id_type
+                 LEFT JOIN ingredient_statuses ist ON p.ingredient_statuses_id_status = ist.id_status
+                 LEFT JOIN orders_has_products ohp ON p.id_product = ohp.products_id_product
+                 GROUP BY p.id_product
+                 ORDER BY veces_vendido DESC
+                 LIMIT 10";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Obtiene el historial de stock (alias para compatibilidad)
+     */
+    public function getHistorialStock($producto_id) {
+        return $this->getHistorialMovimientosStock($producto_id);
+    }
 } 

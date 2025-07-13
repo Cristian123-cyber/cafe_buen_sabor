@@ -72,6 +72,9 @@ abstract class RouteGroup
     public static function registerAll($router)
     {
         ProductRoutes::register($router);
+        ProductCategoryRoutes::register($router);
+        IngredientRoutes::register($router);
+        NotificationRoutes::register($router);
         EmployeeRoutes::register($router);
         RoleRoutes::register($router);
         AuthRoutes::registerProtectedRoutes($router); // Rutas de auth que sí necesitan token
@@ -162,6 +165,92 @@ class ProductRoutes
         // Rutas adicionales (mantener compatibilidad)
         $router->get('/api/productos/disponibles', 'ProductoController@getAvailable');
         $router->get('/api/productos/populares', 'ProductoController@getPopular');
+    }
+}
+
+/**
+ * Rutas relacionadas con categorías de productos
+ */
+class ProductCategoryRoutes
+{
+    public static function register($router)
+    {
+        // CRUD básico
+        $router->get('/api/categorias-productos', 'ProductCategoryController@index');
+        $router->get('/api/categorias-productos/(\d+)', 'ProductCategoryController@show');
+        $router->post('/api/categorias-productos', 'ProductCategoryController@store');
+        $router->put('/api/categorias-productos/(\d+)', 'ProductCategoryController@update');
+        $router->delete('/api/categorias-productos/(\d+)', 'ProductCategoryController@delete');
+
+        // Rutas específicas
+        $router->get('/api/categorias-productos/(\d+)/productos', 'ProductCategoryController@getProducts');
+    }
+}
+
+/**
+ * Rutas relacionadas con ingredientes
+ */
+class IngredientRoutes
+{
+    public static function register($router)
+    {
+        // CRUD básico
+        $router->get('/api/ingredientes', 'IngredientController@index');
+        $router->get('/api/ingredientes/(\d+)', 'IngredientController@show');
+        $router->post('/api/ingredientes', 'IngredientController@store');
+        $router->put('/api/ingredientes/(\d+)', 'IngredientController@update');
+        $router->delete('/api/ingredientes/(\d+)', 'IngredientController@delete');
+
+        // Rutas específicas de ingredientes
+        $router->get('/api/ingredientes/buscar', 'IngredientController@search');
+        $router->get('/api/ingredientes/estado/(\d+)', 'IngredientController@getByStatus');
+        $router->get('/api/ingredientes/stock/bajo', 'IngredientController@getLowStock');
+        $router->get('/api/ingredientes/stock/critico', 'IngredientController@getCriticalStock');
+
+        // Rutas de gestión de stock
+        $router->put('/api/ingredientes/(\d+)/stock', 'IngredientController@updateStock');
+        $router->get('/api/ingredientes/(\d+)/stock/historial', 'IngredientController@getStockHistory');
+        $router->get('/api/ingredientes/(\d+)/productos', 'IngredientController@getProductsUsingIngredient');
+
+        // Rutas de estadísticas
+        $router->get('/api/ingredientes/estadisticas', 'IngredientController@getStatistics');
+    }
+}
+
+/**
+ * Rutas relacionadas con notificaciones
+ */
+class NotificationRoutes
+{
+    public static function register($router)
+    {
+        // CRUD básico
+        $router->get('/api/notificaciones', 'NotificationController@index');
+        $router->get('/api/notificaciones/(\d+)', 'NotificationController@show');
+        $router->post('/api/notificaciones', 'NotificationController@store');
+        $router->put('/api/notificaciones/(\d+)', 'NotificationController@update');
+        $router->delete('/api/notificaciones/(\d+)', 'NotificationController@delete');
+
+        // Rutas específicas de notificaciones
+        $router->get('/api/notificaciones/empleado/(\d+)', 'NotificationController@getByEmployee');
+        $router->get('/api/notificaciones/tipo/([A-Z_]+)', 'NotificationController@getByType');
+        $router->get('/api/notificaciones/no-leidas', 'NotificationController@getUnread');
+        $router->get('/api/notificaciones/empleado/(\d+)/no-leidas', 'NotificationController@getUnreadByEmployee');
+
+        // Rutas de gestión de lectura
+        $router->put('/api/notificaciones/(\d+)/leer', 'NotificationController@markAsRead');
+        $router->put('/api/notificaciones/leer-multiples', 'NotificationController@markMultipleAsRead');
+        $router->put('/api/notificaciones/empleado/(\d+)/leer-todas', 'NotificationController@markAllAsReadByEmployee');
+
+        // Rutas de creación específica
+        $router->post('/api/notificaciones/pedido-listo', 'NotificationController@createOrderReadyNotification');
+        $router->post('/api/notificaciones/pedido-confirmado', 'NotificationController@createOrderConfirmedNotification');
+        $router->post('/api/notificaciones/pedido-cancelado', 'NotificationController@createOrderCancelledNotification');
+
+        // Rutas de estadísticas
+        $router->get('/api/notificaciones/estadisticas', 'NotificationController@getStatistics');
+        $router->get('/api/notificaciones/empleado/(\d+)/estadisticas', 'NotificationController@getStatisticsByEmployee');
+        $router->get('/api/notificaciones/por-fechas', 'NotificationController@getByDateRange');
     }
 }
 
