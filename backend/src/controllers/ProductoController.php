@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Producto;
+use App\Utils\ImageHandler;
 use Exception;
 use PharIo\Manifest\Extension;
 use PhpParser\Node\Stmt\TryCatch;
@@ -363,5 +364,108 @@ class ProductoController extends BaseController
             $this->handleResponse(true, 'Productos populares obtenidos correctamente.', $productos);
             
         }, 'Error al obtener productos populares');
+    }
+
+    /**
+     * Sube una imagen para un producto específico
+     */
+    public function uploadImage($id)
+    {
+        return $this->executeWithErrorHandling(function() use ($id) {
+            // Validar ID
+            $productId = $this->validateId($id);
+            if (!$productId) {
+                $this->handleInvalidIdError('ID de producto');
+                return;
+            }
+
+            // Verificar que el producto existe
+            $producto = $this->productoModel->getById($productId);
+            if (!$producto) {
+                $this->handleResourceNotFoundError('Producto');
+                return;
+            }
+
+            // Verificar que se envió un archivo
+            if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
+                $this->handleResponse(false, 'No se recibió una imagen válida', [], 400);
+                return;
+            }
+
+            try {
+                // Subir imagen
+                $imageUrl = ImageHandler::uploadImage($_FILES['image'], $productId);
+
+                // Actualizar el producto con la nueva URL de imagen
+                $updateData = ['product_image_url' => $imageUrl];
+                $resultado = $this->productoModel->update($productId, $updateData);
+
+                if ($resultado) {
+                    $this->handleResponse(true, 'Imagen subida correctamente', [
+                        'product_id' => $productId,
+                        'image_url' => $imageUrl
+                    ]);
+                } else {
+                    // Si falla la actualización, eliminar la imagen subida
+                    ImageHandler::deleteImage($imageUrl);
+                    $this->handleResponse(false, 'Error al actualizar el producto', [], 500);
+                }
+
+            } catch (\Exception $e) {
+                $this->handleResponse(false, 'Error al subir imagen: ' . $e->getMessage(), [], 400);
+            }
+
+        }, 'Error al subir imagen');
+    }
+
+    /**
+     * Elimina la imagen de un producto
+     */
+    public function deleteImage($id)
+    {
+        return $this->executeWithErrorHandling(function() use ($id) {
+            // Validar ID
+            $productId = $this->validateId($id);
+            if (!$productId) {
+                $this->handleInvalidIdError('ID de producto');
+                return;
+            }
+
+            // Obtener el producto
+            $producto = $this->productoModel->getById($productId);
+            if (!$producto) {
+                $this->handleResourceNotFoundError('Producto');
+                return;
+            }
+
+            $currentImageUrl = $producto['product_image_url'] ?? '';
+
+            if (empty($currentImageUrl)) {
+                $this->handleResponse(false, 'El producto no tiene imagen', [], 400);
+                return;
+            }
+
+            try {
+                // Eliminar imagen del servidor
+                $imageDeleted = ImageHandler::deleteImage($currentImageUrl);
+
+                // Actualizar el producto (eliminar URL de imagen)
+                $updateData = ['product_image_url' => null];
+                $resultado = $this->productoModel->update($productId, $updateData);
+
+                if ($resultado) {
+                    $this->handleResponse(true, 'Imagen eliminada correctamente', [
+                        'product_id' => $productId,
+                        'image_deleted' => $imageDeleted
+                    ]);
+                } else {
+                    $this->handleResponse(false, 'Error al actualizar el producto', [], 500);
+                }
+
+            } catch (\Exception $e) {
+                $this->handleResponse(false, 'Error al eliminar imagen: ' . $e->getMessage(), [], 500);
+            }
+
+        }, 'Error al eliminar imagen');
     }
 } 

@@ -155,6 +155,10 @@ class ProductRoutes
         $router->get('/api/productos/categoria/(\d+)', 'ProductoController@getByCategory');
         $router->get('/api/productos/ingredientes', 'ProductoController@getWithIngredients');
 
+        // Rutas de gestión de imágenes
+        $router->post('/api/productos/(\d+)/image', 'ProductoController@uploadImage');
+        $router->delete('/api/productos/(\d+)/image', 'ProductoController@deleteImage');
+
         // Rutas de gestión de stock
         $router->put('/api/productos/(\d+)/stock', 'ProductoController@updateStock');
         $router->get('/api/productos/(\d+)/stock/historial', 'ProductoController@getStockHistory');
