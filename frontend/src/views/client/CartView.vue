@@ -340,7 +340,7 @@ const formatCurrency = (value) => {
 }
 
 .mobile-cta-container {
-    @apply sticky bottom-0 z-10 bg-white p-3 sm:p-4 lg:hidden shadow-[0_-1px_4px_rgba(0, 0, 0, 0.05)];
+    @apply sticky bottom-0 z-10 bg-white p-3 sm:p-4 lg:hidden shadow-lg;
 }
 
 .mobile-cta-container .checkout-button {

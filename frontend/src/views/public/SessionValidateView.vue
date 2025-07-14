@@ -162,7 +162,7 @@ onMounted(async () => {
 
       isLoading.value = false;
       await new Promise((resolve) => setTimeout(resolve, 3000));
-      router.replace({ name: "ClientHome" }); // Redirige al menú si todo fue bien
+      router.replace({ name: "ClientMenu" }); // Redirige al menú si todo fue bien
 
     }
   } catch (err) {
