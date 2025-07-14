@@ -7,7 +7,7 @@ export const employeService = {
   /**
    * Obtiene la lista completa de empleados.
    */
-  async getAll() {
+  getAll: async ()=>{
     try {
       const response = await api.get('/employees');
       return response.data;
@@ -20,7 +20,7 @@ export const employeService = {
   /**
    * Obtiene un empleado por ID.
    */
-  async getById(id) {
+  getById: async (id)=>{
     try {
       const response = await api.get(`/employees/${id}`);
       return response.data;
@@ -33,7 +33,7 @@ export const employeService = {
   /**
    * Crea un nuevo empleado.
    */
-  async create(data) {
+  create:async (data)=> {
     try {
       const response = await api.post('/employees', data);
       return response.data;
@@ -46,7 +46,7 @@ export const employeService = {
   /**
    * Actualiza un empleado existente.
    */
-  async update(id, data) {
+  update: async (id, data)=> {
     try {
       const response = await api.put(`/employees/${id}`, data);
       return response.data;
@@ -59,7 +59,7 @@ export const employeService = {
   /**
    * Elimina (desactiva) un empleado.
    */
-  async delete(id) {
+  delete:async (id)=> {
     try {
       const response = await api.delete(`/employees/${id}`);
       return response.data;
@@ -72,7 +72,7 @@ export const employeService = {
   /**
    * Filtra empleados por rol y/o estado.
    */
-  async filter(params) {
+  filter:async (params)=> {
     try {
       const response = await api.get('/employees/filter', { params });
       return response.data;
@@ -85,7 +85,7 @@ export const employeService = {
   /**
    * Obtiene la cantidad de mesas atendidas por mesero.
    */
-  async getTablesServed() {
+  getTablesServed:async ()=> {
     try {
       const response = await api.get('/employees/tables-served');
       return response.data;
@@ -98,7 +98,7 @@ export const employeService = {
   /**
    * Obtiene el resumen de ventas de un empleado.
    */
-  async getSalesSummary(id) {
+  getSalesSummary: async (id)=> {
     try {
       const response = await api.get(`/employees/${id}/sales-summary`);
       return response.data;
@@ -111,7 +111,7 @@ export const employeService = {
   /**
    * Obtiene todos los roles de empleados.
    */
-  async getRoles() {
+  getRoles:async ()=> {
     try {
       const response = await api.get('/employees/roles');
       return response.data;
