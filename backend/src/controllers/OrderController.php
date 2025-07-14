@@ -257,4 +257,21 @@ class OrderController extends BaseController
     {
         return $this->orderModel->getProductPriceById($productId);
     }
+
+    /**
+ * Obtener pedidos por sesión de mesa
+ * GET /api/orders/session/{id}
+ */
+public function getBySession($id)
+{
+    return $this->executeWithErrorHandling(function() use ($id) {
+        $sessionId = $this->validateId($id);
+        if (!$sessionId) {
+            $this->handleInvalidIdError('ID de sesión de mesa');
+            return;
+        }
+        $orders = $this->orderModel->getBySessionWithDetails($sessionId);
+        $this->handleResponse(true, 'Pedidos de la sesión obtenidos correctamente', $orders);
+    }, 'Error al obtener pedidos de la sesión');
+}
 } 
