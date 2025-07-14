@@ -28,88 +28,87 @@ class OrderController extends BaseController
     public function store()
     {
         return $this->executeWithErrorHandling(function() {
-            $data = $this->getRequestData();
-            
-            // Validar campos requeridos según documentación
-            $requiredFields = ['table_session_id', 'products'];
-            $missingFields = $this->validateRequiredFields($data, $requiredFields);
-            
-            if (!empty($missingFields)) {
-                $this->handleMissingFieldsError($missingFields);
-                return;
-            }
-
-            // Validar que la sesión de mesa esté activa
-            $session = $this->tableSessionModel->find($data['table_session_id']);
-            if (!$session || $session['session_status'] !== 'ACTIVE') {
-                $this->handleResponse(false, 'La sesión de mesa no está activa o no existe', [], 400);
-                return;
-            }
-
-            // Validar que products sea un array
-            if (!is_array($data['products']) || empty($data['products'])) {
-                $this->handleResponse(false, 'El campo products debe ser un array no vacío', [], 400);
-                return;
-            }
-
-            // Validar estructura de cada producto
-            foreach ($data['products'] as $product) {
-                if (!isset($product['id_product']) || !isset($product['quantity'])) {
-                    $this->handleResponse(false, 'Cada producto debe tener id_product y quantity', [], 400);
+            try {
+                $data = $this->getRequestData();
+                // Validar campos requeridos según documentación
+                $requiredFields = ['table_session_id', 'products', 'waiter_id'];
+                $missingFields = $this->validateRequiredFields($data, $requiredFields);
+                if (!empty($missingFields)) {
+                    $this->handleMissingFieldsError($missingFields);
                     return;
                 }
-            }
-
-            // Crear el pedido
-            $orderData = [
-                'table_sessions_id_session' => $data['table_session_id'],
-                'order_statuses_id_status' => 1, // PENDING
-                'waiter_id' => null, // Se asigna después
-                'total_amount' => 0 // Se calcula después
-            ];
-
-            $order = $this->orderModel->create($orderData);
-            
-            if (!$order) {
-                $this->handleResponse(false, 'Error al crear el pedido', [], 500);
-                return;
-            }
-
-            // Agregar productos al pedido y calcular total
-            $totalAmount = 0;
-            foreach ($data['products'] as $product) {
-                // Obtener precio actual del producto
-                $productPrice = $this->getProductPrice($product['id_product']);
-                if ($productPrice === false) {
-                    $this->handleResponse(false, 'Producto no encontrado: ' . $product['id_product'], [], 400);
+                // Validar que la sesión de mesa esté activa
+                $session = $this->tableSessionModel->find($data['table_session_id']);
+                if (!$session || $session['session_status'] !== 'ACTIVE') {
+                    $this->handleResponse(false, 'La sesión de mesa no está activa o no existe', [], 400);
                     return;
                 }
-
-                // Agregar producto al pedido
-                $this->orderModel->addProductToOrder(
-                    $order['id_order'],
-                    $product['id_product'],
-                    $product['quantity'],
-                    $productPrice
-                );
-
-                $totalAmount += $productPrice * $product['quantity'];
+                // Validar que products sea un array
+                if (!is_array($data['products']) || empty($data['products'])) {
+                    $this->handleResponse(false, 'El campo products debe ser un array no vacío', [], 400);
+                    return;
+                }
+                // Validar estructura de cada producto
+                foreach ($data['products'] as $product) {
+                    if (!isset($product['id_product']) || !isset($product['quantity'])) {
+                        $this->handleResponse(false, 'Cada producto debe tener id_product y quantity', [], 400);
+                        return;
+                    }
+                }
+                // Validar que el mesero exista y esté activo
+                $waiter = $this->employeeModel->getById($data['waiter_id']);
+                if (!$waiter) {
+                    $this->handleResponse(false, 'Mesero no encontrado', [], 400);
+                    return;
+                }
+                if ($waiter['employees_rol_id_rol'] != 1 || $waiter['employees_statuses_id_status'] != 1) {
+                    $this->handleResponse(false, 'El empleado no es un mesero activo', [], 400);
+                    return;
+                }
+                $orderData = [
+                    'table_sessions_id_session' => $data['table_session_id'],
+                    'order_statuses_id_status' => 1, // PENDING
+                    'waiter_id' => $waiter['id_employe'],
+                    'total_amount' => 0 // Se calcula después
+                ];
+                $order = $this->orderModel->create($orderData);
+                if (!$order) {
+                    $this->handleResponse(false, 'Error al crear el pedido', [], 500);
+                    return;
+                }
+                // Agregar productos al pedido y calcular total
+                $totalAmount = 0;
+                foreach ($data['products'] as $product) {
+                    $productPrice = $this->getProductPrice($product['id_product']);
+                    if ($productPrice === false) {
+                        $this->handleResponse(false, 'Producto no encontrado: ' . $product['id_product'], [], 400);
+                        return;
+                    }
+                    $this->orderModel->addProductToOrder(
+                        $order['id_order'],
+                        $product['id_product'],
+                        $product['quantity'],
+                        $productPrice
+                    );
+                    $totalAmount += $productPrice * $product['quantity'];
+                }
+                // Actualizar total del pedido
+                $this->orderModel->update($order['id_order'], [
+                    'total_amount' => $totalAmount,
+                    'waiter_id' => $waiter['id_employe'],
+                    'order_statuses_id_status' => 1,
+                    'table_sessions_id_session' => $data['table_session_id']
+                ]);
+                $this->handleResponse(true, 'Pedido creado correctamente', [
+                    'id_order' => $order['id_order'],
+                    'table_session_id' => $data['table_session_id'],
+                    'total_amount' => $totalAmount
+                ], 201);
+            } catch (\PDOException $e) {
+                $this->handleResponse(false, 'Error SQL: ' . $e->getMessage(), [], 500);
+            } catch (\Exception $e) {
+                $this->handleResponse(false, $e->getMessage(), [], 500);
             }
-
-            // Actualizar total del pedido
-            $this->orderModel->update($order['id_order'], [
-                'total_amount' => $totalAmount,
-                'waiter_id' => null,
-                'order_statuses_id_status' => 1,
-                'table_sessions_id_session' => $data['table_session_id']
-            ]);
-
-            $this->handleResponse(true, 'Pedido creado correctamente', [
-                'id_order' => $order['id_order'],
-                'table_session_id' => $data['table_session_id'],
-                'total_amount' => $totalAmount
-            ], 201);
-
         }, 'Error al crear el pedido');
     }
 
@@ -132,104 +131,17 @@ class OrderController extends BaseController
     public function show($id)
     {
         return $this->executeWithErrorHandling(function() use ($id) {
-            $orderId = $this->validateId($id);
-            if (!$orderId) {
-                $this->handleInvalidIdError('ID de pedido');
-                return;
+            try {
+                $order = $this->orderModel->find($id);
+                if (!$order) {
+                    $this->handleResponse(false, 'Pedido no encontrado', [], 404);
+                    return;
+                }
+                $this->handleResponse(true, 'Pedido obtenido correctamente', $order);
+            } catch (\Exception $e) {
+                $this->handleResponse(false, $e->getMessage(), [], 500);
             }
-
-            $order = $this->orderModel->getByIdWithDetails($orderId);
-            
-            if (!$order) {
-                $this->handleResourceNotFoundError('Pedido');
-                return;
-            }
-
-            $this->handleResponse(true, 'Pedido obtenido correctamente', $order);
         }, 'Error al obtener el pedido');
-    }
-
-    /**
-     * Obtener pedidos por estado
-     * GET /api/orders/status/{status}
-     */
-    public function getByStatus($status)
-    {
-        return $this->executeWithErrorHandling(function() use ($status) {
-            $validStatuses = ['PENDING', 'CONFIRM', 'READY', 'CANCELED', 'COMPLETED'];
-            
-            if (!in_array($status, $validStatuses)) {
-                $this->handleResponse(false, 'Estado no válido', [], 400);
-                return;
-            }
-
-            $orders = $this->orderModel->getByStatusWithDetails($status);
-            $this->handleResponse(true, 'Pedidos por estado obtenidos correctamente', $orders);
-        }, 'Error al obtener pedidos por estado');
-    }
-
-    /**
-     * Obtener pedidos de una sesión de mesa
-     * GET /api/orders/session/{table_session_id}
-     */
-    public function getBySession($table_session_id)
-    {
-        return $this->executeWithErrorHandling(function() use ($table_session_id) {
-            $sessionId = $this->validateId($table_session_id);
-            if (!$sessionId) {
-                $this->handleInvalidIdError('ID de sesión de mesa');
-                return;
-            }
-
-            $orders = $this->orderModel->getBySessionWithDetails($sessionId);
-            $this->handleResponse(true, 'Pedidos de la sesión obtenidos correctamente', $orders);
-        }, 'Error al obtener pedidos de la sesión');
-    }
-
-    /**
-     * Confirmar pedido
-     * PUT /api/orders/{id}/confirm
-     */
-    public function confirm($id)
-    {
-        return $this->executeWithErrorHandling(function() use ($id) {
-            $orderId = $this->validateId($id);
-            if (!$orderId) {
-                $this->handleInvalidIdError('ID de pedido');
-                return;
-            }
-
-            $result = $this->orderModel->updateStatus($orderId, 2); // CONFIRMED
-            
-            if ($result) {
-                $this->handleResponse(true, 'Pedido confirmado correctamente', $result);
-            } else {
-                $this->handleResponse(false, 'Error al confirmar el pedido', [], 500);
-            }
-        }, 'Error al confirmar el pedido');
-    }
-
-    /**
-     * Cancelar pedido
-     * PUT /api/orders/{id}/cancel
-     */
-    public function cancel($id)
-    {
-        return $this->executeWithErrorHandling(function() use ($id) {
-            $orderId = $this->validateId($id);
-            if (!$orderId) {
-                $this->handleInvalidIdError('ID de pedido');
-                return;
-            }
-
-            $result = $this->orderModel->updateStatus($orderId, 3); // CANCELED
-            
-            if ($result) {
-                $this->handleResponse(true, 'Pedido cancelado correctamente', $result);
-            } else {
-                $this->handleResponse(false, 'Error al cancelar el pedido', [], 500);
-            }
-        }, 'Error al cancelar el pedido');
     }
 
     /**
@@ -353,10 +265,6 @@ class OrderController extends BaseController
      */
     private function getProductPrice($productId)
     {
-        $stmt = $this->orderModel->conn->prepare("SELECT product_price FROM products WHERE id_product = ?");
-        $stmt->execute([$productId]);
-        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
-        return $result ? $result['product_price'] : false;
+        return $this->orderModel->getProductPriceById($productId);
     }
 } 

@@ -9,6 +9,15 @@ class Order extends BaseModel
     protected $table_name = 'orders';
     protected $primary_key = 'id_order';
 
+    // Obtener el precio de un producto por su ID
+    public function getProductPriceById($productId)
+    {
+        $stmt = $this->conn->prepare("SELECT product_price FROM products WHERE id_product = ?");
+        $stmt->execute([$productId]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $result ? $result['product_price'] : false;
+    }
+
     public function getAll($page = 1, $limit = 10, $orderBy = null)
     {
     $offset = ($page - 1) * $limit;
@@ -30,29 +39,33 @@ class Order extends BaseModel
 
     public function create($data)
     {
-        $stmt = $this->conn->prepare(
-            "INSERT INTO orders (created_date, total_amount, waiter_id, order_statuses_id_status, table_sessions_id_session)
-             VALUES (NOW(), ?, ?, ?, ?)"
-        );
-        $stmt->execute([
-            $data['total_amount'],
-            $data['waiter_id'],
-            $data['order_statuses_id_status'],
-            $data['table_sessions_id_session']
-        ]);
-        return $this->getById($this->conn->lastInsertId());
+        try {
+            $stmt = $this->conn->prepare(
+                "INSERT INTO orders (created_date, total_amount, waiter_id, order_statuses_id_status, table_sessions_id_session)
+                 VALUES (NOW(), ?, ?, ?, ?)"
+            );
+            $stmt->execute([
+                $data['total_amount'],
+                $data['waiter_id'],
+                $data['order_statuses_id_status'],
+                $data['table_sessions_id_session']
+            ]);
+            return $this->getById($this->conn->lastInsertId());
+        } catch (\PDOException $e) {
+            throw new Exception('Error SQL al crear orden: ' . $e->getMessage());
+        }
     }
 
     public function addProductToOrder($orderId, $productId, $quantity, $price)
     {
-        $sql = "INSERT INTO orders_has_products (orders_id_order, products_id_product, quantity, price, created_at)
-                VALUES (:order_id, :product_id, :quantity, :price, NOW())";
+        $sql = "INSERT INTO orders_has_products (orders_id_order, products_id_product, quantity, product_price)
+                VALUES (:order_id, :product_id, :quantity, :product_price)";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([
             ':order_id' => $orderId,
             ':product_id' => $productId,
             ':quantity' => $quantity,
-            ':price' => $price
+            ':product_price' => $price
         ]);
     }
     public function update($id, $data)
