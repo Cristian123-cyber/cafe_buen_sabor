@@ -24,7 +24,7 @@ export const navigationConfig = {
     { label: 'Pedidos', to: { name: 'Login' }, icon: iconsMap['mdi-table-chair'] }
   ],
   Client: [
-    /* { label: 'Home', to: { name: 'ClientHome' }, icon: iconsMap['i-ic-baseline-home'] }, */
+    { label: 'Home', to: { name: 'ClientHome' }, icon: iconsMap['i-ic-baseline-home'] },
     { label: 'Menu', to: { name: 'ClientMenu' }, icon: iconsMap['i-raphael-coffee'] },
     { label: 'Orders', to: { name: 'ClientOrders' }, icon: iconsMap['i-material-symbols-orders-rounded'] }
   ],
