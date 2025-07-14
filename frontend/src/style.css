@@ -14,6 +14,7 @@ html, body {
   height: 100%;
     @apply bg-primary-dark;
   overscroll-behavior: none; /* evita el efecto rebote que muestra blanco en iOS */
+   @apply font-cafes;
 }
 
 /* 👇 Esto asegura que #app también ocupe todo */

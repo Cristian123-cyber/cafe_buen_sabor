@@ -1,51 +1,60 @@
 <!-- src/components/tables/DisplayQRCard.vue -->
 <template>
-  <div class="qr-card-container">
-    <!-- Contenedor principal con borde dorado y sombra profunda -->
-    <div class="qr-card">
-      
-      <!-- QR Code con animación de pulso -->
-      <div class="qr-code-wrapper qr-pulse">
-        <qrcode-vue 
-          :value="qrURL" 
-          :size="250"
-          level="H"
-          background="#FFFFFF"
-          foreground="#000000"
-          class="rounded-lg"
-        />
-      </div>
-      
-      <!-- Temporizador visual rediseñado -->
-      <div class="timer-container">
-        <div class="flex justify-between items-center mb-1 text-sm">
-          <span class="text-text-muted">Actualización en:</span>
-          <span class="font-mono font-semibold text-accent">{{ formattedTimeLeft }}</span>
-        </div>
-        <div class="progress-bar">
-          <div 
-            class="progress-fill"
-            :style="{ width: `${percentageLeft}%` }"
-          ></div>
+  <div class="qr-display-container">
+    <!-- QR Code Principal con efectos -->
+     <!-- QR Code Principal con efectos -->
+    <div class="qr-main-wrapper">
+      <div class="qr-glow-effect"></div>
+      <div class="qr-code-container">
+        <div class="qr-code-wrapper">
+          <qrcode-vue 
+            :value="qrURL" 
+            :size="qrSize" 
+            level="H" 
+            background="#FFFFFF" 
+            foreground="#212121" 
+            class="qr-code" 
+          />
         </div>
       </div>
-      
-      <!-- Sección de Instrucciones con Iconos -->
-      <div class="instructions-container">
-        <div class="instruction-step">
-          <i-mdi-camera-outline class="w-7 h-7" />
-          <span>Abre tu cámara</span>
+    </div>
+
+    <!-- Temporizador elegante -->
+    <div class="timer-section">
+      <div class="timer-header">
+        <p>URL del QR: {{ qrURL }}</p>
+        <i-mdi-timer-outline class="w-5 h-5 text-accent" />
+        <span class="timer-label">Se actualiza en</span>
+        <span class="timer-value">{{ formattedTimeLeft }}</span>
+      </div>
+      <div class="progress-container">
+        <div class="progress-track">
+          <div class="progress-bar-fill" :style="{ width: `${percentageLeft}%` }"></div>
         </div>
-        <i-mdi-arrow-right-thin class="w-6 h-6 text-text-muted mx-2" />
-        <div class="instruction-step">
-          <i-mdi-scan-helper class="w-7 h-7" />
-          <span>Apunta al código</span>
+      </div>
+    </div>
+
+    <!-- Instrucciones paso a paso -->
+    <div class="instructions-flow">
+      <div class="instruction-item">
+        <div class="step-circle">
+          <i-mdi-camera-outline class="w-5 h-5" />
         </div>
-        <i-mdi-arrow-right-thin class="w-6 h-6 text-text-muted mx-2" />
-        <div class="instruction-step">
-          <i-mdi-food-fork-drink class="w-7 h-7" />
-          <span>¡Pide y disfruta!</span>
+        <div class="step-text">Abre la cámara</div>
+      </div>
+
+      <div class="instruction-item">
+        <div class="step-circle">
+          <i-mdi-scan-helper class="w-5 h-5" />
         </div>
+        <div class="step-text">Escanea el código</div>
+      </div>
+
+      <div class="instruction-item">
+        <div class="step-circle">
+          <i-mdi-food-fork-drink class="w-5 h-5" />
+        </div>
+        <div class="step-text">Explora el menú</div>
       </div>
     </div>
   </div>
@@ -55,14 +64,12 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import QrcodeVue from 'qrcode.vue';
 
-// NOTA: Se ha eliminado la prop 'tableId' para evitar redundancia.
-// El tamaño del QR ahora se maneja internamente para mejor responsive.
 const props = defineProps({
   qr_token: {
     type: String,
     required: true
   },
-  tableId: { // Se mantiene para construir la URL, pero no se muestra
+  tableId: {
     type: [String, Number],
     required: true
   },
@@ -72,10 +79,24 @@ const props = defineProps({
   }
 });
 
-// La URL se construye aquí, pero podría venir completa desde el backend también.
-const qrURL = computed(() => `https://cafebuensabor.app/menu?token=${props.qr_token}`);
+// URL del QR
+const qrURL = computed(() => `http://localhost:5173/session/validate?token=${props.qr_token}&table=${props.tableId}`);
+const qrSize = computed(() => {
+  if (typeof window !== 'undefined') {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
 
-// --- Lógica del Temporizador (sin cambios) ---
+
+    // Tamaños optimizados para todos los dispositivos
+    if (width < 400) return 220;                 // Móviles pequeños
+    if (width < 768) return Math.min(280, height * 0.6);  // Móviles grandes
+    if (width < 1024) return Math.min(400, height * 0.7); // Tablets
+    return Math.min(400, height * 0.6);          // Desktop
+  }
+  return 300; // Valor por defecto para SSR
+});
+
+// Lógica del temporizador
 const timeLeft = ref(props.refreshInterval);
 const percentageLeft = computed(() => (timeLeft.value / props.refreshInterval) * 100);
 const formattedTimeLeft = computed(() => {
@@ -89,12 +110,12 @@ let timerInterval = null;
 const startTimer = () => {
   clearInterval(timerInterval);
   timeLeft.value = props.refreshInterval;
-  
+
   timerInterval = setInterval(() => {
     timeLeft.value -= 1000;
-    
+
     if (timeLeft.value <= 0) {
-      timeLeft.value = props.refreshInterval; // Reinicia para el siguiente ciclo
+      timeLeft.value = props.refreshInterval;
     }
   }, 1000);
 };
@@ -102,60 +123,212 @@ const startTimer = () => {
 onMounted(startTimer);
 onUnmounted(() => clearInterval(timerInterval));
 
-// Reinicia el temporizador si el token cambia (por el polling de la vista padre)
 watch(() => props.qr_token, startTimer);
 </script>
 
 <style scoped>
 @reference "../../style.css";
 
-.qr-card-container {
-  @apply w-full max-w-sm p-2;
+.qr-display-container {
+  @apply w-full max-w-lg mx-auto flex flex-col items-center gap-6 sm:gap-8 px-4 sm:px-6;
+  box-sizing: border-box;
 }
 
-.qr-card {
-  @apply bg-primary rounded-2xl p-6 shadow-2xl border border-accent/20 flex flex-col items-center gap-6;
-  transition: all 0.3s ease;
+
+/* QR Code Principal - Ajustes responsive */
+.qr-main-wrapper {
+  @apply relative flex items-center justify-center w-full px-2 sm:px-0;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.qr-glow-effect {
+  @apply absolute rounded-2xl blur-xl opacity-30;
+  background: radial-gradient(circle, #FFD75C 0%, rgba(203, 161, 53, 0) 70%);
+  animation: glow-pulse 3s ease-in-out infinite alternate;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+.qr-code-container {
+  @apply relative bg-surface rounded-2xl;
+  border: 2px solid #CBA135;
+  box-shadow:
+    0 10px 25px -5px rgba(203, 161, 53, 0.3),
+    0 20px 40px -10px rgba(203, 161, 53, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  width: fit-content;
+  max-width: 95vw; /* Limita el ancho máximo */
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 .qr-code-wrapper {
-  @apply p-3 bg-white rounded-lg shadow-lg;
-  /* La animación se define abajo */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
-/* Animación de pulso para el QR */
-@keyframes pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0px #CBA135;
-  }
-  50% {
-    box-shadow: 0 0 10px 8px rgba(255, 215, 92, 0); /* Usamos un rgba transparente para el final del glow */
-  }
+.qr-code {
+  @apply rounded-lg;
+  /* Asegurar que el QR esté perfectamente centrado */
+  display: block !important;
+  margin: 0 auto;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-.qr-pulse {
-  animation: pulse 2.5s infinite;
-  border: 4px solid #CBA135;
+/* Resetear estilos del componente QR si es necesario */
+.qr-code canvas,
+.qr-code svg {
+  display: block !important;
+  margin: 0 auto !important;
 }
 
-.timer-container {
+/* Timer Section */
+.timer-section {
+  @apply w-full max-w-xs;
+}
+
+.timer-header {
+  @apply flex items-center justify-center gap-2 mb-3 text-sm font-medium text-text-light;
+}
+
+.timer-label {
+  @apply text-text-muted;
+}
+
+.timer-value {
+  @apply font-mono text-accent font-bold text-lg;
+}
+
+.progress-container {
   @apply w-full;
 }
 
-.progress-bar {
-  @apply bg-primary-light rounded-full h-2 w-full overflow-hidden;
+.progress-track {
+  @apply w-full h-2 bg-primary-light rounded-full overflow-hidden;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.progress-fill {
-  @apply bg-accent h-full rounded-full;
-  transition: width 1s linear;
+.progress-bar-fill {
+  @apply h-full rounded-full transition-all duration-1000 ease-linear;
+  background: linear-gradient(90deg, #CBA135, #FFD75C);
+  box-shadow:
+    0 0 10px rgba(203, 161, 53, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.instructions-container {
-  @apply w-full flex items-center justify-center p-3 rounded-lg bg-primary-light text-text-light;
+/* Instrucciones */
+.instructions-flow {
+  @apply w-full grid grid-cols-3 gap-4 sm:gap-6;
 }
 
-.instruction-step {
-  @apply flex flex-col items-center text-center text-xs gap-1;
+.instruction-item {
+  @apply flex flex-col items-center text-center gap-3 p-3 sm:p-4;
+  transition: all 0.3s ease;
+}
+
+.instruction-item:hover {
+  @apply transform -translate-y-1;
+}
+
+.step-circle {
+  @apply w-12 h-12 sm:w-14 sm:h-14 bg-accent text-primary rounded-full flex items-center justify-center;
+  @apply shadow-lg hover:shadow-xl transition-all duration-300;
+  box-shadow:
+    0 8px 25px rgba(203, 161, 53, 0.3),
+    0 0 0 0 rgba(203, 161, 53, 0.4);
+  animation: float 3s ease-in-out infinite;
+}
+
+.step-circle:hover {
+  @apply bg-accent-light transform scale-110;
+  box-shadow:
+    0 12px 35px rgba(203, 161, 53, 0.4),
+    0 0 20px rgba(203, 161, 53, 0.6);
+}
+
+.step-text {
+  @apply text-text-light text-sm sm:text-base font-medium;
+}
+
+/* Animaciones mejoradas */
+@keyframes glow-pulse {
+  0% {
+    opacity: 0.2;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.step-circle:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.step-circle:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+.step-circle:nth-child(3) {
+  animation-delay: 1s;
+}
+
+/* Media queries específicas para tablets */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .qr-display-container {
+    @apply max-w-xl;
+  }
+  
+  .qr-code-container {
+    padding: 1.75rem;
+  }
+  
+  .qr-glow-effect {
+    width: 105%;
+    height: 105%;
+    top: -2.5%;
+    left: -2.5%;
+  }
+}
+/* Ajustes para desktop */
+@media (min-width: 1024px) {
+  .qr-display-container {
+    @apply max-w-2xl;
+  }
+  
+  .qr-code-container {
+    padding: 2rem;
+  }
+}
+
+
+/* Ajustes para landscape móvil */
+@media (max-height: 600px) and (orientation: landscape) {
+  .qr-main-wrapper {
+    @apply px-2;
+  }
+  
+  .qr-code-container {
+    padding: 0.5rem;
+  }
 }
 </style>

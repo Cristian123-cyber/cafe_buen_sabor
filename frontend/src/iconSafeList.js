@@ -17,6 +17,14 @@ import IconOrderConfirmed from 'virtual:icons/mdi/check-circle-outline';
 import IconOrderCancelled from 'virtual:icons/mdi/cancel';
 import IconDefault from 'virtual:icons/mdi/bell-outline';
 
+
+import IconMenu from 'virtual:icons/ph/squares-four';
+import IconOrderStatus from 'virtual:icons/ph/list-bullets-bold';
+import IconHomeClient from 'virtual:icons/ic/baseline-home';
+import IconMenuClient from 'virtual:icons/raphael/coffee';
+import IconOrdersClient from 'virtual:icons/material-symbols/orders-rounded';
+
+
 export const iconsMap = {
   'mdi-view-dashboard-outline': IconDashboard,
   'mdi-account-group-outline': IconUsers,
@@ -30,6 +38,12 @@ export const iconsMap = {
   'mdi-logout': IconLogout,
   'mdi-close': IconClose,
   'mdi-coffee': IconCoffee,
+  'ph-squares-four': IconMenu,
+  'ph-list-bullets-bold': IconOrderStatus,
+  'i-ic-baseline-home': IconHomeClient,
+  'i-raphael-coffee': IconMenuClient,
+'i-material-symbols-orders-rounded': IconOrdersClient,
+
 };
 
 export const notificationIcons = {

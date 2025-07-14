@@ -13,7 +13,6 @@ export const useAuth = () => {
       const data = await authService.login(credentials);
 
       if (data.success) {
-        console.log('data recibida', data);
         authStore.setAuthData(data.data.user, data.data.access_token);
         router.replace(
           authStore.getDashboardRouteByRole(data.data.user.role_id)

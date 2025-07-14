@@ -9,17 +9,13 @@ export const tablesService = {
   getQrForTable: async (tableId) => {
     try {
       // Llamamos al endpoint definido en tu documentación.
-      //const response = await api.get(`/api/tables/${tableId}/qr`);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const response = await api.get(`/tables/${tableId}/qr`);
+     
 
-      console.log('qr nuevo obtenido');
+      console.log('qr nuevo obtenido', response);
 
 
-      const response = {
-        data: {
-            qr_token: '23819HSDDFJKA1903829'
-        }
-      };
+     
       return response.data;
     } catch (error) {
       console.error(`Error al obtener el QR para la mesa ${tableId}:`, error);
@@ -27,4 +23,6 @@ export const tablesService = {
       throw error;
     }
   },
+
+  
 };

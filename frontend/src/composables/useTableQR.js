@@ -17,7 +17,8 @@ export function useTableDisplay(tableId) {
     
     try {
       const data = await tablesService.getQrForTable(tableId);
-      qrToken.value = data.qr_token;
+      console.log(data);
+      qrToken.value = data.data.qr_token;
       error.value = null;
     } catch (e) {
       error.value = "Error al cargar QR";

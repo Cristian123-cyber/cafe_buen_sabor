@@ -10,9 +10,17 @@ export default [
     meta: { requiresGuest: true }, // Solo accesible para no autenticados
   },
   {
-    path: "/tables/validate-qr",
+    path: "/session/validate",
     name: "SessionValidate",
     component: () => import("../views/public/SessionValidateView.vue"),
     meta: { requiresAuth: false }, // pública
   },
+  {
+  path: '/error/unauthorized',
+  name: 'Unauthorized',
+  component: () => import('../views/error/Unauthorized.vue'),
+  meta: {
+    // No requiere autenticación para mostrarse, ya que un no-autenticado podría llegar aquí
+  }
+}
 ];

@@ -86,6 +86,8 @@
   --color-active: rgba(203, 161, 53, 0.2);
   --color-focus: rgba(203, 161, 53, 0.3);
 
+   --font-cafes: "Plus Jakarta Sans", "Noto Sans", "sans-serif";
+
   /*
    * EJEMPLOS DE APLICACIÓN (copiar en CSS):
    * 

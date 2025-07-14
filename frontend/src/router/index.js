@@ -10,6 +10,8 @@ import waiterRoutes from "./waiterRoutes.js";
 import kitchenRoutes from "./kitchenRoutes.js";
 import adminRoutes from "./adminRoutes.js";
 import devicesRoutes from "./deviceRoutes.js";
+import clientRoutes from "./clientRoutes.js";
+import { useClientSession } from "../composables/useClientSession.js";
 
 const routes = [
   ...publicRoutes,
@@ -17,7 +19,8 @@ const routes = [
   ...waiterRoutes,
   ...kitchenRoutes,
   ...adminRoutes,
-  ...devicesRoutes
+  ...devicesRoutes,
+  ...clientRoutes
 ];
 
 const router = createRouter({
@@ -26,10 +29,13 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
+
+  //console.log(`${from.fullPath} -- ${to.fullPath}`);
   const authStore = useAuthStore();
 
   const sessionStore = useSessionStore();
   const { checkAuth } = useAuth();
+  const { checkAuthClient } = useClientSession();
 
   // Esto solo se ejecuta una vez por carga de la página.
   if (!authStore.isAuthCheckComplete) {
@@ -38,21 +44,30 @@ router.beforeEach(async (to, from, next) => {
     // Marcamos que la validación (exitosa o fallida) ya se hizo.
     authStore.isAuthCheckComplete = true;
   }
-
   const isAuthenticated = authStore.isAuthenticated;
+
+  
+
+  if (sessionStore.sessionStatus === 'idle' && sessionStore.sessionToken) {
+
+    await checkAuthClient();
+  }
+
   const userRole = authStore.userRole;
   const isClientSession = sessionStore.isSessionActive;
 
   if (
     to.meta.requiresClientSession &&
-    !sessionStore.isSessionActive &&
-    !authStore.isAuthenticated
+    !isClientSession &&
+    !isAuthenticated
   ) {
     return next(authStore.getUnauthorized());
   }
 
   // 🔐 Bloquear acceso a rutas solo para invitados (login, etc.)
   if (to.meta.requiresGuest) {
+
+    
     if (isAuthenticated) {
       return next({
         ...authStore.getDashboardRouteByRole(authStore.user.role_id),
@@ -61,7 +76,7 @@ router.beforeEach(async (to, from, next) => {
     }
 
     if (isClientSession) {
-      return next({ name: "ClientMenu", replace: true }); // Redirigís al menú del cliente
+      return next({ name: "ClientHome", replace: true }); // Redirigís al menú del cliente
     }
   }
 
@@ -75,10 +90,13 @@ router.beforeEach(async (to, from, next) => {
     // Si está autenticado, verificar si tiene el rol requerido.
     if (to.meta.roles && !to.meta.roles.includes(userRole)) {
       // No tiene el rol permitido, redirigir a una página de "No Autorizado" o a su dashboard.
+     
 
       return next(authStore.getUnauthorized());
     }
   }
+
+ 
 
   // 4. Si ninguna de las condiciones anteriores se cumple, permitir el acceso.
   return next();

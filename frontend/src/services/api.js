@@ -4,6 +4,7 @@ import { API_CONFIG, ERROR_MESSAGES } from "../utils/constants";
 
 // ... importaciones ...
 import { useAuthStore } from "../stores/authS.js";
+import { useSessionStore } from "../stores/clientSessionS.js";
 import { useLoadingStore } from "../stores/loadingS";
 import { useAuth } from "../composables/useAuth";
 
@@ -27,19 +28,20 @@ api.interceptors.request.use(
     // Obtenemos el store FUERA de un componente o setup
 
     const authStore = useAuthStore();
-    const loadingStore = useLoadingStore();
-    // Incrementamos el contador de peticiones activas
-    loadingStore.requestStarted();
+   
+    const clientStore = useSessionStore();
+    
 
     // Usamos el estado de Pinia como fuente de verdad
     if (authStore.accessToken) {
       config.headers.Authorization = `Bearer ${authStore.accessToken}`;
+    } else if (clientStore.sessionToken) {
+      config.headers.Authorization = `Bearer ${clientStore.sessionToken}`;
     }
     return config;
   },
   (error) => {
-    const appStore = useLoadingStore();
-    appStore.requestFinished(); // <--- AÑADIDO
+    
     return Promise.reject(error);
   }
 );
@@ -49,18 +51,21 @@ let refreshTokenPromise = null;
 
 api.interceptors.response.use(
   (response) => {
-    // ----> ¡ACCIÓN DE CARGA! Decrementamos el contador al recibir una respuesta exitosa <----
+    
 
-    const appStore = useLoadingStore();
-    appStore.requestFinished();
+  
 
     return response;
   },
   async (error) => {
-    const appStore = useLoadingStore();
+   
+    const clientStore = useSessionStore();
+    const authStore = useAuthStore();
+    const loadingStore = useLoadingStore();
+
     const alert = useAlert();
 
-    appStore.requestFinished(); // Decrementamos el contador de peticiones activas al recibir un error
+   
 
     const originalRequest = error.config;
     // Error de red (sin respuesta del servidor)
@@ -89,13 +94,24 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // Si es sesión de cliente, no se intenta refresh.
+    if (!authStore.accessToken && clientStore.sessionToken) {
+      console.log('evitando refresh para clientes');
+      router.replace({ name: "Unauthorized" }); 
+      return Promise.reject(error);
+    }
+
     // Si ya hay una petición de refresh en curso, esperamos a que termine
     if (refreshTokenPromise) {
       try {
         const newToken = await refreshTokenPromise;
+      loadingStore.requestFinished();
+
         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
         return api(originalRequest);
       } catch (e) {
+      loadingStore.requestFinished();
+
         return Promise.reject(e);
       }
     }
@@ -104,17 +120,24 @@ api.interceptors.response.use(
     const { handleRefreshToken } = useAuth();
 
     // Creamos una nueva promesa para el refresh y la guardamos
-
     try {
+
+      loadingStore.requestStarted();
+
       refreshTokenPromise = handleRefreshToken();
       const newToken = await refreshTokenPromise;
       // Reseteamos la promesa una vez resuelta
       refreshTokenPromise = null;
 
+      loadingStore.requestFinished();
+
+
       // Reintentamos la petición original con el nuevo token
       originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
       return api(originalRequest);
     } catch (refreshError) {
+      loadingStore.requestFinished();
+
       console.error("Error en refresh API INTERCEPTOR", refreshError);
       refreshTokenPromise = null;
       // aquí podríamos añadir una notificación si quisiéramos.
