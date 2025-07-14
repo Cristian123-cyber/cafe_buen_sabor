@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: mysql
--- Tiempo de generación: 19-06-2025 a las 21:09:04
+-- Tiempo de generación: 12-07-2025 a las 19:58:44
 -- Versión del servidor: 8.0.42
 -- Versión de PHP: 8.2.27
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `cafe_buen_sabor_bd`
 --
-CREATE DATABASE IF NOT EXISTS `cafe_buen_sabor_bd` DEFAULT CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci;
-USE `cafe_buen_sabor_bd`;
 
 -- --------------------------------------------------------
 
@@ -36,15 +34,23 @@ CREATE TABLE `employees` (
   `password` varchar(1000) DEFAULT NULL,
   `created_date` datetime DEFAULT NULL,
   `employees_statuses_id_status` int NOT NULL,
-  `employees_rol_id_rol` int NOT NULL
+  `employees_rol_id_rol` int NOT NULL,
+  `employee_cc` varchar(100) DEFAULT NULL,
+  `table_id_device` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 --
 -- Volcado de datos para la tabla `employees`
 --
 
-INSERT INTO `employees` (`id_employe`, `employe_name`, `employe_email`, `password`, `created_date`, `employees_statuses_id_status`, `employees_rol_id_rol`) VALUES
-(1, 'Cristian Chisavo', 'crischisavo@gmail.com', '12345', '2025-06-19 13:49:57', 1, 3);
+INSERT INTO `employees` (`id_employe`, `employe_name`, `employe_email`, `password`, `created_date`, `employees_statuses_id_status`, `employees_rol_id_rol`, `employee_cc`, `table_id_device`) VALUES
+(1, 'Cristian Chisavo', 'crischisavo@gmail.com', '12345', '2025-06-19 13:49:57', 1, 3, NULL, NULL),
+(2, 'Juan Pérez', 'juanperez@example.com', '$2y$10$2nkfM3nmXIDzzNCTbF.8jOCY9azlMHg9444dGf8apFyEIoCJ0nMlm', NULL, 1, 2, NULL, NULL),
+(3, 'Dispositivo mesa X', 'email@example.com', '$2y$10$WYuxgOWH8KriJvak9RMC5.6IvfF8pT/bGkNvDxBqLWxlwLa/pYfWi', NULL, 1, 4, NULL, NULL),
+(4, 'Dispositivo mesa X', 'email@example.com', '$2y$10$s./y5B8OqR1eFef9a5wg7unA4fqm/WmUSFnZKGf6w4UpSwwmaGljO', NULL, 1, 4, NULL, 1),
+(7, 'Dispositivo mesa Y', 'device@gmail.com', '$2y$10$WYDE8Vysam91e0XsnzH9Wu8ZrHYobwqMCiNCtnJpA1lIKwzGouO0q', NULL, 1, 4, NULL, 1),
+(8, 'Dispositivo mesa X', 'email@example.com', '$2y$10$YF46yVrd.q4oWu0/fCEScuWzL57.AaoyLPx.nyFArHEXF7b3d6raW', NULL, 1, 4, NULL, 2),
+(9, 'Dispositivo mesa X', 'dev@ex.com', '$2y$10$B5DATQ0hDxQK5u27/PDBuOLLauelUxdrpVZ98ZtQVI8mle2/9nr9C', NULL, 1, 4, '', 2);
 
 -- --------------------------------------------------------
 
@@ -64,7 +70,9 @@ CREATE TABLE `employees_rol` (
 INSERT INTO `employees_rol` (`id_rol`, `rol_name`) VALUES
 (1, 'Mesero'),
 (2, 'Cocinero'),
-(3, 'Cajero');
+(3, 'Cajero'),
+(4, 'TABLE_DISPLAY'),
+(5, 'Administrador');
 
 -- --------------------------------------------------------
 
@@ -108,7 +116,52 @@ CREATE TABLE `ingredients` (
 --
 
 INSERT INTO `ingredients` (`id_ingredient`, `ingredient_name`, `ingredient_stock`, `low_stock_level`, `critical_stock_level`, `ingredient_statuses_id_status`, `units_of_measure_id_unit`) VALUES
-(1, 'Cafe', 100.00, 30.00, 10.00, 1, 2);
+(1, 'Cafe', 109.00, 30.00, 10.00, 1, 2);
+
+--
+-- Disparadores `ingredients`
+--
+DELIMITER $$
+CREATE TRIGGER `trg_ingredient_stock_update` AFTER UPDATE ON `ingredients` FOR EACH ROW BEGIN
+  -- 1. Declarar variables al inicio
+  DECLARE mov_type ENUM('IN', 'OUT');
+  DECLARE diff DECIMAL(10,2);
+
+  -- 2. Verificar si cambió el stock
+  IF NEW.ingredient_stock <> OLD.ingredient_stock THEN
+
+    -- Calcular la diferencia
+    SET diff = NEW.ingredient_stock - OLD.ingredient_stock;
+
+    IF diff > 0 THEN
+      SET mov_type = 'IN';
+    ELSE
+      SET mov_type = 'OUT';
+      SET diff = ABS(diff); -- Convertir a positivo
+    END IF;
+
+    -- 3. Insertar en tabla movement
+    INSERT INTO stock_movements (
+      movement_type,
+      quantity,
+      movement_date,
+      movement_notes,
+      product_type,
+      id_product
+    )
+    VALUES (
+      mov_type,
+      diff,
+      NOW(),
+      'Actualización directa del ingrediente - autotrigger',
+      'INGREDIENTE',
+      NEW.id_ingredient
+    );
+
+  END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -135,6 +188,22 @@ INSERT INTO `ingredient_statuses` (`id_status`, `name_status`, `desc_status`) VA
 -- --------------------------------------------------------
 
 --
+-- Estructura de tabla para la tabla `notifications`
+--
+
+CREATE TABLE `notifications` (
+  `id_notification` int NOT NULL,
+  `notification_type` enum('ORDER_READY','ORDER_CONFIRMED','ORDER_CANCELLED') NOT NULL,
+  `message` varchar(500) DEFAULT NULL,
+  `is_read` enum('READ','UNREAD') DEFAULT 'UNREAD',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `employee_id` int DEFAULT NULL,
+  `order_id` int DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+-- --------------------------------------------------------
+
+--
 -- Estructura de tabla para la tabla `orders`
 --
 
@@ -142,7 +211,7 @@ CREATE TABLE `orders` (
   `id_order` int NOT NULL,
   `created_date` datetime DEFAULT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
-  `waiter_id` int NOT NULL,
+  `waiter_id` int DEFAULT NULL,
   `order_statuses_id_status` int NOT NULL,
   `table_sessions_id_session` int NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
@@ -165,17 +234,18 @@ INSERT INTO `orders` (`id_order`, `created_date`, `total_amount`, `waiter_id`, `
 CREATE TABLE `orders_has_products` (
   `orders_id_order` int NOT NULL,
   `products_id_product` int NOT NULL,
-  `quantity` int DEFAULT NULL
+  `quantity` int DEFAULT NULL,
+  `product_price` decimal(10,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 --
 -- Volcado de datos para la tabla `orders_has_products`
 --
 
-INSERT INTO `orders_has_products` (`orders_id_order`, `products_id_product`, `quantity`) VALUES
-(1, 1, 2),
-(2, 1, 1),
-(3, 1, 3);
+INSERT INTO `orders_has_products` (`orders_id_order`, `products_id_product`, `quantity`, `product_price`) VALUES
+(1, 1, 2, 0.00),
+(2, 1, 1, 0.00),
+(3, 1, 3, 0.00);
 
 -- --------------------------------------------------------
 
@@ -231,9 +301,11 @@ CREATE TABLE `order_statuses` (
 --
 
 INSERT INTO `order_statuses` (`id_status`, `status_name`, `status_desc`) VALUES
-(1, 'Pendiente', 'Pedido pendiente de confirmacion'),
-(2, 'Confirmado', 'Pedido confirmado y en cola de preparacion'),
-(3, 'Cancelado', 'Pedido cancelado');
+(1, 'PENDING', 'Pedido pendiente de confirmación'),
+(2, 'CONFIRMED', 'Pedido confirmado y en cola de preparación'),
+(3, 'CANCELLED', 'Pedido cancelado'),
+(4, 'READY', 'Pedido listo para recoger'),
+(5, 'COMPLETED', 'Pedido entregado al cliente');
 
 -- --------------------------------------------------------
 
@@ -254,15 +326,84 @@ CREATE TABLE `products` (
   `low_stock_level` int DEFAULT NULL,
   `critical_stock_level` int DEFAULT NULL,
   `ingredient_statuses_id_status` int DEFAULT NULL,
-  `product_types_id_type` int NOT NULL
+  `product_types_id_type` int NOT NULL,
+  `product_category` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 --
 -- Volcado de datos para la tabla `products`
 --
 
-INSERT INTO `products` (`id_product`, `product_name`, `product_price`, `product_cost`, `product_desc`, `product_image_url`, `created_date`, `last_updated_date`, `product_stock`, `low_stock_level`, `critical_stock_level`, `ingredient_statuses_id_status`, `product_types_id_type`) VALUES
-(1, 'Vaso de cafe', 10000.00, 4000.00, 'Cafe melo', 'http://localhost:8000/public/images/imagen_cafe.jpg', '2025-06-19', NULL, NULL, NULL, NULL, NULL, 1);
+INSERT INTO `products` (`id_product`, `product_name`, `product_price`, `product_cost`, `product_desc`, `product_image_url`, `created_date`, `last_updated_date`, `product_stock`, `low_stock_level`, `critical_stock_level`, `ingredient_statuses_id_status`, `product_types_id_type`, `product_category`) VALUES
+(1, 'Vaso de cafe', 10000.00, 4000.00, 'Cafe melo', 'http://localhost:8000/public/images/imagen_cafe.jpg', '2025-06-19', NULL, NULL, NULL, NULL, NULL, 1, 2),
+(2, 'Cocacola', 10000.00, 6000.00, 'cocacola', 'djafjsfcjsbdfhbfhbhsfbfhd', '2025-06-03', NULL, 40, 30, 10, 1, 2, 1);
+
+--
+-- Disparadores `products`
+--
+DELIMITER $$
+CREATE TRIGGER `tgr_after_update_stock_products` AFTER UPDATE ON `products` FOR EACH ROW BEGIN
+  -- 1. Declarar variables al inicio
+  DECLARE mov_type ENUM('IN', 'OUT');
+  DECLARE diff DECIMAL(10,2);
+
+  -- 2. Verificar si cambió el stock
+  IF NEW.product_stock <> OLD.product_stock THEN
+
+    -- Calcular la diferencia
+    SET diff = NEW.product_stock - OLD.product_stock;
+
+    IF diff > 0 THEN
+      SET mov_type = 'IN';
+    ELSE
+      SET mov_type = 'OUT';
+      SET diff = ABS(diff); -- Convertir a positivo
+    END IF;
+
+    -- 3. Insertar en tabla movement
+    INSERT INTO stock_movements (
+      movement_type,
+      quantity,
+      movement_date,
+      movement_notes,
+      product_type,
+      id_product
+    )
+    VALUES (
+      mov_type,
+      diff,
+      NOW(),
+      'Actualización directa del producto - autotrigger',
+      'PRODUCTO',
+      NEW.id_product
+    );
+
+  END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `products_category`
+--
+
+CREATE TABLE `products_category` (
+  `id_category` int NOT NULL,
+  `category_name` varchar(300) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Volcado de datos para la tabla `products_category`
+--
+
+INSERT INTO `products_category` (`id_category`, `category_name`) VALUES
+(1, 'Gaseosas'),
+(2, 'Cafes'),
+(3, 'Bebidas'),
+(4, 'Cervezas'),
+(5, 'Cocteles');
 
 -- --------------------------------------------------------
 
@@ -301,7 +442,8 @@ CREATE TABLE `product_types` (
 
 INSERT INTO `product_types` (`id_type`, `type_name`, `type_desc`) VALUES
 (1, 'Producto preparado', 'Producto que requiere preparacion y manejo de stock por ingredientes'),
-(2, 'Producto no preparado', 'Producto que viene por unidad y no requiere stock de ingredientes');
+(2, 'Producto no preparado', 'Producto que viene por unidad y no requiere stock de ingredientes'),
+(3, 'Eliminado', 'producto eliminado');
 
 -- --------------------------------------------------------
 
@@ -314,8 +456,38 @@ CREATE TABLE `refresh_tokens` (
   `employe_id` int NOT NULL,
   `token_hash` varchar(255) NOT NULL,
   `expires_at` datetime NOT NULL,
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_revoked` tinyint NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Volcado de datos para la tabla `refresh_tokens`
+--
+
+INSERT INTO `refresh_tokens` (`id`, `employe_id`, `token_hash`, `expires_at`, `created_at`, `is_revoked`) VALUES
+(20, 2, '34139e7295f86d688a289f6b05c1912dcbf7506cb350dd638fe321409ad62fbc', '2025-07-13 19:06:54', '2025-07-07 00:06:54', 0),
+(21, 2, '950a9f5293320141db4409e63ea1bfc491489d0fe3bd70da260ef3759dd887ba', '2025-07-13 19:10:32', '2025-07-07 00:10:32', 0),
+(22, 2, 'cd3a3f3b5ed0900b1c41e77242c0f28deefc6b8ccb8350059c179efe687a5225', '2025-07-13 20:03:59', '2025-07-07 01:03:59', 0),
+(23, 2, 'd04fa3a687e00bb93d439e03dcae0db61f3e431f88e71f950037dc95b0db89f1', '2025-07-13 20:10:18', '2025-07-07 01:10:18', 0),
+(24, 2, '8ce91d25d9528a4c43a836936eea665c7ab3b2c40b21034a6138a47c02d580a0', '2025-07-13 20:22:35', '2025-07-07 01:22:35', 1),
+(25, 2, 'b21e4a06adf61eddae9bd5c3db1630e1675831b47e9b5c13f8a5ef274e528ea3', '2025-07-13 20:38:07', '2025-07-07 01:38:07', 1),
+(26, 2, 'e01e8ebcdb6362e7d29d4b5c1b66451f52f55e814022015348a806b3b3a18eae', '2025-07-13 20:43:18', '2025-07-07 01:43:18', 1),
+(27, 2, '6f4205c310e285e50101a6af08170ac6217a2f2d3909811aa7cf02532d95d2b5', '2025-07-13 20:50:38', '2025-07-07 01:50:38', 1),
+(28, 2, '7f41e09d6ab4b73a2f158603ac755a8fe62994ea2728793af5c553877165f519', '2025-07-13 21:13:18', '2025-07-07 02:13:18', 1),
+(29, 2, '08390dd11b7fdbffdaeabecfed7a2a4f9403aa38c5fe938e25c8164e3a4d3d52', '2025-07-13 21:18:33', '2025-07-07 02:18:33', 1),
+(30, 2, '56219b966599c7183ed860e2b56329944a6d7dfdc92719f5d7563f82dde5c10c', '2025-07-13 21:30:53', '2025-07-07 02:30:53', 0),
+(31, 2, '63fe636b1874a5aebcc67b211e1893ef3f99a840d2ec143ae7825d1701086b89', '2025-07-13 21:34:26', '2025-07-07 02:34:26', 1),
+(32, 2, 'ac549275ded582413fd95cd7f8a42aa93574c30fc583c25f4acc98537fe8fb4c', '2025-07-14 12:44:47', '2025-07-07 17:44:47', 1),
+(33, 2, '3fac18e741bcf948c45fda8f1a0d80f9f702dd0a3b319b9abfad8df5fa592be0', '2025-07-14 12:45:12', '2025-07-07 17:45:12', 1),
+(34, 2, '822e8e942b54c03311c589225b9f2e51917e188bc06265a3c5f0dd7112db9ac2', '2025-07-14 13:26:36', '2025-07-07 18:26:36', 1),
+(35, 2, 'a42099abf363b5af901d4a2ad1f913c4254385bd9922299906e2ed5ab62d000a', '2025-07-14 15:42:40', '2025-07-07 20:42:40', 1),
+(36, 2, '57a173a89cd6318e7eefae99ab6ff6cd2d89b2356c7209b0432b044572bdd0f1', '2025-07-14 17:21:19', '2025-07-07 22:21:19', 1),
+(37, 7, 'afff2ff218d1df279e124886c2ef87eb918c170893a99de2972721784ac47f43', '2025-07-14 19:36:44', '2025-07-08 00:36:44', 0),
+(38, 7, 'a88450ccb0ab7c5619d08fc96153a6a7ba4f922618877dbbbbe6b753cc855815', '2025-07-14 19:41:44', '2025-07-08 00:41:44', 0),
+(39, 7, 'ca4507ed94679be2121005a72823f5835a91b8f7c21bf81b7406fd0e6e4a9268', '2025-07-14 19:44:17', '2025-07-08 00:44:17', 0),
+(40, 7, '018e22da5fa0db3b237ddc87ad6c41b51be640a6a5ad1b16a52f4ef8475c3369', '2025-07-14 19:46:11', '2025-07-08 00:46:11', 0),
+(41, 7, '173ebd3a8f84f5ba2b28e3dab6d6f0f81bf0a3823041b81039c331685527177a', '2025-07-14 19:49:53', '2025-07-08 00:49:53', 0),
+(42, 9, '2b18bcf2f94c2cff25385e95dad2b8605e49cd65b044ea244cec3233d1f363c0', '2025-07-14 19:57:28', '2025-07-08 00:57:28', 0);
 
 -- --------------------------------------------------------
 
@@ -327,16 +499,18 @@ CREATE TABLE `sales` (
   `id_sale` int NOT NULL,
   `total_amount` decimal(10,2) DEFAULT NULL,
   `payment_method` enum('CONTADO','TRANSFERENCIA') DEFAULT NULL,
-  `created_at` datetime DEFAULT NULL
+  `created_at` datetime DEFAULT NULL,
+  `cashier_id` int NOT NULL,
+  `sale_status` enum('COMPLETED','CANCELED') NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
 --
 -- Volcado de datos para la tabla `sales`
 --
 
-INSERT INTO `sales` (`id_sale`, `total_amount`, `payment_method`, `created_at`) VALUES
-(1, 20000.00, 'CONTADO', '2025-06-19 14:31:21'),
-(2, 40000.00, 'TRANSFERENCIA', '2025-06-19 14:31:21');
+INSERT INTO `sales` (`id_sale`, `total_amount`, `payment_method`, `created_at`, `cashier_id`, `sale_status`) VALUES
+(1, 20000.00, 'CONTADO', '2025-06-19 14:31:21', 1, 'COMPLETED'),
+(2, 40000.00, 'TRANSFERENCIA', '2025-06-19 14:31:21', 1, 'COMPLETED');
 
 -- --------------------------------------------------------
 
@@ -370,9 +544,19 @@ CREATE TABLE `stock_movements` (
   `quantity` decimal(10,2) DEFAULT NULL,
   `movement_date` datetime DEFAULT NULL,
   `movement_notes` varchar(300) DEFAULT NULL,
-  `stock_movementscol` varchar(45) DEFAULT NULL,
+  `product_type` enum('INGREDIENTE','PRODUCTO') CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL,
   `id_product` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+
+--
+-- Volcado de datos para la tabla `stock_movements`
+--
+
+INSERT INTO `stock_movements` (`id_movement`, `movement_type`, `quantity`, `movement_date`, `movement_notes`, `product_type`, `id_product`) VALUES
+(1, 'OUT', 1.00, '2025-06-29 21:28:39', 'Actualización directa del ingrediente - autotrigger', 'INGREDIENTE', 1),
+(2, 'IN', 10.00, '2025-06-29 21:29:03', 'Actualización directa del ingrediente - autotrigger', 'INGREDIENTE', 1),
+(3, 'IN', 4.00, '2025-06-29 21:35:38', 'Actualización directa del producto - autotrigger', 'PRODUCTO', 2),
+(4, 'OUT', 54.00, '2025-06-29 21:35:55', 'Actualización directa del producto - autotrigger', 'PRODUCTO', 2);
 
 -- --------------------------------------------------------
 
@@ -393,8 +577,8 @@ CREATE TABLE `tables` (
 --
 
 INSERT INTO `tables` (`id_table`, `table_number`, `qr_token`, `token_expiration`, `table_status`) VALUES
-(1, 1, 'token_qr_231414143241432', '2025-06-20 13:25:00', 'OCCUPIED'),
-(2, 2, 'qr_token_124143212515135', '2025-06-20 14:25:00', 'FREE');
+(1, 1, '5912d0792d5348825ba1104aeb502fe64391aedf1a0b1c132a8d655068159f81', '2025-07-12 15:00:01', 'FREE'),
+(2, 2, 'e24b66c8bb444b2a46a8649533534d8b12edff686978ec7633656d047b10499d', '2025-07-12 15:00:01', 'FREE');
 
 -- --------------------------------------------------------
 
@@ -415,7 +599,12 @@ CREATE TABLE `table_sessions` (
 --
 
 INSERT INTO `table_sessions` (`id_session`, `stared_at`, `ended_at`, `session_status`, `tables_id_table`) VALUES
-(1, '2025-06-19 14:26:42', NULL, 'ACTIVE', 1);
+(1, '2025-06-19 14:26:42', NULL, 'CLOSED', 1),
+(2, '2025-06-18 14:42:00', '2025-06-12 14:42:00', 'CLOSED', 1),
+(3, '2025-06-19 14:42:00', '2025-06-28 14:42:00', 'EXPIRED', 1),
+(4, '2025-07-08 12:15:03', NULL, 'ACTIVE', 1),
+(5, '2025-07-08 12:32:02', NULL, 'CLOSED', 2),
+(6, '2025-07-09 12:43:53', NULL, 'ACTIVE', 2);
 
 -- --------------------------------------------------------
 
@@ -452,8 +641,10 @@ INSERT INTO `units_of_measure` (`id_unit`, `unit_name`, `unit_abbreviation`) VAL
 --
 ALTER TABLE `employees`
   ADD PRIMARY KEY (`id_employe`),
+  ADD UNIQUE KEY `employee_cc` (`employee_cc`),
   ADD KEY `fk_employees_employees_statuses1_idx` (`employees_statuses_id_status`),
-  ADD KEY `fk_employees_employees_rol1_idx` (`employees_rol_id_rol`);
+  ADD KEY `fk_employees_employees_rol1_idx` (`employees_rol_id_rol`),
+  ADD KEY `table_id_device` (`table_id_device`);
 
 --
 -- Indices de la tabla `employees_rol`
@@ -480,6 +671,12 @@ ALTER TABLE `ingredients`
 --
 ALTER TABLE `ingredient_statuses`
   ADD PRIMARY KEY (`id_status`);
+
+--
+-- Indices de la tabla `notifications`
+--
+ALTER TABLE `notifications`
+  ADD PRIMARY KEY (`id_notification`);
 
 --
 -- Indices de la tabla `orders`
@@ -524,7 +721,14 @@ ALTER TABLE `order_statuses`
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id_product`),
   ADD KEY `fk_no_prepare_products_ingredient_statuses1_idx` (`ingredient_statuses_id_status`),
-  ADD KEY `fk_products_product_types1_idx` (`product_types_id_type`);
+  ADD KEY `fk_products_product_types1_idx` (`product_types_id_type`),
+  ADD KEY `product_category` (`product_category`);
+
+--
+-- Indices de la tabla `products_category`
+--
+ALTER TABLE `products_category`
+  ADD PRIMARY KEY (`id_category`);
 
 --
 -- Indices de la tabla `products_has_ingredients`
@@ -552,7 +756,8 @@ ALTER TABLE `refresh_tokens`
 -- Indices de la tabla `sales`
 --
 ALTER TABLE `sales`
-  ADD PRIMARY KEY (`id_sale`);
+  ADD PRIMARY KEY (`id_sale`),
+  ADD KEY `cashier_id` (`cashier_id`);
 
 --
 -- Indices de la tabla `sales_has_orders`
@@ -596,13 +801,13 @@ ALTER TABLE `units_of_measure`
 -- AUTO_INCREMENT de la tabla `employees`
 --
 ALTER TABLE `employees`
-  MODIFY `id_employe` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_employe` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `employees_rol`
 --
 ALTER TABLE `employees_rol`
-  MODIFY `id_rol` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_rol` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `employees_statuses`
@@ -623,6 +828,12 @@ ALTER TABLE `ingredient_statuses`
   MODIFY `id_status` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
+-- AUTO_INCREMENT de la tabla `notifications`
+--
+ALTER TABLE `notifications`
+  MODIFY `id_notification` int NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `orders`
 --
 ALTER TABLE `orders`
@@ -638,31 +849,43 @@ ALTER TABLE `orders_unified`
 -- AUTO_INCREMENT de la tabla `order_statuses`
 --
 ALTER TABLE `order_statuses`
-  MODIFY `id_status` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id_status` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `products`
 --
 ALTER TABLE `products`
-  MODIFY `id_product` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_product` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `products_category`
+--
+ALTER TABLE `products_category`
+  MODIFY `id_category` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `product_types`
 --
 ALTER TABLE `product_types`
-  MODIFY `id_type` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id_type` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `refresh_tokens`
 --
 ALTER TABLE `refresh_tokens`
-  MODIFY `id` int NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT de la tabla `sales`
 --
 ALTER TABLE `sales`
   MODIFY `id_sale` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `stock_movements`
+--
+ALTER TABLE `stock_movements`
+  MODIFY `id_movement` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de la tabla `tables`
@@ -674,7 +897,7 @@ ALTER TABLE `tables`
 -- AUTO_INCREMENT de la tabla `table_sessions`
 --
 ALTER TABLE `table_sessions`
-  MODIFY `id_session` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id_session` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT de la tabla `units_of_measure`
@@ -690,6 +913,7 @@ ALTER TABLE `units_of_measure`
 -- Filtros para la tabla `employees`
 --
 ALTER TABLE `employees`
+  ADD CONSTRAINT `employees_ibfk_1` FOREIGN KEY (`table_id_device`) REFERENCES `tables` (`id_table`),
   ADD CONSTRAINT `fk_employees_employees_rol1` FOREIGN KEY (`employees_rol_id_rol`) REFERENCES `employees_rol` (`id_rol`),
   ADD CONSTRAINT `fk_employees_employees_statuses1` FOREIGN KEY (`employees_statuses_id_status`) REFERENCES `employees_statuses` (`id_status`);
 
@@ -727,7 +951,8 @@ ALTER TABLE `orders_unified_has_orders`
 --
 ALTER TABLE `products`
   ADD CONSTRAINT `fk_no_prepare_products_ingredient_statuses1` FOREIGN KEY (`ingredient_statuses_id_status`) REFERENCES `ingredient_statuses` (`id_status`),
-  ADD CONSTRAINT `fk_products_product_types1` FOREIGN KEY (`product_types_id_type`) REFERENCES `product_types` (`id_type`);
+  ADD CONSTRAINT `fk_products_product_types1` FOREIGN KEY (`product_types_id_type`) REFERENCES `product_types` (`id_type`),
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`product_category`) REFERENCES `products_category` (`id_category`);
 
 --
 -- Filtros para la tabla `products_has_ingredients`
@@ -741,6 +966,12 @@ ALTER TABLE `products_has_ingredients`
 --
 ALTER TABLE `refresh_tokens`
   ADD CONSTRAINT `refresh_tokens_ibfk_1` FOREIGN KEY (`employe_id`) REFERENCES `employees` (`id_employe`) ON DELETE CASCADE;
+
+--
+-- Filtros para la tabla `sales`
+--
+ALTER TABLE `sales`
+  ADD CONSTRAINT `sales_ibfk_1` FOREIGN KEY (`cashier_id`) REFERENCES `employees` (`id_employe`);
 
 --
 -- Filtros para la tabla `sales_has_orders`

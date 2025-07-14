@@ -56,21 +56,6 @@ class EmployeesController extends BaseController
         }, 'Error al obtener el empleado');
     }
 
-    //validar mail
-    public function existsEmail($email, $excludeId = null)
-    {
-        $query = "SELECT COUNT(*) FROM employees WHERE employe_email = :email";
-        if ($excludeId) {
-            $query .= " AND id_employe != :id";
-        }
-        $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':email', $email);
-        if ($excludeId) {
-            $stmt->bindParam(':id', $excludeId);
-        }
-        $stmt->execute();
-        return $stmt->fetchColumn() > 0;
-    }
     // Crear un nuevo usuario
     public function store()
 {
@@ -96,6 +81,14 @@ class EmployeesController extends BaseController
             'employees_statuses_id_status' => $this->validateId($data['employees_statuses_id_status'])
         ];
 
+        // Validación especial para rol 4 (dispositivo)
+        if ($employeeData['employees_rol_id_rol'] == 4) {
+            if (!isset($data['table_id_device']) || $this->validateId($data['table_id_device']) === null) {
+                $this->handleResponse(false, 'Para empleados de tipo dispositivo (rol 4) es obligatorio enviar el id de mesa (table_id_device)', [], 400);
+                return;
+            }
+        }
+
         // Ahora valida el email único
         if ($this->usuarioModel->existsEmail($employeeData['employe_email'])) {
             $this->handleResponse(false, 'El email ya está registrado', [], 400);
@@ -103,7 +96,7 @@ class EmployeesController extends BaseController
         }
 
         if (isset($data['employee_cc'])) {
-            $employeeData['employee_cc'] = $this->sanitizeString($data['employee_cc']);
+            $employeeData['employee_cc'] = ($data['employee_cc'] === null || $data['employee_cc'] === '' ) ? null : $this->sanitizeString($data['employee_cc']);
         } else {
             $employeeData['employee_cc'] = null;
         }

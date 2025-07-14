@@ -68,21 +68,46 @@ public function getAll($page = 1, $limit = 10, $orderBy = null)
 
     public function create($data)
 {
-    $query = "INSERT INTO employees 
-        (employe_name, employe_email, password, employees_rol_id_rol, employees_statuses_id_status, employee_cc, table_id_device) 
-        VALUES (:employe_name, :employe_email, :password, :employees_rol_id_rol, :employees_statuses_id_status, :employee_cc, :table_id_device)";
-    $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':employe_name', $data['employe_name']);
-    $stmt->bindParam(':employe_email', $data['employe_email']);
-    $stmt->bindParam(':password', $data['password']);
-    $stmt->bindParam(':employees_rol_id_rol', $data['employees_rol_id_rol']);
-    $stmt->bindParam(':employees_statuses_id_status', $data['employees_statuses_id_status']);
-    $stmt->bindParam(':employee_cc', $data['employee_cc']);
-    $stmt->bindParam(':table_id_device', $data['table_id_device']);
-    if ($stmt->execute()) {
-        return $this->conn->lastInsertId();
+    // Validar rol 4: debe venir table_id_device
+    if ($data['employees_rol_id_rol'] == 4) {
+        if (!isset($data['table_id_device']) || $data['table_id_device'] === null) {
+            // No se puede registrar sin id de mesa
+            return false;
+        }
+    } else {
+        // Si no es rol 4, forzar table_id_device a null
+        $data['table_id_device'] = null;
     }
-    return false;
+
+    try {
+        $query = "INSERT INTO employees 
+            (employe_name, employe_email, password, employees_rol_id_rol, employees_statuses_id_status, employee_cc, table_id_device, created_date) 
+            VALUES (:employe_name, :employe_email, :password, :employees_rol_id_rol, :employees_statuses_id_status, :employee_cc, :table_id_device, CURDATE())";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':employe_name', $data['employe_name']);
+        $stmt->bindParam(':employe_email', $data['employe_email']);
+        $stmt->bindParam(':password', $data['password']);
+        $stmt->bindParam(':employees_rol_id_rol', $data['employees_rol_id_rol']);
+        $stmt->bindParam(':employees_statuses_id_status', $data['employees_statuses_id_status']);
+        $stmt->bindParam(':employee_cc', $data['employee_cc']);
+        $stmt->bindParam(':table_id_device', $data['table_id_device']);
+        if ($stmt->execute()) {
+            return $this->conn->lastInsertId();
+        }
+        return false;
+    } catch (\PDOException $e) {
+        error_log('ERROR SQL CREATE EMPLOYEE: ' . $e->getMessage());
+        if (isset($_GET['debug_sql'])) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error SQL: ' . $e->getMessage(),
+                'query' => $query,
+                'data' => $data
+            ]);
+            exit;
+        }
+        return false;
+    }
 }
     // Filtrar empleados por rol y estado con JOIN y sin password
     public function filterBy($rol = null, $status = null)
@@ -117,17 +142,28 @@ public function getAll($page = 1, $limit = 10, $orderBy = null)
 
 public function existsEmail($email, $excludeId = null)
 {
-    $query = "SELECT COUNT(*) FROM employees WHERE employe_email = :email";
+    $query = "SELECT COUNT(*) FROM employees WHERE LOWER(TRIM(employe_email)) = LOWER(TRIM(:email))";
     if ($excludeId !== null) {
         $query .= " AND id_employe != :id";
     }
     $stmt = $this->conn->prepare($query);
-    $stmt->bindParam(':email', $email);
+    $cleanEmail = strtolower(trim($email));
+    $stmt->bindParam(':email', $cleanEmail);
     if ($excludeId !== null) {
         $stmt->bindParam(':id', $excludeId);
     }
     $stmt->execute();
-    return $stmt->fetchColumn() > 0;
+    $count = $stmt->fetchColumn();
+    error_log('EXISTS_EMAIL: Email consultado: ' . $cleanEmail . ' | Resultado: ' . $count);
+    if (isset($_GET['debug_email'])) {
+        echo json_encode([
+            'query' => $query,
+            'email_consultado' => $cleanEmail,
+            'resultado' => $count
+        ]);
+        exit;
+    }
+    return $count > 0;
 }
     public function update($id, $data)
     {
