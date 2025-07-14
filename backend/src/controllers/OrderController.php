@@ -31,7 +31,7 @@ class OrderController extends BaseController
             try {
                 $data = $this->getRequestData();
                 // Validar campos requeridos según documentación
-                $requiredFields = ['table_session_id', 'products', 'waiter_id'];
+                $requiredFields = ['table_session_id', 'products'];
                 $missingFields = $this->validateRequiredFields($data, $requiredFields);
                 if (!empty($missingFields)) {
                     $this->handleMissingFieldsError($missingFields);
@@ -55,20 +55,11 @@ class OrderController extends BaseController
                         return;
                     }
                 }
-                // Validar que el mesero exista y esté activo
-                $waiter = $this->employeeModel->getById($data['waiter_id']);
-                if (!$waiter) {
-                    $this->handleResponse(false, 'Mesero no encontrado', [], 400);
-                    return;
-                }
-                if ($waiter['employees_rol_id_rol'] != 1 || $waiter['employees_statuses_id_status'] != 1) {
-                    $this->handleResponse(false, 'El empleado no es un mesero activo', [], 400);
-                    return;
-                }
+                // No asignar mesero al crear el pedido
                 $orderData = [
                     'table_sessions_id_session' => $data['table_session_id'],
                     'order_statuses_id_status' => 1, // PENDING
-                    'waiter_id' => $waiter['id_employe'],
+                    'waiter_id' => null,
                     'total_amount' => 0 // Se calcula después
                 ];
                 $order = $this->orderModel->create($orderData);
@@ -95,7 +86,6 @@ class OrderController extends BaseController
                 // Actualizar total del pedido
                 $this->orderModel->update($order['id_order'], [
                     'total_amount' => $totalAmount,
-                    'waiter_id' => $waiter['id_employe'],
                     'order_statuses_id_status' => 1,
                     'table_sessions_id_session' => $data['table_session_id']
                 ]);

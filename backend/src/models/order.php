@@ -46,7 +46,7 @@ class Order extends BaseModel
             );
             $stmt->execute([
                 $data['total_amount'],
-                $data['waiter_id'],
+                isset($data['waiter_id']) ? $data['waiter_id'] : null,
                 $data['order_statuses_id_status'],
                 $data['table_sessions_id_session']
             ]);
@@ -75,7 +75,7 @@ class Order extends BaseModel
         );
         $stmt->execute([
             $data['total_amount'],
-            $data['waiter_id'],
+            isset($data['waiter_id']) ? $data['waiter_id'] : null,
             $data['order_statuses_id_status'],
             $data['table_sessions_id_session'],
             $id
