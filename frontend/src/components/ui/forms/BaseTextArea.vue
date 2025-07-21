@@ -1,5 +1,5 @@
 <template>
-  <div class="form-group">
+  <div class="form-group" :class="`variant-${variant}`">
     <!-- 1. Label (Etiqueta) -->
     <label v-if="label" :for="name" class="form-label">
       {{ label }}
@@ -7,18 +7,14 @@
 
     <!-- 2. Contenedor, que recibirá la animación de sacudida -->
     <div class="form-input-wrapper" ref="wrapperRef">
-      
+
       <!-- 3. El elemento <textarea> real -->
-      <textarea
-        :id="name"
-        :name="name"
-        v-model="value"
-        :class="textareaClasses"
-        v-bind="$attrs"
-        :aria-invalid="!!errorMessage"
-        :aria-describedby="describedByIds"
-        ref="textareaRef"
-      ></textarea>
+      <textarea :id="name" :name="name" v-model="value" :class="textareaClasses" v-bind="$attrs"
+        :aria-invalid="!!errorMessage" :aria-describedby="describedByIds" ref="textareaRef"></textarea>
+
+        <div v-if="errorMessage" class="form-input-state-decorator">
+        <i-mdi-alert-circle class="w-5 h-5" />
+      </div>
 
     </div>
 
@@ -33,7 +29,7 @@
       </p>
       <!-- Espaciador para empujar el contador a la derecha si no hay texto de ayuda -->
       <span v-else class="flex-grow"></span>
-      
+
       <!-- Contador de Caracteres -->
       <div v-if="showCounter && maxLength" :class="counterClasses">
         {{ value.length }} / {{ maxLength }}
@@ -84,6 +80,11 @@ const props = defineProps({
     type: Number,
     default: null,
   },
+  variant: {
+    type: String,
+    default: 'light',
+    validator: (value) => ['light', 'dark'].includes(value)
+  }
 });
 
 
@@ -106,9 +107,8 @@ const describedByIds = computed(() => {
 
 // --- CLASES COMPUTADAS ---
 const textareaClasses = computed(() => [
-  'form-input', // Reutilizamos la clase base de los inputs
+  'form-input', `variant-${props.variant}`, // Reutilizamos la clase base de los inputs
   {
-    'is-invalid': !!errorMessage.value,
     'resize-none': props.autoResize, // Deshabilita el resize manual si el auto-resize está activo
   }
 ]);
@@ -144,16 +144,29 @@ onMounted(() => {
 
 // 2. Animación de Sacudida por Error
 // Lógica idéntica a tu BaseInput, aplicada al wrapper
-watch(
-  () => errorMessage,
-  (newErr) => {
-    if (newErr.message && wrapperRef.value) {
-      wrapperRef.value.classList.remove('animate-shake');
-      void wrapperRef.value.offsetWidth; // Forzar reflow
-      wrapperRef.value.classList.add('animate-shake');
-    }
-  },
-  { deep: true }
-);
+watch(errorMessage, (newError) => {
+  if (newError && wrapperRef.value) {
+
+    
+    
+   
+    wrapperRef.value.classList.remove('animate-shake', 'is-invalid');
+    void wrapperRef.value.offsetWidth;
+    wrapperRef.value.classList.add('animate-shake', 'is-invalid');
+ 
+  }else{
+
+     wrapperRef.value.classList.remove('animate-shake', 'is-invalid');
+
+  }
+});
 
 </script>
+
+
+<style scoped>
+
+
+
+
+</style>

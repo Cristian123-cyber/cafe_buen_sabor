@@ -25,16 +25,16 @@ class TableSessionController1 extends BaseController
      */
     public function validateQrAndStartSession()
     {
-        return $this->executeWithErrorHandling(function() {
-            
+        return $this->executeWithErrorHandling(function () {
+
             $input = $this->getRequestData();
 
             $missingFields = $this->validateRequiredFields($input, ['qr_token', 'id_table']);
-            
+
             if (!empty($missingFields)) {
-               $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
-               return;
-           }
+                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+                return;
+            }
             // 2. Sanitizar y validar los datos de entrada
             $qrToken = $this->sanitizeString($input['qr_token']);
             $idTable = filter_var($input['id_table'], FILTER_VALIDATE_INT);
@@ -55,7 +55,7 @@ class TableSessionController1 extends BaseController
 
             // 4. Buscar una sesión activa para esta mesa o crear una nueva
             $session = $this->tableSessionModel->findActiveByTableId($tableData['id_table']);
-            
+
             if (!$session || $session === false || empty($session)) {
                 // Si no hay sesión activa, creamos una nueva.
                 $sessionId = $this->tableSessionModel->createSession($tableData['id_table']);
@@ -64,8 +64,14 @@ class TableSessionController1 extends BaseController
                     $this->handleResponse(false, 'No se pudo iniciar la sesión de la mesa.', [], 500);
                     return;
                 }
+                $this->tableModel->updateTable($tableData['id_table'], ['table_status' => 'OCCUPIED']);
+
                 $session = ['id_session' => $sessionId, 'id_table' => $tableData['id_table']];
             }
+
+
+
+
 
             // 5. Generar el JWT de Sesión de Mesa (Session-JWT)
             $secretKey = $_ENV['JWT_SECRET'];
@@ -96,15 +102,15 @@ class TableSessionController1 extends BaseController
                     'id' => (int)$session['id_session']
                 ]
             ], 200);
-
         }, 'Error al validar la sesión de mesa');
     }
 
 
-    public function validateClientSession() {
+    public function validateClientSession()
+    {
 
 
-        return $this->executeWithErrorHandling(function() {
+        return $this->executeWithErrorHandling(function () {
 
             $input = $this->getRequestData();
 
@@ -112,15 +118,15 @@ class TableSessionController1 extends BaseController
 
 
 
-            
+
             if (!empty($missingFields)) {
-               $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
-               return;
-           }
+                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+                return;
+            }
 
-             $idSession = filter_var($input['session_id'], FILTER_VALIDATE_INT);
+            $idSession = filter_var($input['session_id'], FILTER_VALIDATE_INT);
 
-             if ($idSession === false) {
+            if ($idSession === false) {
                 $this->handleValidationError('El ID de Session no es valido.');
                 return;
             }
@@ -128,7 +134,7 @@ class TableSessionController1 extends BaseController
 
             $result = $this->tableSessionModel->validateSession((int) $idSession);
 
-            if (!$result || empty($result)){
+            if (!$result || empty($result)) {
 
                 $this->handleResponse(false, 'Acesso no autorizado, session expirada', [], 401);
             }
@@ -136,10 +142,9 @@ class TableSessionController1 extends BaseController
 
             $tableData = $this->tableModel->find($result['table_id']);
 
-            if (!$tableData || empty($tableData)){
+            if (!$tableData || empty($tableData)) {
 
                 $this->handleResponse(false, 'Acesso no autorizado, mesa no encontrada', [], 401);
-
             }
 
 
@@ -153,26 +158,7 @@ class TableSessionController1 extends BaseController
                     'id' => (int) $idSession
                 ]
             ], 200);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         }, 'Error al validar sesion.');
-
-
-
-        
     }
 
     // ... otros métodos del controlador ...

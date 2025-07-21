@@ -6,7 +6,7 @@
             <!-- 🎬 Video de fondo -->
             <video class="absolute top-0 left-0 w-full h-full object-cover" autoplay muted loop playsinline
                 poster="https://img.freepik.com/free-photo/steaming-cup-coffee-saucer-with-coffee-beans-scattered-around_9975-124454.jpg">
-                <source src="/videos/cafe-hero.mp4" type="video/mp4" />
+                <source src="http://localhost:8000/uploads/video/mixkit-close-up-view-serving-a-sparkling-cappuccino-41858-hd-ready.mp4" type="video/mp4" />
                 Tu navegador no soporta el video.
             </video>
 
@@ -30,12 +30,7 @@
                 </router-link>
             </div>
 
-            <!-- ✨ Floating elements -->
-            <div class="floating-elements absolute inset-0 z-30 pointer-events-none">
-                <div class="floating-element floating-element-1"></div>
-                <div class="floating-element floating-element-2"></div>
-                <div class="floating-element floating-element-3"></div>
-            </div>
+            
         </div>
 
         <!-- Main Content -->

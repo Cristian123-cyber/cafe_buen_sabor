@@ -168,12 +168,13 @@ const maxWidthClass = computed(() => {
 }
 
 .modal-container {
-  @apply relative z-10 flex w-full flex-col overflow-hidden rounded-xl bg-surface shadow-2xl ring-1 ring-border-light;
+  @apply relative z-10 flex w-full flex-col overflow-hidden rounded-xl bg-surface shadow-2xl;
   max-height: 90vh;
 }
 
 .modal-header {
-  @apply bg-gradient-to-r from-surface to-surface-dark;
+    background: linear-gradient(145deg, #212121 0%, #1a1a1a 50%, #0d0d0d 100%);
+
 }
 
 .modal-header-content {
@@ -181,11 +182,11 @@ const maxWidthClass = computed(() => {
 }
 
 .modal-title {
-  @apply text-xl font-semibold text-text tracking-tight;
+  @apply text-xl font-semibold text-text-light tracking-tight;
 }
 
 .modal-close-button {
-  @apply rounded-lg p-2 text-text-muted transition-all duration-200 hover:bg-accent-light hover:text-text active:scale-95;
+  @apply rounded-full p-2 text-text-muted transition-all duration-200 hover:bg-accent hover:text-text active:scale-95;
 }
 
 .modal-body {

@@ -121,11 +121,7 @@ const confirmOrder = async () => {
         type: 'info',
         duration: 5000, // Dura más para dar tiempo a verlo
       });
-      /* await alert.show({
-        variant: 'success',
-        title: '¡Enviado!',
-        message: 'El pedido ha sido enviado a la cocina con éxito.'
-      }); */
+      
     } catch (e) {
       await alert.show({
         variant: 'error',

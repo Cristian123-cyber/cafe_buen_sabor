@@ -43,9 +43,9 @@ export const useAuthStore = defineStore("auth", () => {
   const getDashboardRouteByRole = (role) => {
     const roleRoutes = {
       5: { name: "AdminDashboard" },
-      1: { name: "WaiterDashboard" },
+      1: { name: "WaiterTables" },
       2: { name: "KitchenDashboard" },
-      3: { name: "CashierDashboard" },
+      3: { name: "CashierTables" },
       4: { name: "DevicesQR", params: { table_id: user.value?.table_id} },
     };
     return roleRoutes[role] || { name: "Login" };

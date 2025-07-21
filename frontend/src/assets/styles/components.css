@@ -47,7 +47,7 @@
 }
 
 .btn-terciary {
-  @apply bg-surface-dark text-text hover:bg-gray-300 focus-visible:ring-blue-500/70;
+  @apply bg-gray-300 text-text hover:bg-gray-400 focus-visible:ring-blue-500/70;
 }
 /* Variante de Peligro (Acciones destructivas) */
 .btn-danger {
@@ -146,13 +146,6 @@
       - `appearance-none`: ¡Esta es la clave! Oculta la apariencia por defecto
         del sistema operativo, incluyendo la flecha nativa.
 */
-.select-native {
-  @apply block w-full rounded-md border border-border-light bg-surface-darker px-3 py-2 text-sm text-text placeholder:text-text-muted;
-  @apply appearance-none focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/30;
-  @apply transition-all duration-200;
-  @apply disabled:opacity-50 disabled:pointer-events-none;
-  @apply text-text;
-}
 
 /* 2. Clase para el texto del placeholder (cuando no hay nada seleccionado)
 */
@@ -307,7 +300,7 @@
 }
 
 .message {
-  @apply mt-2 text-base text-text-muted;
+  @apply mt-2 text-base text-gray-400;
   /* Mejora la legibilidad en párrafos */
   text-wrap: pretty;
 }
@@ -334,7 +327,7 @@
 
 .button--accent {
 
-  @apply focus:ring-success-light text-text bg-success;
+  @apply focus:ring-success-light text-text-light bg-success;
 }
 .button--accent:hover {
  @apply bg-success-light
@@ -350,7 +343,7 @@
 
 .button--warning {
  
-  @apply focus:ring-yellow-300 bg-warning text-text;
+  @apply focus:ring-yellow-300 bg-warning text-text-light;
 }
 .button--warning:hover {
   @apply bg-accent-light

@@ -1,15 +1,10 @@
 <!-- src/components/ui/BaseForm.vue (REDISENADO Y SIMPLIFICADO) -->
 <template>
   <!-- El componente 'Form' de VeeValidate sigue siendo el cerebro -->
-  <Form @submit="handleSubmit" :validation-schema="validationSchema" :initial-values="initialValues"
+  <Form @submit="onFormSubmit" ref="formRef" :validation-schema="validationSchema" :initial-values="initialValues"
     v-slot="{ errors }">
     <div class="relative" :class="{ 'form-disabled': disabled }">
-      <!-- Overlay de Carga se mantiene, es una excelente funcionalidad -->
-      <div v-if="isSubmitting"
-        class="fixed inset-0 z-50 flex items-center rounded-xl justify-center bg-white/30 dark:bg-neutral-900/50 rouded"
-        aria-live="assertive" role="status">
-       
-      </div>
+     
 
       <!-- El fieldset es crucial para deshabilitar todos los campos a la vez -->
       <fieldset :disabled="isSubmitting || disabled" class="flex flex-col gap-y-6">
@@ -40,7 +35,47 @@
 </template>
 
 <script setup>
-import { Form } from 'vee-validate';
+import { Form, useForm } from 'vee-validate';
+import { ref, watch, onMounted } from 'vue';
+
+// Referencia al componente Form
+const formRef = ref(null);
+
+
+
+
+// Funciones expuestas
+defineExpose({
+  // Método para enviar el formulario manualmente
+  submit: async () => {
+
+    if (formRef.value) {
+      console.log('Enviando formulario manualmente...');
+      // Esto triggerea el evento @submit del Form
+      const result = await formRef.value.validate();
+
+      if (result.valid) {
+
+
+        console.log('fallback')
+        // Fallback: llamar directamente al handler
+        const values = formRef.value.getValues();
+        onFormSubmit(values);
+
+      } else {
+        console.log('no valid')
+      }
+
+    }
+  },
+
+  // Método para resetear el formulario
+  reset: () => {
+    if (formRef.value) {
+      formRef.value.resetForm();
+    }
+  },
+});
 
 const props = defineProps({
   initialValues: { type: Object, default: () => ({}) },
@@ -56,9 +91,14 @@ const getCombinedErrors = (veeErrors) => {
   return { ...veeErrors, ...props.serverErrors };
 };
 
-const handleSubmit = (values) => {
+const onFormSubmit = (values) => {
   emit('submit', values);
-};
+}
+
+
+onMounted(() => {
+
+});
 </script>
 
 <style scoped>

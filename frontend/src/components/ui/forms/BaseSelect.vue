@@ -1,5 +1,5 @@
 <template>
-    <div class="form-group">
+    <div class="form-group" :class="`variant-${variant}`">
         <!-- 1. Label, consistente con los otros componentes -->
         <label v-if="label" :for="name" class="form-label">
             {{ label }}
@@ -9,9 +9,8 @@
         <div class="select-native-wrapper">
 
             <!-- 3. El <select> nativo -->
-            <select ref="selectRef" :id="name" v-model="value"
-                :class="selectClasses" v-bind="$attrs" :required="!!placeholder"
-                @focus="isOpen = true" @blur="handleBlur">
+            <select ref="selectRef" :id="name" v-model="value" :class="selectClasses" v-bind="$attrs"
+                :required="!!placeholder" @focus="isOpen = true" @blur="handleBlur">
                 <!-- Opción de Placeholder (si se proporciona) -->
                 <option v-if="placeholder" value="" disabled hidden>
                     {{ placeholder }}
@@ -24,8 +23,9 @@
             </select>
 
             <!-- 4. Nuestro icono de flecha personalizado -->
-            <div :class="['select-native-chevron']" >
-                <i-mynaui-chevron-down-solid :class="['transition-transform duration-200', { 'rotate-180 animate-bounce-scale': isOpen }]"  />
+            <div :class="['select-native-chevron']">
+                <i-mynaui-chevron-down-solid
+                    :class="['transition-transform duration-200', { 'rotate-180 animate-bounce-scale': isOpen }]" />
             </div>
 
         </div>
@@ -60,15 +60,20 @@ const props = defineProps({
     // Props de adaptabilidad, mantenemos esta excelente característica
     optionValue: { type: String, default: 'value' },
     optionLabel: { type: String, default: 'label' },
+    variant: {
+        type: String,
+        default: 'light',
+        validator: (value) => ['light', 'dark'].includes(value)
+    }
 });
 
 const selectClasses = computed(() => [
-    'select-native', {
+    'form-input', `variant-${props.variant}`, {
         'is-invalid': !!errorMessage.value
     }
 ])
 
-const { value, errorMessage, handleChange} = useField(() => props.name);
+const { value, errorMessage, handleChange } = useField(() => props.name);
 
 const handleBlur = () => {
     setTimeout(() => {

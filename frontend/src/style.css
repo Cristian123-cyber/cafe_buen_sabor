@@ -2,6 +2,7 @@
 @import "tailwindcss";
 @reference './assets/styles/app.css';
 @import './assets/styles/components.css';
+@import './assets/styles/forms.css';
 @source inline("animate-shake");
 
 

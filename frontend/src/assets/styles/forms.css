@@ -1,0 +1,105 @@
+.form-group {
+  @apply flex flex-col gap-2 w-full;
+}
+
+/* Variante light */
+.form-group.variant-light .form-label {
+  @apply text-gray-600;
+}
+
+.form-group.variant-light .form-input {
+  @apply bg-surface text-text border-2 border-gray-200;
+  @apply transition-all duration-300 ease-in-out;
+  /* Eliminamos borde grueso y ring fuerte en focus */
+  @apply focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40 focus:shadow-sm;
+  @apply placeholder-text-muted;
+}
+
+.form-group.variant-light .form-help-text {
+  @apply text-text-muted;
+}
+
+/* Variante dark */
+.form-group.variant-dark .form-label {
+  @apply text-text-light;
+}
+
+.form-group.variant-dark .form-input {
+  @apply bg-primary text-text-light border-2 border-border-dark;
+  @apply transition-all duration-300 ease-in-out;
+  /* Eliminamos borde grueso y ring fuerte en focus */
+  @apply focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent/40 focus:shadow-sm;
+  @apply placeholder-text-muted;
+}
+
+.form-group.variant-dark .form-help-text {
+  @apply text-text-muted;
+}
+
+/* Estilos comunes */
+.form-label {
+  @apply text-sm font-medium inline-flex items-center;
+}
+
+.form-input-wrapper {
+  @apply relative flex items-center;
+}
+
+.form-input {
+  @apply w-full py-2 px-3 rounded-lg outline-none transition-all duration-200 appearance-none;
+}
+
+/* Estado de error - AHORA FUNCIONARÁ */
+.form-input-wrapper.is-invalid .form-input {
+  @apply border-error focus:border-error focus:ring-error/30;
+}
+
+.form-group.variant-light .form-input-wrapper.is-invalid .form-input {
+  @apply bg-error-light;
+}
+
+.form-group.variant-dark .form-input-wrapper.is-invalid .form-input {
+  @apply bg-primary-light;
+}
+
+/* Adornos */
+.form-input-adornment {
+  @apply absolute flex items-center justify-center pointer-events-none;
+}
+
+.form-input-prefix {
+  @apply left-3;
+}
+
+.form-input-suffix {
+  @apply right-3;
+}
+
+.form-input.has-prefix {
+  @apply pl-10;
+}
+
+.form-input.has-suffix {
+  @apply pr-10;
+}
+
+/* Decorador de estado */
+.form-input-state-decorator {
+  @apply absolute right-3 flex items-center justify-center text-error;
+}
+
+/* Mensajes de texto */
+.form-error-text {
+  @apply text-sm text-error mt-1;
+}
+
+/* Ocultar spinners */
+input[type="number"].hide-number-spinners::-webkit-outer-spin-button,
+input[type="number"].hide-number-spinners::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"].hide-number-spinners {
+  -moz-appearance: textfield;
+}

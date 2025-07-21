@@ -30,7 +30,11 @@ const handleLinkClick = (event, link) => {
 </script>
 
 <template>
+
+
+
     <aside :class="['sidebar-container', { 'is-open': isOpen }]">
+        
         <!-- Backdrop con efecto de desenfoque -->
         <div class="sidebar-backdrop" @click="$emit('close')" aria-hidden="true" />
         
@@ -95,7 +99,7 @@ const handleLinkClick = (event, link) => {
 
 /* --- CONTENEDOR PRINCIPAL --- */
 .sidebar-container {
-    @apply fixed inset-y-0 left-0 z-40 w-72 transform -translate-x-full transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] lg:sticky lg:translate-x-0;
+    @apply fixed inset-y-0 left-0 z-40 w-72 transform -translate-x-full transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] lg:sticky lg:translate-x-0 min-h-0;
     perspective: 1500px;
 }
 
@@ -190,10 +194,8 @@ const handleLinkClick = (event, link) => {
     @apply text-accent-light;
 }
 
-/* Estado activo */
 .nav-link.is-active {
-    @apply bg-gradient-to-r from-accent/30 to-accent/10 text-white pl-6;
-    box-shadow: inset 4px 0 0 0 var(--color-accent-light);
+  @apply bg-gradient-to-r from-accent/30 to-accent/10 text-white pl-6 border-l-4 border-accent-light;
 }
 
 .nav-link.is-active .nav-icon-container {
@@ -208,10 +210,7 @@ const handleLinkClick = (event, link) => {
     @apply opacity-100 text-white;
 }
 
-.nav-link.is-active::after {
-    content: '';
-    @apply absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-accent-light rounded-l-full;
-}
+
 
 /* --- FOOTER --- */
 .sidebar-footer {
@@ -264,10 +263,7 @@ const handleLinkClick = (event, link) => {
     @apply bg-white/20;
 }
 
-/* --- ANIMACIONES --- */
-.sidebar-container {
-    animation: fadeIn 0.5s ease-out;
-}
+
 
 @keyframes fadeIn {
     from {
@@ -280,11 +276,7 @@ const handleLinkClick = (event, link) => {
     }
 }
 
-.nav-link {
-    animation: slideIn 0.4s ease-out forwards;
-    opacity: 0;
-    transform: translateX(-20px);
-}
+
 
 @keyframes slideIn {
     to {

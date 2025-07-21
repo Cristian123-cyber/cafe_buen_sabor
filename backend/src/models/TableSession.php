@@ -104,6 +104,8 @@ class TableSession extends BaseModel
         }
     }
 
+    
+
     public function validateSession(int $id)
     {
         $sql = "SELECT id_session, tables_id_table AS table_id FROM table_sessions WHERE id_session = :id AND session_status = 'ACTIVE'";

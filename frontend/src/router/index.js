@@ -30,7 +30,7 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
 
-  //console.log(`${from.fullPath} -- ${to.fullPath}`);
+  
   const authStore = useAuthStore();
 
   const sessionStore = useSessionStore();

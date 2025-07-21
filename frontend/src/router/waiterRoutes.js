@@ -1,7 +1,13 @@
 export default [
   {
-    path: '/waiter/dashboard',
-    name: 'WaiterDashboard',
+    path: '/waiter/mesas',
+    name: 'WaiterTables',
+    component: () => import('../views/waiter/WaiterDashboard.vue'),
+    meta: { requiresAuth: true }, // Solo accesible para no autenticados
+  },
+  {
+    path: '/waiter/pedidos',
+    name: 'WaiterOrders',
     component: () => import('../views/waiter/WaiterDashboard.vue'),
     meta: { requiresAuth: true }, // Solo accesible para no autenticados
   }

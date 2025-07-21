@@ -7,7 +7,7 @@ class Database
 {
     private static $instance = null;
     private $host = "cafeteria_mysql"; // Usa el nombre del servicio MySQL en Docker
-    private $db_name = "cafeteria_db";
+    private $db_name = "cafe_buen_sabor_bd";
     private $username = "root";
     private $password = "root123";
     private $conn = null;
