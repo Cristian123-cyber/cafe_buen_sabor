@@ -8,6 +8,15 @@ use Exception;
 
 class Employees extends BaseModel
 {
+    // Obtener el total de empleados (sin paginación)
+    public function getTotalCount()
+    {
+        $query = "SELECT COUNT(*) FROM employees";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return (int)$stmt->fetchColumn();
+    }
+
    
     public function __construct()
     {
@@ -139,7 +148,23 @@ public function getAll($page = 1, $limit = 10, $orderBy = null)
         return $empleados;
     }
     
-
+    // Verificar si la cédula ya existe (excepto para un id dado)
+public function existsCedula($cedula, $excludeId = null)
+    {
+        if ($cedula === null) return false;
+        $query = "SELECT COUNT(*) FROM employees WHERE employee_cc = :cedula";
+        if ($excludeId !== null) {
+            $query .= " AND id_employe != :id";
+        }
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':cedula', $cedula);
+        if ($excludeId !== null) {
+            $stmt->bindParam(':id', $excludeId);
+        }
+        $stmt->execute();
+        $count = $stmt->fetchColumn();
+        return $count > 0;
+    }
 public function existsEmail($email, $excludeId = null)
 {
     $query = "SELECT COUNT(*) FROM employees WHERE LOWER(TRIM(employe_email)) = LOWER(TRIM(:email))";

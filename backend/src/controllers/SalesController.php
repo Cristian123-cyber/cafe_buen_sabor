@@ -10,8 +10,11 @@ class SalesController
     public function index()
     {
         try {
+            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+            $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
+            $orderBy = isset($_GET['orderBy']) ? $_GET['orderBy'] : null;
             $saleModel = new Sale();
-            $sales = $saleModel->all();
+            $sales = $saleModel->getAll($page, $limit, $orderBy);
             echo json_encode([
                 'success' => true,
                 'data' => $sales

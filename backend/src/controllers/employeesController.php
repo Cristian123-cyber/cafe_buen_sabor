@@ -18,9 +18,19 @@ class EmployeesController extends BaseController
     public function index()
     {
         return $this->executeWithErrorHandling(function() {
-            $usuarios = $this->usuarioModel->getAll();
-            $this->handleResponse(true, 'Empleados obtenidos correctamente.', $usuarios);
-            
+            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+            $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
+            $orderBy = isset($_GET['orderBy']) ? $_GET['orderBy'] : null;
+            $usuarios = $this->usuarioModel->getAll($page, $limit, $orderBy);
+            // Obtener el total de empleados (sin paginación)
+            $total = $this->usuarioModel->getTotalCount();
+            $response = [
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'data' => $usuarios
+            ];
+            $this->handleResponse(true, 'Empleados obtenidos correctamente.', $response);
         }, 'Error al obtener los empleados');
     }
 
@@ -89,7 +99,8 @@ class EmployeesController extends BaseController
             }
         }
 
-        // Ahora valida el email único
+
+        // Validar email único
         if ($this->usuarioModel->existsEmail($employeeData['employe_email'])) {
             $this->handleResponse(false, 'El email ya está registrado', [], 400);
             return;
@@ -99,6 +110,11 @@ class EmployeesController extends BaseController
             $employeeData['employee_cc'] = ($data['employee_cc'] === null || $data['employee_cc'] === '' ) ? null : $this->sanitizeString($data['employee_cc']);
         } else {
             $employeeData['employee_cc'] = null;
+        }
+        // Validar cédula única si viene
+        if ($employeeData['employee_cc'] !== null && $this->usuarioModel->existsCedula($employeeData['employee_cc'])) {
+            $this->handleResponse(false, 'La cédula ya está registrada', [], 400);
+            return;
         }
 
         if (isset($data['table_id_device'])) {
@@ -173,8 +189,15 @@ class EmployeesController extends BaseController
                 $updateData['employe_email'] = $email;
             }
     
+
             if (array_key_exists('employee_cc', $data)) {
-                $updateData['employee_cc'] = $data['employee_cc'] !== '' ? $this->sanitizeString($data['employee_cc']) : null;
+                $cedula = $data['employee_cc'] !== '' ? $this->sanitizeString($data['employee_cc']) : null;
+                // Validar cédula única si viene y es diferente al actual
+                if ($cedula !== null && $cedula !== $usuario['employee_cc'] && $this->usuarioModel->existsCedula($cedula, $employeeId)) {
+                    $this->handleResponse(false, 'La cédula ya está registrada por otro usuario', [], 400);
+                    return;
+                }
+                $updateData['employee_cc'] = $cedula;
             }
     
             if (isset($data['table_id_device'])) {

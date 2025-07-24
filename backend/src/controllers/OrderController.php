@@ -109,7 +109,10 @@ class OrderController extends BaseController
     public function index()
     {
         return $this->executeWithErrorHandling(function() {
-            $orders = $this->orderModel->getAllWithDetails();
+            $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
+            $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
+            $orderBy = isset($_GET['orderBy']) ? $_GET['orderBy'] : null;
+            $orders = $this->orderModel->getAll($page, $limit, $orderBy);
             $this->handleResponse(true, 'Pedidos obtenidos correctamente', $orders);
         }, 'Error al obtener los pedidos');
     }
