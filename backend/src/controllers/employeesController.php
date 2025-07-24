@@ -24,11 +24,11 @@ class EmployeesController extends BaseController
             $usuarios = $this->usuarioModel->getAll($page, $limit, $orderBy);
             // Obtener el total de empleados (sin paginación)
             $total = $this->usuarioModel->getTotalCount();
+            $lastPage = (int) ceil($total / $limit);
             $response = [
                 'total' => $total,
-                'page' => $page,
-                'limit' => $limit,
-                'data' => $usuarios
+                'last_page' => $lastPage,
+                'employees' => $usuarios
             ];
             $this->handleResponse(true, 'Empleados obtenidos correctamente.', $response);
         }, 'Error al obtener los empleados');
