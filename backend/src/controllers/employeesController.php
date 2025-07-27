@@ -21,15 +21,15 @@ class EmployeesController extends BaseController
             // --- Parámetros de Paginación ---
             $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
             $perPage = isset($_GET['perPage']) ? max(1, intval($_GET['perPage'])) : 10;
-            $orderBy = isset($_GET['orderBy']) ? $_GET['orderBy'] : null;
+            $orderBy = isset($_GET['orderBy']) ? $this->sanitizeString($_GET['orderBy']) : null;
 
 
             // --- Parámetros de Filtrado ---
             // Leemos los nuevos filtros desde la URL (query string)
             $filters = [
-                'term' => $_GET['term'] ?? null,    // Si no existe, es null
-                'role' => $_GET['role'] ?? null,
-                'state' => $_GET['state'] ?? null
+                'term' => isset($_GET['term']) ? $this->sanitizeString($_GET['term']) : null,
+                'role' => isset($_GET['role']) ? $this->sanitizeString($_GET['role']) : null,
+                'state' => isset($_GET['state']) ? $this->sanitizeString($_GET['state']) : null
             ];
 
 
