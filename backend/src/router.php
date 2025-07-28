@@ -85,6 +85,7 @@ abstract class RouteGroup
         SaleOrderRoutes::register($router);
         OrdersRoutes::register($router);
         UnitsOfMeasureRoutes::register($router);
+        AnalyticsRoutes::register($router);
     }
 }
 /**
@@ -240,6 +241,18 @@ class UnitsOfMeasureRoutes
     {
         // Solo obtener todas las unidades de medida
         $router->get('/api/units-of-measure', 'UnitsOfMeasureController@index');
+    }
+}
+
+/**
+ * Rutas relacionadas con analytics y dashboard
+ */
+class AnalyticsRoutes
+{
+    public static function register($router)
+    {
+        // Dashboard principal del administrador
+        $router->get('/api/analytics/dashboard-summary', 'AnalyticsController@dashboardSummary');
     }
 }
 
@@ -419,6 +432,11 @@ RouteGroup::registerAll($router);
 $router->before('GET', '/api/auth/me', function () {
 
     AccessControlMiddleware::handle([], false);
+});
+
+// Proteger el dashboard solo para administradores
+$router->before('GET', '/api/analytics/dashboard-summary', function () {
+    AccessControlMiddleware::handle([1], false); // Solo rol 1 (Administrador)
 });
 
 return $router;

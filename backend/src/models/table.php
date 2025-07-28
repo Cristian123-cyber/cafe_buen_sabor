@@ -103,4 +103,25 @@ class Table extends BaseModel
             return false;
         }
     }
+
+    /**
+     * Obtiene estadísticas de las mesas (ocupadas vs total)
+     */
+    public function getTableStats()
+    {
+        $query = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN table_status = 'OCCUPIED' THEN 1 ELSE 0 END) as occupied
+                  FROM {$this->table_name}
+                  WHERE table_status != 'INACTIVE'";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        return [
+            'total' => (int)$result['total'],
+            'occupied' => (int)$result['occupied']
+        ];
+    }
 }

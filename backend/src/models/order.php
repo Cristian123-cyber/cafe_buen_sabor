@@ -339,4 +339,21 @@ class Order extends BaseModel
         
         return $orders;
     }
+
+    /**
+     * Obtiene el total de pedidos en un rango de fechas específico
+     */
+    public function getOrdersByDateRange($from, $to)
+    {
+        $query = "SELECT COUNT(*) as total
+                  FROM {$this->table_name}
+                  WHERE created_date >= ?
+                  AND created_date <= ?";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$from, $to]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        return (int)$result['total'];
+    }
 }

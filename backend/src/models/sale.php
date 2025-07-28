@@ -274,6 +274,24 @@ class Sale extends BaseModel
     return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Obtiene el total de ingresos en un rango de fechas específico
+     */
+    public function getRevenueByDateRange($from, $to)
+    {
+        $query = "SELECT COALESCE(SUM(total_amount), 0) as total
+                  FROM {$this->table_name}
+                  WHERE sale_status = 'COMPLETED'
+                  AND created_at >= ?
+                  AND created_at <= ?";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$from, $to]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+        
+        return (float)$result['total'];
+    }
+
     //Ingresos por empleado
     public function getRevenueByEmployee()
     {
