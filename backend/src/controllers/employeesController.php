@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Models\Employees;
+use App\Controllers\AuthController;
 
 class EmployeesController extends BaseController
 {
@@ -277,6 +278,25 @@ class EmployeesController extends BaseController
             }
 
             $usuario = $this->usuarioModel->getById($employeeId);
+
+            // Veiricar si el usuario que intenta eliminar no es el mismo que solicita la eliminación
+            $authController = new AuthController();
+
+            $currentUser = $authController->getCurrentUser();
+
+            if (!$currentUser || $currentUser === null) {
+                $this->handleResponse(false, 'No autorizado', [], 401);
+                return;
+            }
+
+            if ((int) $currentUser['userId'] === $employeeId) {
+                $this->handleResponse(false, 'No puedes eliminar tu propio usuario', [], 403);
+                return;
+            }
+
+
+
+
             if (!$usuario) {
                 $this->handleResponse(false, 'Empleado no encontrado', [], 404);
                 return;

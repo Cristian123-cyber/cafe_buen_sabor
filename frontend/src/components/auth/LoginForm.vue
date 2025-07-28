@@ -6,7 +6,7 @@
             <!-- SLOTS CON ESTILO PROPIO -->
             <template #header>
                 <div class="text-center mb-6">
-                    <h2 class="form-title">Bienvenido de Nuevo</h2>
+                    <h2 class="form-title">Bienvenido  de nuevo</h2>
                     <p class="form-subtitle">Accede a tu panel de control</p>
                 </div>
             </template>
@@ -135,7 +135,6 @@ const devLogin = (role) => {
 /* Estilos específicos para el contenido del formulario de login */
 .form-title {
     @apply text-3xl font-bold text-text-light;
-    font-family: var(--font-serif);
 }
 
 .form-subtitle {

@@ -101,9 +101,6 @@ export const useAnalyticsStore = defineStore("analytics", () => {
     } finally {
       loadingTopWaiters.value = false;
     }
-
-
-
   };
 
   return {

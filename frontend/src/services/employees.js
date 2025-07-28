@@ -1,5 +1,4 @@
-import api from './api';
-
+import api from "./api";
 /**
  * Servicio para gestionar empleados de la API.
  */
@@ -7,20 +6,23 @@ export const employeService = {
   /**
    * Obtiene la lista completa de empleados.
    */
-  getAll: async ()=>{
+  getAll: async (params) => {
     try {
-      const response = await api.get('/employees');
+      const response = await api.get("/employees", { params: params });
+
       return response.data;
     } catch (error) {
-      console.error('Error al obtener empleados:', error);
-      throw error;
+     
+        console.error("Error al obtener empleados:", error);
+        throw error;
+      
     }
   },
 
   /**
    * Obtiene un empleado por ID.
    */
-  getById: async (id)=>{
+  getById: async (id) => {
     try {
       const response = await api.get(`/employees/${id}`);
       return response.data;
@@ -33,12 +35,12 @@ export const employeService = {
   /**
    * Crea un nuevo empleado.
    */
-  create:async (data)=> {
+  create: async (data) => {
     try {
-      const response = await api.post('/employees', data);
+      const response = await api.post("/employees", data);
       return response.data;
     } catch (error) {
-      console.error('Error al crear empleado:', error);
+      console.error("Error al crear empleado:", error);
       throw error;
     }
   },
@@ -46,7 +48,7 @@ export const employeService = {
   /**
    * Actualiza un empleado existente.
    */
-  update: async (id, data)=> {
+  update: async (id, data) => {
     try {
       const response = await api.put(`/employees/${id}`, data);
       return response.data;
@@ -59,7 +61,7 @@ export const employeService = {
   /**
    * Elimina (desactiva) un empleado.
    */
-  delete:async (id)=> {
+  delete: async (id) => {
     try {
       const response = await api.delete(`/employees/${id}`);
       return response.data;
@@ -72,12 +74,12 @@ export const employeService = {
   /**
    * Filtra empleados por rol y/o estado.
    */
-  filter:async (params)=> {
+  filter: async (params) => {
     try {
-      const response = await api.get('/employees/filter', { params });
+      const response = await api.get("/employees/filter", { params });
       return response.data;
     } catch (error) {
-      console.error('Error al filtrar empleados:', error);
+      console.error("Error al filtrar empleados:", error);
       throw error;
     }
   },
@@ -85,12 +87,12 @@ export const employeService = {
   /**
    * Obtiene la cantidad de mesas atendidas por mesero.
    */
-  getTablesServed:async ()=> {
+  getTablesServed: async () => {
     try {
-      const response = await api.get('/employees/tables-served');
+      const response = await api.get("/employees/tables-served");
       return response.data;
     } catch (error) {
-      console.error('Error al obtener mesas atendidas:', error);
+      console.error("Error al obtener mesas atendidas:", error);
       throw error;
     }
   },
@@ -98,12 +100,15 @@ export const employeService = {
   /**
    * Obtiene el resumen de ventas de un empleado.
    */
-  getSalesSummary: async (id)=> {
+  getSalesSummary: async (id) => {
     try {
       const response = await api.get(`/employees/${id}/sales-summary`);
       return response.data;
     } catch (error) {
-      console.error(`Error al obtener resumen de ventas del empleado ${id}:`, error);
+      console.error(
+        `Error al obtener resumen de ventas del empleado ${id}:`,
+        error
+      );
       throw error;
     }
   },
@@ -111,15 +116,26 @@ export const employeService = {
   /**
    * Obtiene todos los roles de empleados.
    */
-  getRoles:async ()=> {
+  getRoles: async () => {
     try {
-      const response = await api.get('/employees/roles');
+      const response = await api.get("/employees/roles");
+      console.log("roles obtenidos: ", response.data);
+
       return response.data;
     } catch (error) {
-      console.error('Error al obtener roles de empleados:', error);
+      console.error("Error al obtener roles de empleados:", error);
       throw error;
     }
-  }
+  },
+  getStates: async () => {
+    try {
+      const response = await api.get("/estados-empleados");
+      console.log("estados obtenidos: ", response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error al obtener roles de empleados:", error);
+      throw error;
+    }
+  },
 };
-
-

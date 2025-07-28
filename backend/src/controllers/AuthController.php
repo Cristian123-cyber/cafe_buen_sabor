@@ -263,7 +263,7 @@ class AuthController extends BaseController
         ]);
     }
 
-    private function getCurrentUser()
+    public function getCurrentUser()
     {
         try {
             $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';

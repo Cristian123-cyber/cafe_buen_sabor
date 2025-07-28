@@ -1,11 +1,11 @@
 import { useSessionStore } from "../stores/clientSessionS";
 import { clientSessionService } from "../services/clientSession";
-import { useRouter } from "vue-router";
+import router from "../router/index.js";
+
 
 
 export const useClientSession = () => {
   const store = useSessionStore();
-  const router = useRouter();
 
   const startSession = async (qrToken, tableId) => {
     try {

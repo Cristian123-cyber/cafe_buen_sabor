@@ -20,12 +20,18 @@ export const authService = {
   login: async (credentials) => {
 
     try {
-
-
       const response = await authApi.post("/auth/login", credentials);
       return response.data;
     } catch (error) {
-      return error?.response.data;
+      return {
+      success: false,
+      message:
+        error?.response?.data?.message ||
+        error?.response?.message ||
+        error.message ||
+        "Error desconocido",
+    };
+     
     }
   },
 

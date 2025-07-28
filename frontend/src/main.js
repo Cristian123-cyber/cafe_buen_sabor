@@ -1,14 +1,16 @@
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
-import router from './router'; // <-- Importa el router
 import { createPinia } from 'pinia'; // Importa Pinia
 
 
 
 const app = createApp(App);
+const pinia = createPinia()
+app.use(pinia); // <-- Usa Pinia
 
-app.use(createPinia());
+
+import router from './router'; // <-- Importa el router
 app.use(router); // <-- Usa el router
 
 

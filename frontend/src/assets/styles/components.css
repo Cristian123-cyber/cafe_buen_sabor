@@ -359,7 +359,7 @@
 
 /* Estilos del Contenedor Principal */
 .presenter-container {
-  @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+  @apply fixed inset-0 z-60 flex items-center justify-center p-4;
   /* Importante: El contenedor ya no maneja la opacidad, lo hacen sus hijos. */
 }
 

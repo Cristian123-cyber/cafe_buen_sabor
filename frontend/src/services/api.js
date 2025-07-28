@@ -72,7 +72,7 @@ api.interceptors.response.use(
     if (!error.response) {
       alert.show({
         variant: "error",
-        title: "Error de red",
+        title: "Error de red pa",
         message: "Ha ocurrido un error, verifica tu conexion",
         confirmButtonText: "Aceptar",
         cancelButtonText: "Cancelar",

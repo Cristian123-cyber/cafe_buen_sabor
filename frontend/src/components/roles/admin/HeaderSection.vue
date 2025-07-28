@@ -3,9 +3,10 @@
         <!-- Mensaje de bienvenida -->
         <div class="welcome-wrapper">
             <div class="welcome-header">
-                <i-mdi-human-hello-variant class="welcome-icon" />
+                <i-mdi-human-hello-variant v-if="!title" class="welcome-icon" />
+                <i-mdi-view-dashboard-outline v-else class="welcome-icon" />
                 <div>
-                    <h1 class="welcome-title">{{ welcomeMessage }}</h1>
+                    <h1 class="welcome-title">{{ title ? title :  welcomeMessage }}</h1>
                     <p class="welcome-subtitle">{{ descriptionMessage }}</p>
                 </div>
             </div>
@@ -39,11 +40,16 @@ import { getRandomPhraseByRole } from '../../../utils/motivationalPhrases.js';
 // Capitalizar primera letra
 const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 
-defineProps({
+const props = defineProps({
     descriptionMessage: {
         type: String,
         default: 'Aquí tienes un resumen del rendimiento de Café Buen Sabor.'
+    },
+    title: {
+        type: String,
+        default: null
     }
+
 });
 
 const authStore = useAuthStore();

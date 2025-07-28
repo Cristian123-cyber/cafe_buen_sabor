@@ -139,12 +139,12 @@ onMounted(() => {
 
       <section v-if="summary" class="stats-grid">
 
-        <M :title="summary.revenue.title" :value="summary.revenue.value"
+        <MetricCard :title="summary.revenue.title" :value="summary.revenue.value"
           :trend-value="summary.revenue.trend.value" :trend-text="summary.revenue.trend.text">
           <template #icon>
             <i-mdi-wallet-outline class="w-7 h-7 text-accent" />
           </template>
-        </M>
+        </MetricCard>
 
         <MetricCard :title="summary.totalOrders.title" :value="summary.totalOrders.value"
           :trend-value="summary.totalOrders.trend.value" :trend-text="summary.totalOrders.trend.text">
@@ -153,12 +153,12 @@ onMounted(() => {
           </template>
         </MetricCard>
 
-        <M :title="summary.activeTables.title" :value="summary.activeTables.value"
+        <MetricCard :title="summary.activeTables.title" :value="summary.activeTables.value"
           :progress="summary.activeTables.progress" :trend-text="summary.activeTables.text">
           <template #icon>
             <i-mdi-table-chair class="w-7 h-7 text-accent" />
           </template>
-        </M>
+        </MetricCard>
 
         <MetricCard :title="summary.averageTicket.title" :value="summary.averageTicket.value"
           :trend-value="summary.averageTicket.trend.value" :trend-text="summary.averageTicket.trend.text">

@@ -1,7 +1,4 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "../stores/authS";
-import { useAuth } from "../composables/useAuth";
-import { useSessionStore } from "../stores/clientSessionS.js";
 
 // Importa tus archivos de rutas
 import publicRoutes from "./publicRoutes.js";
@@ -11,7 +8,6 @@ import kitchenRoutes from "./kitchenRoutes.js";
 import adminRoutes from "./adminRoutes.js";
 import devicesRoutes from "./deviceRoutes.js";
 import clientRoutes from "./clientRoutes.js";
-import { useClientSession } from "../composables/useClientSession.js";
 
 const routes = [
   ...publicRoutes,
@@ -29,6 +25,11 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
+
+  const { useAuthStore } = await import('../stores/authS');
+  const { useAuth } = await import('../composables/useAuth');
+  const { useSessionStore } = await import('../stores/clientSessionS');
+  const { useClientSession } = await import('../composables/useClientSession.js');
 
   
   const authStore = useAuthStore();

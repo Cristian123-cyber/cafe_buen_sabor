@@ -2,9 +2,9 @@
 <template>
   <!-- El componente 'Form' de VeeValidate sigue siendo el cerebro -->
   <Form @submit="onFormSubmit" ref="formRef" :validation-schema="validationSchema" :initial-values="initialValues"
-    v-slot="{ errors }">
+    v-slot="{ errors, values }">
     <div class="relative" :class="{ 'form-disabled': disabled }">
-     
+
 
       <!-- El fieldset es crucial para deshabilitar todos los campos a la vez -->
       <fieldset :disabled="isSubmitting || disabled" class="flex flex-col gap-y-6">
@@ -16,7 +16,7 @@
 
         <!-- Slot por defecto para los campos del formulario -->
         <div class="space-y-5">
-          <slot :errors="getCombinedErrors(errors)"></slot>
+          <slot :values="values" :errors="getCombinedErrors(errors)"></slot>
         </div>
 
         <!-- Slot para los botones de acción -->
@@ -35,8 +35,8 @@
 </template>
 
 <script setup>
-import { Form, useForm } from 'vee-validate';
-import { ref, watch, onMounted } from 'vue';
+import { Form } from 'vee-validate';
+import { ref, onMounted } from 'vue';
 
 // Referencia al componente Form
 const formRef = ref(null);
@@ -50,25 +50,20 @@ defineExpose({
   submit: async () => {
 
     if (formRef.value) {
-      console.log('Enviando formulario manualmente...');
-      // Esto triggerea el evento @submit del Form
       const result = await formRef.value.validate();
 
       if (result.valid) {
-
-
-        console.log('fallback')
-        // Fallback: llamar directamente al handler
         const values = formRef.value.getValues();
+        // Fallback: llamar directamente al handler
         onFormSubmit(values);
 
       } else {
-        console.log('no valid')
+        console.log('no valid');
+        console.error('Errores de validación:', result.errors);
       }
 
     }
   },
-
   // Método para resetear el formulario
   reset: () => {
     if (formRef.value) {

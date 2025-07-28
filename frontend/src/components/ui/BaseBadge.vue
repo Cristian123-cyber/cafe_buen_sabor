@@ -103,7 +103,7 @@ const badgeClasses = computed(() => [
 
 
 /* == Accent == */
-.badge-accent-solid { @apply bg-accent text-primary; }
+.badge-accent-solid { @apply bg-accent text-text-light; }
 
 
 /* == Success == */
