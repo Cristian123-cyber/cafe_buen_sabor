@@ -368,4 +368,35 @@ class Sale extends BaseModel
         return $stmt->fetch(\PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Obtiene el recaudo mensual para un año específico
+     */
+    public function getYearlyRevenue($year)
+    {
+        $query = "SELECT 
+                    MONTH(created_at) as month,
+                    COALESCE(SUM(total_amount), 0) as total
+                  FROM {$this->table_name}
+                  WHERE sale_status = 'COMPLETED'
+                  AND YEAR(created_at) = ?
+                  GROUP BY MONTH(created_at)
+                  ORDER BY month";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$year]);
+        $results = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        
+        // Inicializar array con 12 meses en 0
+        $monthlyData = array_fill(1, 12, 0);
+        
+        // Llenar con los datos reales
+        foreach ($results as $row) {
+            $month = (int)$row['month'];
+            $monthlyData[$month] = (float)$row['total'];
+        }
+        
+        // Retornar solo los valores (sin las claves)
+        return array_values($monthlyData);
+    }
+
 }

@@ -430,4 +430,47 @@ class Producto extends BaseModel
             ]
         ];
     }
+
+    /**
+     * Obtiene los productos más vendidos
+     */
+    public function getTopProducts($limit = 5, $period = 'monthly')
+    {
+        $dateCondition = '';
+        $params = [];
+        
+        switch ($period) {
+            case 'weekly':
+                $dateCondition = 'AND o.created_date >= DATE_SUB(NOW(), INTERVAL 1 WEEK)';
+                break;
+            case 'monthly':
+                $dateCondition = 'AND o.created_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH)';
+                break;
+            case 'all_time':
+                $dateCondition = '';
+                break;
+            default:
+                $dateCondition = 'AND o.created_date >= DATE_SUB(NOW(), INTERVAL 1 MONTH)';
+        }
+        
+        $query = "SELECT 
+                    p.id_product,
+                    p.product_name as name,
+                    SUM(ohp.quantity) as quantity
+                  FROM products p
+                  INNER JOIN orders_has_products ohp ON p.id_product = ohp.products_id_product
+                  INNER JOIN orders o ON ohp.orders_id_order = o.id_order
+                  WHERE o.order_statuses_id_status IN (2, 3, 4) -- Pedidos confirmados, en preparación o listos
+                  $dateCondition
+                  GROUP BY p.id_product, p.product_name
+                  HAVING quantity > 0
+                  ORDER BY quantity DESC
+                  LIMIT ?";
+        
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$limit]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $results;
+    }
 } 

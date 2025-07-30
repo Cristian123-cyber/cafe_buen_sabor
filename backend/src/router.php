@@ -253,6 +253,11 @@ class AnalyticsRoutes
     {
         // Dashboard principal del administrador
         $router->get('/api/analytics/dashboard-summary', 'AnalyticsController@dashboardSummary');
+        
+        // Gráficos de analytics
+        $router->get('/api/analytics/yearly-revenue', 'AnalyticsController@yearlyRevenue');
+        $router->get('/api/analytics/top-waiters', 'AnalyticsController@topWaiters');
+        $router->get('/api/analytics/top-products', 'AnalyticsController@topProducts');
     }
 }
 

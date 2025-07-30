@@ -5,6 +5,8 @@ namespace App\Controllers;
 use App\Models\Sale;
 use App\Models\Order;
 use App\Models\Table;
+use App\Models\employees;
+use App\Models\Producto;
 use Exception;
 
 class AnalyticsController extends BaseController
@@ -12,6 +14,8 @@ class AnalyticsController extends BaseController
     private $saleModel;
     private $orderModel;
     private $tableModel;
+    private $employeeModel;
+    private $productModel;
 
     public function __construct()
     {
@@ -19,6 +23,8 @@ class AnalyticsController extends BaseController
         $this->saleModel = new Sale();
         $this->orderModel = new Order();
         $this->tableModel = new Table();
+        $this->employeeModel = new employees();
+        $this->productModel = new Producto();
     }
 
     /**
@@ -49,6 +55,66 @@ class AnalyticsController extends BaseController
 
             $this->handleResponse(true, 'Dashboard obtenido correctamente', $response);
         }, 'Error al obtener el dashboard');
+    }
+
+    /**
+     * Recaudo mensual (12 meses)
+     * GET /api/analytics/yearly-revenue?year=2023
+     */
+    public function yearlyRevenue()
+    {
+        return $this->executeWithErrorHandling(function () {
+            $year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+            
+            $monthlyData = $this->saleModel->getYearlyRevenue($year);
+            
+            $response = [
+                'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                'data' => $monthlyData
+            ];
+
+            $this->handleResponse(true, 'Datos de recaudo anual obtenidos correctamente', $response);
+        }, 'Error al obtener el recaudo anual');
+    }
+
+    /**
+     * Top meseros por mesas atendidas
+     * GET /api/analytics/top-waiters?period=monthly
+     */
+    public function topWaiters()
+    {
+        return $this->executeWithErrorHandling(function () {
+            $period = isset($_GET['period']) ? $_GET['period'] : 'monthly';
+            
+            $waiters = $this->employeeModel->getTopWaitersByTablesServed($period);
+            
+            $response = [
+                'waiters' => $waiters
+            ];
+
+            $this->handleResponse(true, 'Top meseros obtenidos correctamente', $response);
+        }, 'Error al obtener el top de meseros');
+    }
+
+    /**
+     * Top productos vendidos
+     * GET /api/analytics/top-products?limit=5&period=monthly
+     */
+    public function topProducts()
+    {
+        return $this->executeWithErrorHandling(function () {
+            $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
+            $period = isset($_GET['period']) ? $_GET['period'] : 'monthly';
+            
+            $products = $this->productModel->getTopProducts($limit, $period);
+            
+            $response = [
+                'labels' => array_column($products, 'name'),
+                'data' => array_column($products, 'quantity')
+            ];
+
+            $this->handleResponse(true, 'Top productos obtenidos correctamente', $response);
+        }, 'Error al obtener el top de productos');
     }
 
     /**
