@@ -4,6 +4,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useEmployeStore } from '../../stores/employeesS';
 import { useAlert } from '../../composables/useAlert';
 
+
 const alert = useAlert();
 
 
@@ -145,10 +146,16 @@ const triggerSubmit = async (form) => {
 
 }
 onMounted(() => {
-
+ 
   employeStore.fetchEmployees();
   employeStore.fetchRoles();
   employeStore.fetchStates();
+
+
+  searchTerm.value = employeStore.filterTerm;
+  selectedRole.value = employeStore.filterRol;
+  selectedState.value = employeStore.filterState;
+  console.log(employeStore.filterState);
 
 });
 

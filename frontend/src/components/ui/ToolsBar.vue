@@ -13,18 +13,27 @@ const props = defineProps({
         type: String,
         required: true,
     },
+    searchLabel: {
+        type: String,
+        default: 'Buscar'
+    },
+
+    placeholderSearch: {
+        type: String,
+        default: 'Nombre, email o información...'
+    },
 
 
     /**
      * Valor actual del rol seleccionado. Usado con v-model.
      */
     selectedRole: {
-        type: Number,
-        required: true,
+        type: [String, Number],
+        required: false,
     },
     selectedState: {
-        type: Number,
-        required: true,
+        type: [String, Number],
+        required: false,
     },
     /**
      * Array de objetos para poblar las opciones del select.
@@ -32,7 +41,7 @@ const props = defineProps({
      */
     roleOptions: {
         type: Array,
-        required: true,
+        required: false,
         // Validador simple para asegurar que recibimos un array no vacío
         validator: (value) => Array.isArray(value)
     },
@@ -43,7 +52,7 @@ const props = defineProps({
     },
     stateOptions: {
         type: Array,
-        required: true,
+        required: false,
         // Validador simple para asegurar que recibimos un array no vacío
         validator: (value) => Array.isArray(value)
     },
@@ -81,7 +90,13 @@ const handleBlurState = () => {
 
 // Computed para verificar si hay filtros activos
 const hasActiveFilters = computed(() => {
-    return props.searchTerm.trim() !== '' || (props.selectedRole !== 0 && props.selectedRole !== -1) || (props.selectedState !== 0 && props.selectedState !== -1);
+  const role = props.selectedRole;
+  const state = props.selectedState;
+
+  const isRoleActive = role !== 0 && role !== -1 && role !== null && role !== undefined && role !== '' && role !== '0';
+  const isStateActive = state !== 0 && state !== -1 && state !== null && state !== undefined && state !== '' && state !== '0';
+
+  return props.searchTerm.trim() !== '' || isRoleActive || isStateActive;
 });
 
 // --- EMITS ---
@@ -116,11 +131,11 @@ function onSearchInput(event) {
  */
 function onRoleChange(event) {
     console.log('emitiendo cambio select');
-    emit('update:selectedRole', parseInt(event.target.value));
+    emit('update:selectedRole', event.target.value);
 }
 function onStateChange(event) {
     console.log('emitiendo cambio state');
-    emit('update:selectedState', parseInt(event.target.value));
+    emit('update:selectedState', event.target.value);
 }
 
 /**
@@ -180,13 +195,13 @@ function clearAllFilters() {
                     <div class="filter-item search-filter">
                         <label class="filter-label">
                             <i-mdi-magnify class="filter-label-icon" />
-                            Buscar usuarios
+                            {{ searchLabel }}
                         </label>
                         <div class="search-input-container">
                             <div class="search-input-wrapper">
                                 <i-mdi-magnify class="search-input-icon" />
                                 <input type="text" :value="searchTerm" @input="onSearchInput"
-                                    placeholder="Nombre, email o información..." class="search-input"
+                                    :placeholder="placeholderSearch" class="search-input"
                                     aria-label="Buscar usuario" />
                                 <div v-if="searchTerm" class="search-clear" @click="emit('update:searchTerm', '')">
                                     <i-mdi-close class="w-4 h-4" />
@@ -196,7 +211,7 @@ function clearAllFilters() {
                     </div>
 
                     <!-- Select de roles mejorado -->
-                    <div class="filter-item role-filter">
+                    <div v-if="roleOptions" class="filter-item role-filter">
                         <label class="filter-label">
                             <i-mdi-account-group class="filter-label-icon" />
                             {{ titleRoleOptions }}
@@ -222,7 +237,7 @@ function clearAllFilters() {
                     </div>
                     <div v-if="stateOptions" class="filter-item role-filter">
                         <label class="filter-label">
-                            <i-mdi-account-group class="filter-label-icon" />
+                            <i-gg-check-o class="filter-label-icon" />
                             {{ titleStateOptions }}
                         </label>
 

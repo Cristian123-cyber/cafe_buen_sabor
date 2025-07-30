@@ -15,9 +15,60 @@ class Table extends BaseModel
         $this->primary_key = 'id_table';
     }
     // Obtener todas las mesas
-    public function all()
+    public function all($filters)
     {
-        return $this->getAll(1, 1000);
+
+        $query =  "SELECT t.* FROM {$this->table_name} t
+        ";
+
+        // --- Lógica para filtros (WHERE) ---
+        $whereConditions = [];
+        $bindings = [];
+
+        // Filtro por término de búsqueda (nombre o email)
+        if (!empty($filters['term'])) {
+            $whereConditions[] = "(t.table_number LIKE ?)";
+            $searchTerm = '%' . $filters['term'] . '%';
+            $bindings[] = $searchTerm;
+        }
+
+        // Filtro por estado
+        if (!empty($filters['state'])) {
+            $whereConditions[] = "t.table_status = ?";
+            $bindings[] = $filters['state'];
+        }
+
+        // Si hay condiciones, las unimos con AND y las añadimos a la query
+        if (!empty($whereConditions)) {
+            $query .= " WHERE " . implode(" AND ", $whereConditions);
+        }
+
+
+        // --- Lógica para ordenamiento ---
+        $query .= " ORDER BY t.table_number ASC";
+
+
+        try {
+            $stmt = $this->conn->prepare($query);
+            // Usamos bindValue para especificar tipos, especialmente para LIMIT/OFFSET
+            foreach ($bindings as $key => $value) {
+                // Los parámetros de LIMIT/OFFSET deben ser enteros
+               
+                    $stmt->bindValue($key + 1, $value, \PDO::PARAM_STR);
+                
+            }
+            $stmt->execute();
+            $tables = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+
+
+            return $tables ?: [];
+        } catch (\PDOException $e) {
+
+            throw new \Exception("Error al consultar la base de datos.");
+        }
+
+       // return $this->getAll(1, 1000);
     }
 
     // Buscar por ID
@@ -90,7 +141,7 @@ class Table extends BaseModel
             }
 
             // Verificación de expiración
-            if (isset($table['token_expiration'])) {
+            if (isset($table['token_expiration']) && $table['token_expiration'] !== null) {
                 $expirationTime = strtotime($table['token_expiration']);
                 if (time() > $expirationTime) {
                     return false; 

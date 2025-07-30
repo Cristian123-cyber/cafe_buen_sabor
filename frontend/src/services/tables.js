@@ -10,12 +10,9 @@ export const tablesService = {
     try {
       // Llamamos al endpoint definido en tu documentación.
       const response = await api.get(`/tables/${tableId}/qr`);
-     
 
-      console.log('qr nuevo obtenido', response);
+      console.log("qr nuevo obtenido", response);
 
-
-     
       return response.data;
     } catch (error) {
       console.error(`Error al obtener el QR para la mesa ${tableId}:`, error);
@@ -24,5 +21,26 @@ export const tablesService = {
     }
   },
 
-  
+  getAll: async (params) => {
+    try {
+      const response = await api.get("/tables", { params: params });
+      console.log("Respuesta all mesas: ", response);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al obtener las mesas:`, error);
+      throw error;
+
+    }
+  },
+
+  create: async (data) => {
+    try {
+      const response = await api.post("/tables", data);
+      console.log("Respuesta crear mesa: ", response);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al crear la mesa:`, error);
+      throw error;
+    }
+  },
 };

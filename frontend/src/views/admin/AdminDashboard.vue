@@ -18,18 +18,24 @@ const selectedYear = ref(new Date().getFullYear());
 
 //TOP WAITERS VALUEs
 
-const optionsTopWaiter = ['Mes', 'Semana', 'Historico'];
+const optionsTopWaiter = [{label: 'Mes', value: 'monthly'}, {label: 'Semana', value: 'weekly'}, {label: 'Historico', value: 'all_time'}];
 const selectedIndexTopWaiter = ref(0);
 const currentValueTopWaiters = computed(() => {
-  return optionsTopWaiter[selectedIndexTopWaiter.value];
+  return optionsTopWaiter[selectedIndexTopWaiter.value].value;
+});
+const currentLabelTopWaiters = computed(() => {
+  return optionsTopWaiter[selectedIndexTopWaiter.value].label;
 });
 
 //TOP PRODUCTS VALUEs
 
-const optionsTopProducts = ['Mes', 'Semana', 'Historico'];
+const optionsTopProducts = [{label: 'Mes', value: 'monthly'}, {label: 'Semana', value: 'weekly'}, {label: 'Historico', value: 'all_time'}];
 const selectedIndexTopProducts = ref(0);
 const currentValueTopProducts = computed(() => {
-  return optionsTopProducts[selectedIndexTopProducts.value];
+  return optionsTopProducts[selectedIndexTopProducts.value].value;
+});
+const currentLabelTopProducts = computed(() => {
+  return optionsTopProducts[selectedIndexTopProducts.value].label;
 });
 
 //Yearly revenue actions
@@ -206,7 +212,7 @@ onMounted(() => {
               <button @click="prevOption" :disabled="selectedIndexTopWaiter <= 0 || loadingTopWaiters" class="year-button" aria-label="Valor anterior">
                 <i-mdi-chevron-left />
               </button>
-              <span class="year-display">{{ currentValueTopWaiters }}</span>
+              <span class="year-display">{{ currentLabelTopWaiters }}</span>
               <button @click="nextOption" :disabled="selectedIndexTopWaiter >= 2 || loadingTopWaiters" class="year-button"
                 aria-label="Valor siguiente">
                 <i-mdi-chevron-right />
@@ -222,7 +228,7 @@ onMounted(() => {
               <button @click="prevOptionProducts" :disabled="selectedIndexTopProducts <= 0 || loadingTopProducts" class="year-button" aria-label="Valor anterior">
                 <i-mdi-chevron-left />
               </button>
-              <span class="year-display">{{ currentValueTopProducts }}</span>
+              <span class="year-display">{{ currentLabelTopProducts }}</span>
               <button @click="nextOptionProducts" :disabled="selectedIndexTopProducts >= 2 || loadingTopProducts" class="year-button"
                 aria-label="Valor siguiente">
                 <i-mdi-chevron-right />

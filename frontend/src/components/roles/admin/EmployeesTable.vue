@@ -23,7 +23,7 @@ const emit = defineEmits(['edit', 'delete', 'change-password']);
 // Definimos las columnas que queremos mostrar. La propiedad 'key' debe coincidir
 // con la clave en el objeto de datos del empleado.
 const columns = ref([
-    { key: 'id_employe', label: 'ID' },
+   
     { key: 'employe_name', label: 'Nombre' },
     { key: 'employee_cc', label: 'Cedula' },
     { key: 'employe_email', label: 'Email' },

@@ -18,7 +18,17 @@ class TablesController extends BaseController
     public function index()
     {
         return $this->executeWithErrorHandling(function() {
-            $tables = $this->tableModel->all();
+
+            
+
+
+            // --- Parámetros de Filtrado ---
+            // Leemos los nuevos filtros desde la URL (query string)
+            $filters = [
+                'term' => isset($_GET['term']) ? $this->sanitizeString($_GET['term']) : null,
+                'state' => isset($_GET['state']) ? $this->sanitizeString($_GET['state']) : null
+            ];
+            $tables = $this->tableModel->all($filters);
             $this->handleResponse(true, 'Mesas obtenidas correctamente.', $tables);
             
         }, 'Error al obtener las mesas');
@@ -89,7 +99,7 @@ class TablesController extends BaseController
                 'table_status' => $this->sanitizeString($data['table_status'] ?? 'FREE'),
                 'qr_token' => $this->generarTokenSeguro(),
                 'token_expiration' => date('Y-m-d H:i:s', strtotime('+10 minutes'))
-            ];;
+            ];
 
             // Validar número de mesa
             if (!$tableData['table_number']) {

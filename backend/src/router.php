@@ -439,9 +439,6 @@ $router->before('GET', '/api/auth/me', function () {
     AccessControlMiddleware::handle([], false);
 });
 
-// Proteger el dashboard solo para administradores
-$router->before('GET', '/api/analytics/dashboard-summary', function () {
-    AccessControlMiddleware::handle([1], false); // Solo rol 1 (Administrador)
-});
+
 
 return $router;
