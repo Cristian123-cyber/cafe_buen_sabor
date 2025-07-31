@@ -10,6 +10,7 @@
                             <i-mdi-person class="w-5 h-5 text-border-dark"></i-mdi-person>
                         </template>
                     </BaseInput>
+                    
                 </BaseFormRow>
 
                 <BaseFormRow>
@@ -24,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, defineExpose, onMounted } from 'vue';
+import { ref, defineExpose, onMounted, watch } from 'vue';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useTablesStore } from '../../../../stores/tablesStore';
 import * as z from 'zod';
@@ -46,8 +47,12 @@ defineExpose({
     isLoading
 });
 
+const props = defineProps({
+    currentTable: { type: Object, default: null }, // Prop para recibir la mesa actual a editar
+});
 // Datos iniciales para el formulario de mesas
 const tableData = ref({
+    id_table: '', // ID de la mesa si se está editando
     table_number: '',
     table_status: '', // Se usa null para que el placeholder del select se muestre
 });
@@ -57,6 +62,7 @@ const validStatuses = ['INACTIVE', 'OCCUPIED', 'FREE']; // Aquí tus estados vá
 // Schema de validación adaptado para las mesas
 const tableSchema = toTypedSchema(
   z.object({
+    id_table: z.number().optional(),
     table_number: z.coerce // Intenta convertir el valor a número
             .number({ required_error: 'El número de mesa es obligatorio' })
             .positive('El número de mesa debe ser un número positivo'),
@@ -71,27 +77,41 @@ const tableSchema = toTypedSchema(
 
 // Función de envío adaptada para crear una mesa
 const onFormSubmit = async (values) => {
-    console.log('Datos de la mesa a crear:', values);
+    console.log('Datos de la mesa a editar:', values);
     isLoading.value = true;
     try {
-        await tableStore.addTable(values);
+        await tableStore.editTable(values.id_table, values);
         emits('completed');
         alert.show({
             variant: 'success',
-            title: 'Mesa Creada',
-            message: `La mesa #${values.table_number} ha sido creada exitosamente.`,
+            title: 'Mesa Editada',
+            message: `La mesa #${values.table_number} ha sido editada exitosamente.`,
         });
     } catch (error) {
-        console.error("Error al crear la mesa:", error);
+        console.error("Error al editar la mesa:", error);
         alert.show({
             variant: 'error',
-            title: 'Error al crear la mesa',
-            message: error?.message || 'Ocurrió un error al crear la mesa. Inténtalo de nuevo más tarde.',
+            title: 'Error al editar la mesa',
+            message: error?.message || 'Ocurrió un error al editar la mesa. Inténtalo de nuevo más tarde.',
         });
     } finally {
         isLoading.value = false;
     }
 };
+
+watch(
+  () => props.currentTable,
+  (newVal) => {
+    if (newVal && newVal !== null) {
+      tableData.value = {
+        id_table: newVal.id_table || null,
+        table_number: newVal.table_number || '',
+        table_status: newVal.table_status || ''
+      };
+    }
+  },
+  { immediate: true } // ← Para que corra también al montar si ya viene seteado
+);
 
 
    

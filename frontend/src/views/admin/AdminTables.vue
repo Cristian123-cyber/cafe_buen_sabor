@@ -5,6 +5,8 @@ import { storeToRefs } from 'pinia';
 
 import { useAlert } from '../../composables/useAlert';
 import { useTablesStore } from '../../stores/tablesStore';
+import EditEmployeeForm from '../../components/roles/admin/forms/EditEmployeeForm.vue';
+import EditTableForm from '../../components/roles/admin/forms/EditTableForm.vue';
 
 const tableStore = useTablesStore();
 
@@ -46,8 +48,10 @@ const handleCreate = () => {
 }
 
 const handleEdit = (table) => {
-  console.log('Editar mesa: ', table);
-  //showEditModal.value = true;
+ 
+  
+  currentTable.value = table;
+  showEditModal.value = true;
 }
 
 const handleDelete = async (table) => {
@@ -197,6 +201,22 @@ onUnmounted(() => {
         </template>
       
       </BaseModal>
+
+      <BaseModal v-model="showEditModal" title="Editar Mesa" @close="showEditModal = false" >
+        <EditTableForm ref="formEditRef" :currentTable="currentTable" @completed="showEditModal = false" />
+
+        <template #footer>
+          <BaseButton variant="terciary" @click="showEditModal = false">
+            Cancelar
+          </BaseButton>
+          <BaseButton @click="triggerSubmit('edit')" variant="accent" :loading="formEditRef?.isLoading">
+            Guardar
+          </BaseButton>
+        </template>
+      
+      </BaseModal>
+
+
 
       <FooterDash>
 

@@ -43,4 +43,14 @@ export const tablesService = {
       throw error;
     }
   },
+  
+  update: async (id, data) => {
+    try {
+      const response = await api.put(`/tables/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar la mesa ${id}:`, error);
+      throw error;
+    }
+  },
 };

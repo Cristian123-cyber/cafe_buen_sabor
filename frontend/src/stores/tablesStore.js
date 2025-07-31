@@ -50,7 +50,7 @@ export const useTablesStore = defineStore("tables", () => {
           const newTable = result.data;
   
           if (newTable !== null && newTable !== undefined) {
-            tables.value.push(newTable); // Agregar al inicio del array
+            tables.value.push(newTable); //  al  del array
           }
         } else {
           throw new Error(result.message || "Error al crear la mesa");
@@ -62,9 +62,27 @@ export const useTablesStore = defineStore("tables", () => {
     };
 
 
+   const editTable = async (id, data) => {
+       error.value = null;
+   
+       try {
+         const result = await tablesService.update(id, data);
+   
+         if (result.success) {
+           fetchTables(false);
+         }
+       } catch (e) {
+         console.log(e);
+         error.value = e;
+         throw new Error(e.response?.data?.message || "Error al editar la mesa"); // Re-lanzar el error para manejarlo en el componente
+       }
+     };
+
+
   //ACTIONS
 
   const fetchTables = async (
+    showLoading = true,
     filters = {
       term: filterTerm.value,
       state: filterState.value !== 0 && filterState.value !== '' ? filterState.value : null,
@@ -72,7 +90,7 @@ export const useTablesStore = defineStore("tables", () => {
   ) => {
     if (isFetching) return; // Evitar múltiples llamadas simultáneas
     isFetching = true;
-    isLoading.value = true;
+    isLoading.value = showLoading;
     error.value = true;
 
     const params = {
@@ -113,7 +131,7 @@ export const useTablesStore = defineStore("tables", () => {
     clearTimeout(pollingTimeout);
 
     const poll = async () => {
-      await fetchTables({
+      await fetchTables(true, {
       term: filterTerm.value,
       state: filterState.value !== 0 ? filterState.value : null,
     }); // Reutilizas tu función
@@ -150,5 +168,6 @@ export const useTablesStore = defineStore("tables", () => {
 
 
     addTable,
+    editTable,
   };
 });

@@ -58,17 +58,18 @@ const props = defineProps({
 // --- Computed Properties para Lógica de UI (sin cambios en la lógica) ---
 
 const isOccupied = computed(() => props.table.table_status === 'OCCUPIED');
+const isInactive = computed(() => props.table.table_status === 'INACTIVE');
 
 const statusClass = computed(() =>
-    isOccupied.value ? 'bg-success' : 'bg-text-muted'
+    isOccupied.value ? 'bg-success' : isInactive.value ? 'bg-primary' : 'bg-text-muted'
 );
 
 const statusTooltip = computed(() =>
-    isOccupied.value ? 'Mesa Ocupada' : 'Mesa Libre'
+    isOccupied.value ? 'Mesa Ocupada' : isInactive.value ? 'Mesa inactiva' : 'Mesa Libre'
 );
 
 const statusText = computed(() =>
-    isOccupied.value ? 'Ocupada' : 'Libre'
+    isOccupied.value ? 'Ocupada' : isInactive.value ? 'Inactiva' : 'Libre'
 );
 
 // 3. Formato de expiración actualizado con date-fns (Requerimiento 3)
