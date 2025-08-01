@@ -39,6 +39,8 @@ class Table extends BaseModel
         }
 
         // Si hay condiciones, las unimos con AND y las añadimos a la query
+        $whereConditions[] = "t.table_status != 'DELETED'";
+
         if (!empty($whereConditions)) {
             $query .= " WHERE " . implode(" AND ", $whereConditions);
         }
@@ -96,6 +98,9 @@ class Table extends BaseModel
         }
         return false;
     }
+
+
+   
 
     // Eliminar mesa
     public function deleteTable($id)

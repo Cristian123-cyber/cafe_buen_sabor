@@ -7,10 +7,8 @@ export const navigationConfig = {
     { label: 'Usuarios', to: { name: 'AdminUsers' }, icon: iconsMap['mdi-account-group-outline'] },
     { label: 'Mesas', to: { name: 'AdminTables' }, icon: iconsMap['mdi-table-chair'] },
     { label: 'Productos', to: { name: 'AdminProducts' }, icon: iconsMap['mdi-food-outline'] },
-    { label: 'Ingredientes', to: { name: 'AdminIngredients' }, icon: iconsMap['mdi-food-apple'] },
     { label: 'Ordenes', to: { name: 'AdminOrders' }, icon: iconsMap['i-material-symbols-orders-rounded'] },
     { label: 'Ventas', to: { name: 'AdminSales' }, icon: iconsMap['mdi-food-apple'] },
-    { label: 'Sesiones', to: { name: 'AdminSessions' }, icon: iconsMap['mdi-food-apple'] },
     { label: 'Reportes', to: { name: 'AdminReports' }, icon: iconsMap['mdi-chart-line'] },
   ],
   3: [

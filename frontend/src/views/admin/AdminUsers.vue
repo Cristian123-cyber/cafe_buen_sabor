@@ -187,9 +187,7 @@ onMounted(() => {
 
       <EmployeesTable :employees="filteredEmployees" :loading="isLoading" @edit="handleEdit" @delete="handleDelete"
         @change-password="handleChangePassword">
-        <template #header>
-          <h2 class="text-lg font-semibold">Lista de Empleados</h2>
-        </template>
+        
 
       </EmployeesTable>
       <!-- Componente de Paginación -->

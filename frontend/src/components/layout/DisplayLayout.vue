@@ -12,7 +12,7 @@
 @reference "../../style.css";
 
 .display-layout {
-  @apply w-screen min-h-screen flex items-center justify-center bg-primary-dark;
+  @apply w-screen min-h-screen flex items-center justify-center bg-surface-dark;
   padding: 2rem 1rem; /* margen para que no se corte arriba/abajo */
   overflow-y: auto;
 }

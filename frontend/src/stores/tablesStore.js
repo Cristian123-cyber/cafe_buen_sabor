@@ -15,16 +15,15 @@ export const useTablesStore = defineStore("tables", () => {
   const totalPages = ref(0);
 
   // Estado de filtros
-  const filterTerm = ref('');
+  const filterTerm = ref("");
   const filterState = ref(0);
-
 
   //estados
 
   const states = [
-    { status_id: 1, status_label: 'Libre', status_name: 'FREE' },
-    { status_id: 2, status_label: 'Ocupada', status_name: 'OCCUPIED' },
-    { status_id: 3, status_label: 'Inactiva', status_name: 'INACTIVE' },
+    { status_id: 1, status_label: "Libre", status_name: "FREE" },
+    { status_id: 2, status_label: "Ocupada", status_name: "OCCUPIED" },
+    { status_id: 3, status_label: "Inactiva", status_name: "INACTIVE" },
   ];
 
   const setFilters = ({ term, state }) => {
@@ -41,43 +40,57 @@ export const useTablesStore = defineStore("tables", () => {
   let isFetching = false;
 
   const addTable = async (data) => {
-      
-  
-      try {
-        const result = await tablesService.create(data);
-  
-        if (result.success) {
-          const newTable = result.data;
-  
-          if (newTable !== null && newTable !== undefined) {
-            tables.value.push(newTable); //  al  del array
-          }
-        } else {
-          throw new Error(result.message || "Error al crear la mesa");
+    try {
+      const result = await tablesService.create(data);
+
+      if (result.success) {
+        const newTable = result.data;
+
+        if (newTable !== null && newTable !== undefined) {
+          tables.value.push(newTable); //  al  del array
         }
-      } catch (e) {
-        error.value = e;
-        throw new Error(e.response?.data?.message || "Error al crear la mesa"); // Re-lanzar el error para manejarlo en el componente
+      } else {
+        throw new Error(result.message || "Error al crear la mesa");
       }
-    };
+    } catch (e) {
+      error.value = e;
+      throw new Error(e.response?.data?.message || "Error al crear la mesa"); // Re-lanzar el error para manejarlo en el componente
+    }
+  };
 
+  const editTable = async (id, data) => {
+    error.value = null;
 
-   const editTable = async (id, data) => {
-       error.value = null;
-   
-       try {
-         const result = await tablesService.update(id, data);
-   
-         if (result.success) {
-           fetchTables(false);
-         }
-       } catch (e) {
-         console.log(e);
-         error.value = e;
-         throw new Error(e.response?.data?.message || "Error al editar la mesa"); // Re-lanzar el error para manejarlo en el componente
-       }
-     };
+    try {
+      const result = await tablesService.update(id, data);
 
+      if (result.success) {
+        fetchTables(false);
+      }
+    } catch (e) {
+      console.log(e);
+      error.value = e;
+      throw new Error(e.response?.data?.message || "Error al editar la mesa"); // Re-lanzar el error para manejarlo en el componente
+    }
+  };
+
+  const deleteTable = async (id) => {
+    error.value = null;
+
+    try {
+      const result = await tablesService.delete(id);
+      console.log(result);
+
+      if (result.success) {
+        fetchTables(false);
+      }
+    } catch (e) {
+      console.log(e);
+      throw new Error(
+        e.response?.data?.message || "Error al eliminar la mesita bro"
+      );
+    }
+  };
 
   //ACTIONS
 
@@ -85,7 +98,10 @@ export const useTablesStore = defineStore("tables", () => {
     showLoading = true,
     filters = {
       term: filterTerm.value,
-      state: filterState.value !== 0 && filterState.value !== '' ? filterState.value : null,
+      state:
+        filterState.value !== 0 && filterState.value !== ""
+          ? filterState.value
+          : null,
     }
   ) => {
     if (isFetching) return; // Evitar múltiples llamadas simultáneas
@@ -117,9 +133,8 @@ export const useTablesStore = defineStore("tables", () => {
       totalPages.value = 0;
       error.value = e;
     } finally {
-    
-        isFetching = false;
-    
+      isFetching = false;
+
       isLoading.value = false;
     }
   };
@@ -132,10 +147,10 @@ export const useTablesStore = defineStore("tables", () => {
 
     const poll = async () => {
       await fetchTables(true, {
-      term: filterTerm.value,
-      state: filterState.value !== 0 ? filterState.value : null,
-    }); // Reutilizas tu función
-      pollingTimeout = setTimeout(poll, (120000)); // 2 minutos
+        term: filterTerm.value,
+        state: filterState.value !== 0 ? filterState.value : null,
+      }); // Reutilizas tu función
+      pollingTimeout = setTimeout(poll, 120000); // 2 minutos
     };
 
     poll(); // Ejecutar inmediatamente
@@ -165,9 +180,8 @@ export const useTablesStore = defineStore("tables", () => {
     total,
     totalPages,
 
-
-
     addTable,
     editTable,
+    deleteTable
   };
 });

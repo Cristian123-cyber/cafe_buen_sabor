@@ -75,11 +75,6 @@ export const useAuth = () => {
       return;
     }
 
-    if (authStore.accessToken === authStore.FAKE_TOKEN) {
-      authStore.authStatus = "success";
-      console.log("Sesión de desarrollo, check omitido");
-      return;
-    }
 
     authStore.authStatus = "loading";
     try {
@@ -98,70 +93,14 @@ export const useAuth = () => {
     }
   };
 
-  // Mock users para desarrollo
-  const MOCK_USERS = {
-    Mesero: {
-      id: 1,
-      name: "Usuario Mesero",
-      email: "waiter@test.com",
-      role_name: "Mesero",
-      role_id: 1,
-    },
-    Cocinero: {
-      id: 2,
-      name: "Usuario Cocinero",
-      email: "kitchen@test.com",
-      role_name: "Cocinero",
-      role_id: 2,
-    },
-    Cajero: {
-      id: 3,
-      name: "Usuario Cajero",
-      email: "cashier@test.com",
-      role_name: "Cajero",
-      role_id: 3,
-    },
-    Administrador: {
-      id: 4,
-      name: "Usuario Admin",
-      email: "admin@test.com",
-      role_name: "Administrador",
-      role_id: 5,
-    },
-    Device: {
-      id: 5,
-      name: "Dispositivo de Mesa",
-      email: "device@gmail.com",
-      role_name: "Device",
-      role_id: 4,
-      table_id: 1,
-    },
-  };
+  
 
-  const fakeLogin = (role) => {
-    const authStore = useAuthStore();
-    console.warn(`--- MODO SIMULACIÓN: Logueado como ${role} ---`);
-    const fakeUserData = MOCK_USERS[role];
-
-    if (!fakeUserData) {
-      console.error(`Rol ${role} no encontrado en MOCK_USERS.`);
-      return;
-    }
-
-    authStore.setAuthData(fakeUserData, authStore.FAKE_TOKEN);
-
-    // Redirige automáticamente al dashboard del rol
-    const targetRoute = authStore.getDashboardRouteByRole(
-      authStore.user.role_id
-    );
-    router.replace(targetRoute);
-  };
+  
 
   return {
     login,
     logout,
     checkAuth,
     handleRefreshToken,
-    fakeLogin,
   };
 };

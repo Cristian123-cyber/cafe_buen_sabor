@@ -115,7 +115,6 @@ export const useEmployeStore = defineStore("employees", () => {
   const fetchStates = async () => {
     try {
       const data = await employeService.getStates();
-      console.log("Estados obtenidos:", data);
       states.value = data.data;
     } catch (e) {
       console.log(e);

@@ -24,7 +24,7 @@ export const tablesService = {
   getAll: async (params) => {
     try {
       const response = await api.get("/tables", { params: params });
-      console.log("Respuesta all mesas: ", response);
+
       return response.data;
     } catch (error) {
       console.error(`Error al obtener las mesas:`, error);
@@ -43,13 +43,26 @@ export const tablesService = {
       throw error;
     }
   },
-  
+
   update: async (id, data) => {
     try {
       const response = await api.put(`/tables/${id}`, data);
       return response.data;
     } catch (error) {
       console.error(`Error al actualizar la mesa ${id}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Elimina una mesa.
+   */
+  delete: async (id) => {
+    try {
+      const response = await api.delete(`/tables/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al eliminar la mesita ${id}:`, error);
       throw error;
     }
   },

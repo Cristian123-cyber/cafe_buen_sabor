@@ -5,8 +5,11 @@ import { storeToRefs } from 'pinia';
 
 import { useAlert } from '../../composables/useAlert';
 import { useTablesStore } from '../../stores/tablesStore';
-import EditEmployeeForm from '../../components/roles/admin/forms/EditEmployeeForm.vue';
-import EditTableForm from '../../components/roles/admin/forms/EditTableForm.vue';
+import QrWrapper from '../../components/cafe/QrWrapper.vue';
+
+
+
+
 
 const tableStore = useTablesStore();
 
@@ -22,14 +25,10 @@ watch([searchTerm, selectedState], ([newSearch, newState]) => {
 
 
 const stateOptions = computed(() => {
-  const states = tableStore.states?.map((state) => ({
-    value: state.id_status,
-    label: state.status_name,
-  }));
 
-  states?.unshift({ value: 0, label: 'Todos' });
 
-  return states ? states : [{ value: 0, label: 'Todos' }, { value: 'OCCUPIED', label: 'Ocupada' }, { value: 'FREE', label: 'Libre' },];
+
+  return [{ value: 0, label: 'Todos' }, { value: 'OCCUPIED', label: 'Ocupada' }, { value: 'FREE', label: 'Libre' }, { value: 'INACTIVE', label: 'Inactiva' }];
 });
 
 
@@ -42,7 +41,6 @@ const { tables } = storeToRefs(tableStore);
 
 // Handlers actions
 const handleCreate = () => {
-  console.log('Crear nueva mesa');
   showCreateModal.value = true;
   
 }
@@ -55,7 +53,7 @@ const handleEdit = (table) => {
 }
 
 const handleDelete = async (table) => {
-  console.log('Eliminar mesa: ', table);
+  
    const isConfirmed = await alert.show({
     variant: 'warning',
     title: '¿Desea eliminar esta mesa?',
@@ -63,7 +61,7 @@ const handleDelete = async (table) => {
     confirmButtonText: 'Sí, eliminar',
     cancelButtonText: 'Cancelar',
   });
-  return;
+  
 
   if (isConfirmed) {
 
@@ -88,12 +86,15 @@ const handleDelete = async (table) => {
 }
 
 const handleQrView = (table) => {
-  console.log('Ver QR de la mesa: ', table);
-  // Aquí abrirías el modal o vista para mostrar el QR
+
+  showQrModal.value = true;
+  currentTable.value = table;
 }
 
 const handleAddLogin = (table) => {
-  console.log('Agregar login a la mesa: ', table);
+
+  showAddLoginModal.value = true;
+  currentTable.value = table;
   // Aquí abrirías el modal o vista para agregar un login a la mesa
 }
 
@@ -101,12 +102,15 @@ const handleAddLogin = (table) => {
 //MODAL CONTROL
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
+const showQrModal = ref(false);
+const showAddLoginModal = ref(false);
 const currentTable = ref(null);
 
 
 // form references
 const formCreateRef = ref();
 const formEditRef = ref();
+const formAddLoginRef = ref();
 
 
 
@@ -119,6 +123,9 @@ const triggerSubmit = async (form) => {
       break;
     case 'edit':
       formEditRef.value?.submit();
+      break;
+    case 'addLogin':
+      formAddLoginRef.value?.submit();
       break;
     default:
       console.warn('No se ha definido un formulario para enviar');
@@ -211,6 +218,40 @@ onUnmounted(() => {
           </BaseButton>
           <BaseButton @click="triggerSubmit('edit')" variant="accent" :loading="formEditRef?.isLoading">
             Guardar
+          </BaseButton>
+        </template>
+      
+      </BaseModal>
+
+      <BaseModal v-model="showQrModal" maxWidth="2xl" title="QR de la mesa" @close="showQrModal = false">
+
+        <QrWrapper 
+        :table-id="currentTable?.id_table"
+        >
+      </QrWrapper>
+        
+       
+
+       <template #footer>
+          <BaseButton variant="secondary" @click="showQrModal = false">
+            Cerrar
+          </BaseButton>
+          
+        </template>
+      
+      </BaseModal>
+
+
+      <BaseModal v-model="showAddLoginModal" title="Crear Login" @close="showAddLoginModal = false">
+
+        <CreateLoginTableForm ref="formAddLoginRef"  @completed="showAddLoginModal = false" :current-table="currentTable"></CreateLoginTableForm>
+
+        <template #footer>
+          <BaseButton variant="terciary" @click="showAddLoginModal = false">
+            Cancelar
+          </BaseButton>
+          <BaseButton @click="triggerSubmit('addLogin')" variant="accent" :loading="formAddLoginRef?.isLoading">
+            Crear Login
           </BaseButton>
         </template>
       

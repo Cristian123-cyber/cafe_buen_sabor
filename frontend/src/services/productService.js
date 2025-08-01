@@ -11,9 +11,9 @@ export const productService = {
    * Corresponde a: GET /api/products
    * @returns {Promise<Array>} Una promesa que resuelve a un array de productos.
    */
-  fetchProducts: async () => {
+  fetchProducts: async (params) => {
     try {
-      const response = await api.get('/productos');
+      const response = await api.get('/productos', { params: params});
       return response.data;
     } catch (error) {
       console.error('Error al obtener los productos:', error.response?.data || error.message);

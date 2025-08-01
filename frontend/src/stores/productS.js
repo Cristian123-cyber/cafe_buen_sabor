@@ -14,6 +14,9 @@ export const useProductStore = defineStore("products", () => {
   const isLoading = ref(false);
   const error = ref(null);
 
+  const filterTerm = ref("");
+  const filterCategory = ref(0);
+
   // ✅ Getter: Función que filtra según categoría
   const getProductsByCategory = (category) => {
     if (category === "All") return products.value;
@@ -33,7 +36,6 @@ export const useProductStore = defineStore("products", () => {
     try {
       // Llama al servicio para obtener los datos
       const data = await productService.fetchProducts();
-      console.log(data.data, 'DATA COMPLETA');
       products.value = [
         ...data.data[0].productos_no_preparados,
         ...data.data[0].productos_preparados,
@@ -46,6 +48,48 @@ export const useProductStore = defineStore("products", () => {
     }
   };
 
+  const fetchProducts = async (
+    showLoading = true,
+    filters = {
+      term: filterTerm.value,
+      category: filterCategory.value !== 0 ? filterCategory.value : null,
+    }
+  ) => {
+
+    
+    isLoading.value = showLoading;
+    error.value = null;
+
+    
+
+    const params = {
+      ...filters,
+    };
+    try {
+      const data = await productService.fetchProducts(params);
+      products.value = [
+        ...data.data[0].productos_no_preparados,
+        ...data.data[0].productos_preparados,
+      ];
+    } catch (e) {
+      console.log(e);
+      products.value = [];
+
+      error.value = e;
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const setFilters = ({ term, category }) => {
+    console.log("seteando filtros producto", term, category);
+
+    if (term !== undefined) filterTerm.value = term;
+    if (category !== undefined) filterCategory.value = category;
+
+    fetchProducts();
+  };
+
   /**
    * Acción para cargar todas las categorías desde la API.
    */
@@ -54,10 +98,11 @@ export const useProductStore = defineStore("products", () => {
     try {
       const data = await productService.fetchCategories();
       categories.value = data.data;
+      console.log(categories.value);
       categories.value.unshift({
         cantidad_productos: 0,
         category_name: "Todas",
-        id_category: null,
+        id_category: 0,
       });
     } catch (e) {
       console.error("No se pudieron cargar las categorías.", e);
@@ -98,7 +143,7 @@ export const useProductStore = defineStore("products", () => {
 
     try {
       const data = await productService.getProductById(id);
-      console.log(data.data, 'data obtenida');
+      console.log(data.data, "data obtenida");
       return data.data;
     } catch (error) {
       error.value = "No se pudo cargar el producto.";
@@ -120,9 +165,14 @@ export const useProductStore = defineStore("products", () => {
     getProductsByCategory,
     // Actions
     fetchAllProducts,
+    fetchProducts,
     fetchAllCategories,
     addProduct,
     removeProduct,
     getProductById,
+    filterTerm,
+    filterCategory,
+
+    setFilters,
   };
 });
