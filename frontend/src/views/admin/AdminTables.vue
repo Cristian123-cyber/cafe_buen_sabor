@@ -4,6 +4,7 @@ import { ref, onMounted, computed, watch, onUnmounted } from 'vue';
 import { storeToRefs } from 'pinia';
 
 import { useAlert } from '../../composables/useAlert';
+import { useToasts } from '../../composables/useToast';
 import { useTablesStore } from '../../stores/tablesStore';
 import QrWrapper from '../../components/cafe/QrWrapper.vue';
 
@@ -14,7 +15,7 @@ import QrWrapper from '../../components/cafe/QrWrapper.vue';
 const tableStore = useTablesStore();
 
 const alert = useAlert();
-
+const { addToast } = useToasts();
 const searchTerm = ref('');
 
 const selectedState = ref(0);
@@ -67,11 +68,12 @@ const handleDelete = async (table) => {
 
     try {
       await tableStore.deleteTable(table.id_table);
-      alert.show({
-        variant: 'success',
-        title: 'Mesa eliminada',
-        message: `La mesa ${table.table_number} ha sido eliminada correctamente.`,
-      });
+      addToast({
+            message: `La mesa ${table.table_number} ha sido eliminada exitosamente`,
+            title: 'Mesa eliminada',
+            type: 'info',
+            duration: 2000
+        });
     } catch (error) {
       alert.show({
         variant: 'error',

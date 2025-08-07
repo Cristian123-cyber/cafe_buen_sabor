@@ -30,8 +30,10 @@ import { useTablesStore } from '../../../../stores/tablesStore';
 import * as z from 'zod';
 import { storeToRefs } from 'pinia';
 import { useAlert } from '../../../../composables/useAlert';
+import { useToasts } from '../../../../composables/useToast';
 
 const alert = useAlert();
+const { addToast } = useToasts();
 const isLoading = ref(false);
 const tableStore = useTablesStore();
 const { states } = tableStore;
@@ -76,10 +78,11 @@ const onFormSubmit = async (values) => {
     try {
         await tableStore.addTable(values);
         emits('completed');
-        alert.show({
-            variant: 'success',
-            title: 'Mesa Creada',
-            message: `La mesa #${values.table_number} ha sido creada exitosamente.`,
+        addToast({
+            message: 'Mesa creada exitosamente',
+            title: 'Exito',
+            type: 'info',
+            duration: 2000
         });
     } catch (error) {
         console.error("Error al crear la mesa:", error);

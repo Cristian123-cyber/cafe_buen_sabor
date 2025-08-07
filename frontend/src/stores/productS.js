@@ -11,6 +11,8 @@ export const useProductStore = defineStore("products", () => {
   // --- STATE ---
   const products = ref([]);
   const categories = ref([]);
+  const productTypes = ref(null);
+  const ingredients = ref(null);
   const isLoading = ref(false);
   const error = ref(null);
 
@@ -82,7 +84,7 @@ export const useProductStore = defineStore("products", () => {
   };
 
   const setFilters = ({ term, category }) => {
-    console.log("seteando filtros producto", term, category);
+    
 
     if (term !== undefined) filterTerm.value = term;
     if (category !== undefined) filterCategory.value = category;
@@ -106,6 +108,27 @@ export const useProductStore = defineStore("products", () => {
       });
     } catch (e) {
       console.error("No se pudieron cargar las categorías.", e);
+    }
+  };
+
+  const fetchAllIngredients = async () => {
+    // Podríamos tener un loading/error separado si quisiéramos
+    try {
+      const data = await productService.fetchIngredients();
+      ingredients.value = data;
+
+    } catch (e) {
+      console.error("No se pudieron cargar las ingridents.", e);
+    }
+  };
+  const fetchTypes = async () => {
+    // Podríamos tener un loading/error separado si quisiéramos
+    try {
+      const data = await productService.fetchTypes();
+      productTypes.value = data;
+
+    } catch (e) {
+      console.error("No se pudieron cargar las tipos.", e);
     }
   };
 
@@ -159,6 +182,8 @@ export const useProductStore = defineStore("products", () => {
     // State
     products,
     categories,
+    ingredients,
+    productTypes,
     isLoading,
     error,
     // Getters
@@ -166,7 +191,9 @@ export const useProductStore = defineStore("products", () => {
     // Actions
     fetchAllProducts,
     fetchProducts,
+    fetchTypes,
     fetchAllCategories,
+    fetchAllIngredients,
     addProduct,
     removeProduct,
     getProductById,

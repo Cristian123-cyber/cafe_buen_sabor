@@ -35,6 +35,28 @@ export const productService = {
       throw error;
     }
   },
+  fetchIngredients: async () => {
+    try {
+      const response = await api.get('/ingredientes');
+      
+      
+      return response.data.data;
+    } catch (error) {
+      console.error('Error al obtener las categorías:', error.response?.data || error.message);
+      throw error;
+    }
+  },
+  fetchTypes: async () => {
+    try {
+      const response = await api.get('/products/types');
+      
+      console.log(response.data.data);
+      return response.data.data;
+    } catch (error) {
+      console.error('Error al obtener las categorías:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 
   /**
    * (Admin) Crea un nuevo producto en la base de datos.

@@ -22,11 +22,11 @@
 
       </HeaderSection>
 
-
+<!-- 
       <ToolsBar v-model:searchTerm="searchTerm" placeholderSearch="Nombre, ID..."
         v-model:selectedRole="selectedCategory" :roleOptions="categoryOptions" :loading="isLoading"
         buttonCreateText="Crear Producto" searchLabel="Buscar productos" @create="handleCreate">
-      </ToolsBar>
+      </ToolsBar> -->
 
 
      </div>

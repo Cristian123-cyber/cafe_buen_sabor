@@ -90,13 +90,13 @@ const handleBlurState = () => {
 
 // Computed para verificar si hay filtros activos
 const hasActiveFilters = computed(() => {
-  const role = props.selectedRole;
-  const state = props.selectedState;
+    const role = props.selectedRole;
+    const state = props.selectedState;
 
-  const isRoleActive = role !== 0 && role !== -1 && role !== null && role !== undefined && role !== '' && role !== '0';
-  const isStateActive = state !== 0 && state !== -1 && state !== null && state !== undefined && state !== '' && state !== '0';
+    const isRoleActive = role !== 0 && role !== -1 && role !== null && role !== undefined && role !== '' && role !== '0';
+    const isStateActive = state !== 0 && state !== -1 && state !== null && state !== undefined && state !== '' && state !== '0';
 
-  return props.searchTerm.trim() !== '' || isRoleActive || isStateActive;
+    return props.searchTerm.trim() !== '' || isRoleActive || isStateActive;
 });
 
 // --- EMITS ---
@@ -183,85 +183,77 @@ function clearAllFilters() {
         <!-- Filtros en una sección separada -->
         <div class="toolbar-filters">
             <!-- Loading state -->
-
             <div class="filters-grid">
 
-                
-
-                
-
-
-                    <!-- Campo de búsqueda mejorado -->
-                    <div class="filter-item search-filter">
-                        <label class="filter-label">
-                            <i-mdi-magnify class="filter-label-icon" />
-                            {{ searchLabel }}
-                        </label>
-                        <div class="search-input-container">
-                            <div class="search-input-wrapper">
-                                <i-mdi-magnify class="search-input-icon" />
-                                <input type="text" :value="searchTerm" @input="onSearchInput"
-                                    :placeholder="placeholderSearch" class="search-input"
-                                    aria-label="Buscar usuario" />
-                                <div v-if="searchTerm" class="search-clear" @click="emit('update:searchTerm', '')">
-                                    <i-mdi-close class="w-4 h-4" />
-                                </div>
+                <!-- Campo de búsqueda mejorado -->
+                <div class="filter-item search-filter">
+                    <label class="filter-label">
+                        <i-mdi-magnify class="filter-label-icon" />
+                        {{ searchLabel }}
+                    </label>
+                    <div class="search-input-container">
+                        <div class="search-input-wrapper">
+                            <i-mdi-magnify class="search-input-icon" />
+                            <input type="text" :value="searchTerm" @input="onSearchInput"
+                                :placeholder="placeholderSearch" class="search-input" aria-label="Buscar usuario" />
+                            <div v-if="searchTerm" class="search-clear" @click="emit('update:searchTerm', '')">
+                                <i-mdi-close class="w-4 h-4" />
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Select de roles mejorado -->
-                    <div v-if="roleOptions" class="filter-item role-filter">
-                        <label class="filter-label">
-                            <i-mdi-account-group class="filter-label-icon" />
-                            {{ titleRoleOptions }}
-                        </label>
+                <!-- Select de roles mejorado -->
+                <div v-if="roleOptions" class="filter-item role-filter">
+                    <label class="filter-label">
+                        <i-mdi-account-group class="filter-label-icon" />
+                        {{ titleRoleOptions }}
+                    </label>
 
-                        <!-- Mantenemos tu estructura form-group original pero con clases específicas -->
-                        <div class="role-form-group variant-light">
-                            <div class="role-select-wrapper">
-                                <select :value="selectedRole" @change="onRoleChange" :disabled="loading"
-                                    class="role-form-input variant-light" @focus="isOpen = true" @blur="handleBlur">
-                                    <option v-if="roleOptions.length !== 0" v-for="option in roleOptions"
-                                        :key="option.value" :value="option.value">
-                                        {{ option.label }}
-                                    </option>
-                                </select>
+                    <!-- Mantenemos tu estructura form-group original pero con clases específicas -->
+                    <div class="role-form-group variant-light">
+                        <div class="role-select-wrapper">
+                            <select :value="selectedRole" @change="onRoleChange" :disabled="loading"
+                                class="role-form-input variant-light" @focus="isOpen = true" @blur="handleBlur">
+                                <option v-if="roleOptions.length !== 0" v-for="option in roleOptions"
+                                    :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
 
-                                <div class="role-select-chevron">
-                                    <i-mynaui-chevron-down-solid
-                                        :class="['chevron-icon', { 'chevron-open': isOpen }]" />
-                                </div>
+                            <div class="role-select-chevron">
+                                <i-mynaui-chevron-down-solid :class="['chevron-icon', { 'chevron-open': isOpen }]" />
                             </div>
                         </div>
                     </div>
-                    <div v-if="stateOptions" class="filter-item role-filter">
-                        <label class="filter-label">
-                            <i-gg-check-o class="filter-label-icon" />
-                            {{ titleStateOptions }}
-                        </label>
+                </div>
+                <div v-if="stateOptions" class="filter-item role-filter">
+                    <label class="filter-label">
+                        <i-gg-check-o class="filter-label-icon" />
+                        {{ titleStateOptions }}
+                    </label>
 
-                        <!-- Mantenemos tu estructura form-group original pero con clases específicas -->
-                        <div class="role-form-group variant-light">
-                            <div class="role-select-wrapper">
-                                <select :value="selectedState" @change="onStateChange" :disabled="loading"
-                                    class="role-form-input variant-light" @focus="isOpenState = true"
-                                    @blur="handleBlurState">
-                                    <option v-if="stateOptions.length !== 0" v-for="option in stateOptions"
-                                        :key="option.value" :value="option.value">
-                                        {{ option.label }}
-                                    </option>
-                                </select>
+                    <!-- Mantenemos tu estructura form-group original pero con clases específicas -->
+                    <div class="role-form-group variant-light">
+                        <div class="role-select-wrapper">
+                            <select :value="selectedState" @change="onStateChange" :disabled="loading"
+                                class="role-form-input variant-light" @focus="isOpenState = true"
+                                @blur="handleBlurState">
+                                <option v-if="stateOptions.length !== 0" v-for="option in stateOptions"
+                                    :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
 
-                                <div class="role-select-chevron">
-                                    <i-mynaui-chevron-down-solid
-                                        :class="['chevron-icon', { 'chevron-open': isOpenState }]" />
-                                </div>
+                            <div class="role-select-chevron">
+                                <i-mynaui-chevron-down-solid
+                                    :class="['chevron-icon', { 'chevron-open': isOpenState }]" />
                             </div>
                         </div>
                     </div>
+                </div>
 
-                
+
 
             </div>
 

@@ -222,7 +222,7 @@ const toastClass = computed(() => `toast--${props.type}`);
   @apply rounded-full transition-colors;
   @apply text-text-muted hover:text-text;
   @apply hover:bg-surface-darker;
-  @apply focus:outline-none focus:ring-2 focus:ring-accent/50;
+  @apply focus:outline-none;
 }
 
 /* Barra de progreso mejorada */

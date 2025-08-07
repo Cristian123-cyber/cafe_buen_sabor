@@ -13,7 +13,8 @@
                     </BaseInput>
                     <BaseInput name="employee_cc" type="number" label="Cedula" placeholder="">
                         <template #prefix>
-                            <i-heroicons-identification-16-solid class="w-5 h-5 text-border-dark"></i-heroicons-identification-16-solid>
+                            <i-heroicons-identification-16-solid
+                                class="w-5 h-5 text-border-dark"></i-heroicons-identification-16-solid>
                         </template>
                     </BaseInput>
                 </BaseFormRow>
@@ -39,17 +40,22 @@
 
                 <BaseFormRow :cols="2">
 
-                    <BaseSelect name="employees_rol_id_rol" label="Rol" :options="roles"
-                        option-label="rol_name" option-value="id_rol" placeholder="Selecciona un rol">
+                    <BaseSelect name="employees_rol_id_rol" label="Rol" :options="roles" option-label="rol_name"
+                        option-value="id_rol" placeholder="Selecciona un rol">
                     </BaseSelect>
                     <BaseSelect name="employees_statuses_id_status" label="Estado Inicial" :options="states"
                         option-label="status_name" option-value="id_status" placeholder="Selecciona un estado">
                     </BaseSelect>
 
-                
+
+                </BaseFormRow>
+                <!-- Input de imagen -->
+                <BaseFormRow>
+                    <BaseImageInput name="product_image" label="Imagen del Producto"
+                        help-text="Sube una imagen en formato PNG o JPG (máximo 5MB)" />
                 </BaseFormRow>
 
-                
+
             </template>
         </BaseForm>
 
@@ -64,9 +70,12 @@ import { useEmployeStore } from '../../../../stores/employeesS';
 import * as z from 'zod';
 import { storeToRefs } from 'pinia';
 import { useAlert } from '../../../../composables/useAlert';
+import { useToasts } from '../../../../composables/useToast';
 const alert = useAlert();
 const isLoading = ref(false);
 const employeStore = useEmployeStore();
+
+const { addToast } = useToasts();
 
 const { roles, states } = storeToRefs(employeStore);
 
@@ -95,52 +104,52 @@ const employeeData = ref({
 
 
 const employeSchema = toTypedSchema(
-  z
-    .object({
-      employe_name: z
-        .string({ required_error: 'El nombre es obligatorio' })
-        .min(3, 'El nombre debe tener al menos 3 caracteres'),
+    z
+        .object({
+            employe_name: z
+                .string({ required_error: 'El nombre es obligatorio' })
+                .min(3, 'El nombre debe tener al menos 3 caracteres'),
 
-      employe_email: z
-        .string({ required_error: 'El correo es obligatorio' })
-        .email('Correo inválido'),
+            employe_email: z
+                .string({ required_error: 'El correo es obligatorio' })
+                .email('Correo inválido'),
 
-      password: z
-        .string({ required_error: 'La contraseña es obligatoria' })
-        .min(6, 'La contraseña debe tener al menos 6 caracteres'),
+            password: z
+                .string({ required_error: 'La contraseña es obligatoria' })
+                .min(6, 'La contraseña debe tener al menos 6 caracteres'),
 
-      employees_statuses_id_status: z
-        .union([
-          z.string().transform(val => (val === '' ? null : Number(val))),
-          z.number()
-        ])
-        .nullable()
-        .refine(val => val !== null, {
-          message: 'Debe seleccionar un estado',
-        }),
+            employees_statuses_id_status: z
+                .union([
+                    z.string().transform(val => (val === '' ? null : Number(val))),
+                    z.number()
+                ])
+                .nullable()
+                .refine(val => val !== null, {
+                    message: 'Debe seleccionar un estado',
+                }),
 
-      employees_rol_id_rol: z
-        .union([
-          z.string().transform(val => (val === '' ? null : Number(val))),
-          z.number()
-        ])
-        .nullable()
-        .refine(val => val !== null, {
-          message: 'Debe seleccionar un rol',
-        }),
+            employees_rol_id_rol: z
+                .union([
+                    z.string().transform(val => (val === '' ? null : Number(val))),
+                    z.number()
+                ])
+                .nullable()
+                .refine(val => val !== null, {
+                    message: 'Debe seleccionar un rol',
+                }),
 
-      employee_cc: z
-        .union([
-          z
-            .string()
-            .min(6, 'Debe tener al menos 6 caracteres')
-            .regex(/^\d+$/, 'Solo se permiten números'),
-          z
-            .number()
-            .refine(val => String(val).length >= 6, 'Debe tener al menos 6 dígitos')
-        ])
-        .transform(val => String(val)),
-    })
+            employee_cc: z
+                .union([
+                    z
+                        .string()
+                        .min(6, 'Debe tener al menos 6 caracteres')
+                        .regex(/^\d+$/, 'Solo se permiten números'),
+                    z
+                        .number()
+                        .refine(val => String(val).length >= 6, 'Debe tener al menos 6 dígitos')
+                ])
+                .transform(val => String(val)),
+        })
 );
 
 const onFormSubmit = async (values) => {
@@ -149,12 +158,12 @@ const onFormSubmit = async (values) => {
     try {
         await employeStore.addEmploye(values);
         emits('completed'); // Emitir el evento de completado
-        alert.show({
-            variant: 'success',
-            title: 'Empleado creado',
-            message: `El empleado ${values.employe_name} ha sido creado exitosamente.`,
+        addToast({
+            message: 'Empleado creado exitosamente',
+            title: 'Exito',
+            type: 'info',
+            duration: 2000
         });
-
 
     } catch (error) {
         console.error("Error al crear empleado:", error);
@@ -188,4 +197,4 @@ onMounted(async () => {
 
 </script>
 
-<style lang="scss" scoped></style>
+<style scoped></style>

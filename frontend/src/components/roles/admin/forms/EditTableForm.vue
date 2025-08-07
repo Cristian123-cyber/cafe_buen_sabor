@@ -31,8 +31,10 @@ import { useTablesStore } from '../../../../stores/tablesStore';
 import * as z from 'zod';
 import { storeToRefs } from 'pinia';
 import { useAlert } from '../../../../composables/useAlert';
+import { useToasts } from '../../../../composables/useToast';
 
 const alert = useAlert();
+const { addToast } = useToasts();
 const isLoading = ref(false);
 const tableStore = useTablesStore();
 const { states } = tableStore;
@@ -82,10 +84,11 @@ const onFormSubmit = async (values) => {
     try {
         await tableStore.editTable(values.id_table, values);
         emits('completed');
-        alert.show({
-            variant: 'success',
-            title: 'Mesa Editada',
-            message: `La mesa #${values.table_number} ha sido editada exitosamente.`,
+        addToast({
+            message: 'Mesa editada exitosamente',
+            title: 'Exito',
+            type: 'info',
+            duration: 2000
         });
     } catch (error) {
         console.error("Error al editar la mesa:", error);
