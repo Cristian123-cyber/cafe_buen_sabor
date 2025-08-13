@@ -183,11 +183,11 @@ onUnmounted(() => {
           <BaseButton size="icon" @click="handleDelete(table)" variant="danger">
              <i-mdi-trash class="w-5 h-5" />
           </BaseButton>
-          <BaseButton size="icon" @click="handleAddLogin(table)" variant="terciary">
+          <BaseButton v-if="table.table_status !== 'INACTIVE'" size="icon" @click="handleAddLogin(table)" variant="terciary">
               <i-fa6-solid-user-plus class="w-5 h-5" />
           </BaseButton>
           
-          <BaseButton size="icon" @click="handleQrView(table)" variant="primary">
+          <BaseButton v-if="table.table_status !== 'INACTIVE'" size="icon" @click="handleQrView(table)" variant="primary">
             <i-mdi-qrcode-scan class="w-5 h-5" />
           </BaseButton>
 

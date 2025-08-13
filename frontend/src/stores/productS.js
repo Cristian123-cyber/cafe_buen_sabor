@@ -63,6 +63,8 @@ export const useProductStore = defineStore("products", () => {
     const params = {
       ...filters,
     };
+
+    console.warn(filters);
     try {
       const data = await productService.fetchProducts(params);
       products.value = [

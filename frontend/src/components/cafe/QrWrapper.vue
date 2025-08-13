@@ -1,11 +1,11 @@
 <template>
-    <QRComponent 
-        :qr_token="qrToken ?? ''" 
-        :tableId="tableId" 
-        :timeLeft="timeLeft"
-        :totalDuration="totalDuration"
-        :withDetails="false"
-        />
+    <QrMinimal 
+    :qr_token="qrToken ?? ''" 
+    :tableId="tableId" 
+    :timeLeft="timeLeft"
+    :totalDuration="totalDuration"
+    :loading="isLoading"
+  />
     
 </template>
 

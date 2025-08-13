@@ -22,7 +22,15 @@ class ProductoController extends BaseController
     public function index()
     {
         return $this->executeWithErrorHandling(function () {
-            $productos = $this->productoModel->getProductosAgrupados();
+
+
+            // --- Parámetros de Filtrado ---
+            // Leemos los nuevos filtros desde la URL (query string)
+            $filters = [
+                'term' => isset($_GET['term']) ? $this->sanitizeString($_GET['term']) : null,
+                'category' => isset($_GET['category']) ? $this->sanitizeString($_GET['category']) : null,
+            ];
+            $productos = $this->productoModel->getProductosAgrupados($filters);
             $this->handleResponse(true, 'Productos obtenidos correctamente.', $productos);
         }, 'Error al obtener los productos');
     }
