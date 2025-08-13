@@ -57,12 +57,8 @@ export const useProductStore = defineStore("products", () => {
       category: filterCategory.value !== 0 ? filterCategory.value : null,
     }
   ) => {
-
-    
     isLoading.value = showLoading;
     error.value = null;
-
-    
 
     const params = {
       ...filters,
@@ -84,8 +80,6 @@ export const useProductStore = defineStore("products", () => {
   };
 
   const setFilters = ({ term, category }) => {
-    
-
     if (term !== undefined) filterTerm.value = term;
     if (category !== undefined) filterCategory.value = category;
 
@@ -116,7 +110,6 @@ export const useProductStore = defineStore("products", () => {
     try {
       const data = await productService.fetchIngredients();
       ingredients.value = data;
-
     } catch (e) {
       console.error("No se pudieron cargar las ingridents.", e);
     }
@@ -126,7 +119,6 @@ export const useProductStore = defineStore("products", () => {
     try {
       const data = await productService.fetchTypes();
       productTypes.value = data;
-
     } catch (e) {
       console.error("No se pudieron cargar las tipos.", e);
     }
@@ -136,11 +128,26 @@ export const useProductStore = defineStore("products", () => {
    * (Admin) Añade un nuevo producto.
    * @param {Object} productData - Datos del producto a crear.
    */
-  const addProduct = async (productData) => {
+  const addProduct = async (productData, productImg) => {
     try {
       const newProduct = await productService.createProduct(productData);
-      // Actualiza el estado local para reflejar el cambio inmediatamente
-      products.value.push(newProduct);
+
+      if (newProduct?.data?.id_product && productImg) {
+        // Subo la imagen SOLO si hay producto y archivo
+        const imageResult = await productService.uploadImage(
+          productImg,
+          newProduct.data.id_product
+        );
+
+        newProduct.data.product_image_url = imageResult?.data?.image_url;
+
+        products.value.push(newProduct.data);
+      }else{
+
+        throw new Error("Error al crear producto");
+        
+        
+      }
     } catch (e) {
       // El error se puede propagar al componente para mostrar una notificación
       throw new Error("Error al añadir el producto.");

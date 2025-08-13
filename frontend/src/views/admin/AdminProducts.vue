@@ -55,8 +55,7 @@ const handleEdit = (product) => {
 };
 
 const handleDelete = (product) => {
-  console.log('Eliminar:', product);
-  // Aquí mostrarías un modal de confirmación antes de eliminar
+
 };
 
 

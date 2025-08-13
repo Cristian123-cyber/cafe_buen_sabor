@@ -15,6 +15,179 @@ class Producto extends BaseModel
         $this->primary_key = 'id_product';
     }
 
+    public function createProduct(array $data) {
+        $sql = "INSERT INTO products (
+                    product_name, 
+                    product_price, 
+                    product_cost, 
+                    product_desc, 
+                    product_types_id_type, 
+                    product_category,
+                    product_stock,
+                    low_stock_level,
+                    critical_stock_level,
+                    ingredient_statuses_id_status,
+                    created_date
+                ) VALUES (
+                    :product_name, 
+                    :product_price, 
+                    :product_cost, 
+                    :product_desc, 
+                    :product_types_id_type,
+                    :product_category,
+                    :product_stock,
+                    :low_stock_level,
+                    :critical_stock_level,
+                    :ingredient_statuses_id_status,
+                    NOW()
+                )";
+        
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([
+                ':product_name' => $data['product_name'],
+                ':product_price' => $data['product_price'],
+                ':product_cost' => $data['product_cost'],
+                ':product_desc' => $data['product_desc'],
+                ':product_types_id_type' => $data['product_types_id_type'],
+                // Importante: El nombre de la columna en la BD es 'product_category'
+                ':product_category' => $data['product_category'], 
+                ':product_stock' => $data['product_stock'] ?? null,
+                ':low_stock_level' => $data['low_stock_level'] ?? null,
+                ':critical_stock_level' => $data['critical_stock_level'] ?? null,
+                ':ingredient_statuses_id_status' => $data['ingredient_statuses_id_status'] ?? null,
+            ]);
+            return $this->conn->lastInsertId();
+        } catch (PDOException $e) {
+            error_log('Error en ProductoModel::create: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Crea un producto PREPARADO y asocia sus ingredientes en una transacción.
+     * @param array $productData Datos del producto.
+     * @param array $ingredientIds Array de IDs de ingredientes a asociar.
+     * @return int|false El ID del nuevo producto o false si la transacción falla.
+     */
+    public function createWithIngredients(array $productData, array $ingredientIds) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Insertar el producto en la tabla `products`
+            $productId = $this->createProduct($productData);
+            
+            if (!$productId) {
+                throw new Exception("Falló la inserción del producto principal.");
+            }
+
+            // 2. Insertar las asociaciones en la tabla intermedia `products_has_ingredients`
+            // Nota: Se omite 'quantity' como solicitaste, la BD le asignará su valor por defecto (NULL).
+            $sqlAssoc = "INSERT INTO products_has_ingredients (products_id_product, ingredients_id_ingredient) VALUES (:product_id, :ingredient_id)";
+            $stmtAssoc = $this->conn->prepare($sqlAssoc);
+            
+            foreach ($ingredientIds as $ingredientId) {
+                $stmtAssoc->execute([
+                    ':product_id' => $productId,
+                    ':ingredient_id' => $ingredientId
+                ]);
+            }
+            
+            $this->conn->commit();
+            return $productId;
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log('Error en ProductoModel::createWithIngredients: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Actualiza un producto PREPARADO y sus ingredientes en una transacción.
+     * Reemplaza completamente los ingredientes anteriores.
+     * @param int $productId El ID del producto.
+     * @param array $productData Datos del producto a actualizar.
+     * @param array $ingredientIds El NUEVO array de IDs de ingredientes.
+     * @return bool True si la operación fue exitosa.
+     */
+    public function updateWithIngredients(int $productId, array $productData, array $ingredientIds) {
+        try {
+            $this->conn->beginTransaction();
+
+            // 1. Actualizar los datos del producto en la tabla `products`
+            if (!empty($productData)) {
+                $this->update($productId, $productData);
+            }
+
+            // 2. Borrar TODAS las asociaciones de ingredientes existentes para este producto
+            $sqlDelete = "DELETE FROM products_has_ingredients WHERE products_id_product = :product_id";
+            $stmtDelete = $this->conn->prepare($sqlDelete);
+            $stmtDelete->execute([':product_id' => $productId]);
+            
+            // 3. Insertar las nuevas asociaciones (si las hay)
+            if (!empty($ingredientIds)) {
+                $sqlAssoc = "INSERT INTO products_has_ingredients (products_id_product, ingredients_id_ingredient) VALUES (:product_id, :ingredient_id)";
+                $stmtAssoc = $this->conn->prepare($sqlAssoc);
+                
+                foreach ($ingredientIds as $ingredientId) {
+                    $stmtAssoc->execute([
+                        ':product_id' => $productId,
+                        ':ingredient_id' => $ingredientId
+                    ]);
+                }
+            }
+            
+            $this->conn->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->conn->rollBack();
+            error_log('Error en ProductoModel::updateWithIngredients: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Método auxiliar para obtener el tipo de un producto.
+     * Útil en el método update del controlador.
+     * @param int $productId
+     * @return int|false El ID del tipo de producto o false si no se encuentra.
+     */
+    public function getProductTypeId(int $productId) {
+        $sql = "SELECT product_types_id_type FROM products WHERE id_product = :id";
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([':id' => $productId]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result ? (int)$result['product_types_id_type'] : false;
+        } catch (PDOException $e) {
+            error_log('Error en ProductoModel::getProductTypeId: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Actualiza la URL de la imagen de un producto.
+     * @param int $productId
+     * @param string $imageUrl
+     * @return bool
+     */
+    public function updateImageUrl(int $productId, string $imageUrl) {
+        $sql = "UPDATE products SET product_image_url = :image_url, last_updated_date = NOW() WHERE id_product = :id_product";
+        try {
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([
+                ':image_url' => $imageUrl,
+                ':id_product' => $productId
+            ]);
+            return $stmt->rowCount() > 0;
+        } catch (PDOException $e) {
+            error_log('Error en ProductoModel::updateImageUrl: ' . $e->getMessage());
+            return false;
+        }
+    }
+
     /**
      * Obtiene productos con información de tipo de producto y estado
      */

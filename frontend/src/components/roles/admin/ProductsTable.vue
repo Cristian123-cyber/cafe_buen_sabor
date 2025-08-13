@@ -162,14 +162,10 @@ const getCategoryClass = (categoryName) => {
 }
 
 .product-desc {
-    @apply text-xs text-text-muted;
-    /* Truncamiento de texto a 2 líneas para mantener la tabla compacta */
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  @apply text-xs text-text-muted whitespace-nowrap overflow-hidden;
+  text-overflow: ellipsis;
+  max-width: 150px; /* Ajusta el ancho según lo que necesites */
 }
-
 .on-demand-info {
   @apply text-text-muted italic flex items-center gap-1.5;
 }

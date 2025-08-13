@@ -16,7 +16,7 @@
                 </BaseFormRow>
 
 
- 
+
 
                 <BaseFormRow :cols="2">
                     <BaseInput name="product_price" type="number" step="0.01" label="Precio" placeholder="">
@@ -37,6 +37,14 @@
                         option-label="category_name" option-value="id_category" placeholder="Selecciona una categoría">
                     </BaseSelect>
                 </BaseFormRow>
+
+                <div v-if="values.product_types_id_type == 1" class="ingredients-section mt-4">
+                    <BaseFormRow>
+                        <BaseCheckBoxGroup name="ingredients" label="Ingredientes del Producto" :options="ingredients"
+                            option-label="ingredient_name" option-value="id_ingredient"
+                            help-text="Selecciona los ingredientes que componen este producto." />
+                    </BaseFormRow>
+                </div>
 
                 <!-- Campos solo para productos NO preparados (tipo 2) -->
                 <div v-if="values.product_types_id_type == 2">
@@ -96,9 +104,6 @@ const { productTypes, ingredients, categories } = storeToRefs(productStore);
 const formRef = ref();
 const emits = defineEmits(['completed']);
 
-// Variables para manejo de ingredientes
-const selectedIngredients = ref([]);
-const newIngredientId = ref('');
 
 defineExpose({
     submit: () => {
@@ -117,8 +122,12 @@ const productData = ref({
     critical_stock_level: null,
     product_types_id_type: '',
     product_categories_id_category: '',
-    product_image: null
+    product_image: null,
+    ingredients: [],
 });
+
+const PREPARED_PRODUCT_TYPE = 1;
+const NON_PREPARED_PRODUCT_TYPE = 2;
 
 
 
@@ -195,6 +204,7 @@ const productSchema = toTypedSchema(
             .nullable()
             .optional(),
 
+
         ingredient_statuses_id_status: z
             .union([
                 z.string().transform(val => val === '' ? null : Number(val)),
@@ -203,41 +213,49 @@ const productSchema = toTypedSchema(
             .nullable()
             .optional(),
 
+        ingredients: z
+            .array(
+                z.union([
+                    z.string().transform(val => val === '' ? null : Number(val)),
+                    z.number()
+                ])
+            )
+            .optional()
+            .nullable(),
+
         product_image: z
             .instanceof(File, { message: 'La imagen es obligatoria y debe ser un archivo válido (PNG o JPG)' })
     })
         .superRefine((data, ctx) => {
-            if (data.product_types_id_type === 2) {
-                if (data.product_stock === null) {
+            if (data.product_types_id_type === PREPARED_PRODUCT_TYPE) {
+                console.log(data);
+                if (!data.ingredients || data.ingredients.length === 0) {
                     ctx.addIssue({
-                        path: ['product_stock'],
-                        code: 'custom',
-                        message: 'Este campo es obligatorio',
-                    });
-                }
-                if (data.low_stock_level === null) {
-                    ctx.addIssue({
-                        path: ['low_stock_level'],
-                        code: 'custom',
-                        message: 'Este campo es obligatorio',
-                    });
-                }
-                if (data.critical_stock_level === null) {
-                    ctx.addIssue({
-                        path: ['critical_stock_level'],
-                        code: 'custom',
-                        message: 'Este campo es obligatorio',
-                    });
-                }
-                if (data.ingredient_statuses_id_status === null) {
-                    ctx.addIssue({
-                        path: ['ingredient_statuses_id_status'],
-                        code: 'custom',
-                        message: 'Este campo es obligatorio',
+                        code: z.ZodIssueCode.custom,
+                        message: 'Debe seleccionar al menos un ingrediente',
+                        path: ['ingredients'],
                     });
                 }
             }
+
+            if (data.product_types_id_type === NON_PREPARED_PRODUCT_TYPE) {
+                if (data.product_stock === null || data.product_stock < 0) {
+                    ctx.addIssue({ path: ['product_stock'], code: 'custom', message: 'El stock es obligatorio y debe ser >= 0' });
+                }
+                if (data.low_stock_level === null || data.low_stock_level < 0) {
+                    ctx.addIssue({ path: ['low_stock_level'], code: 'custom', message: 'El nivel bajo es obligatorio y debe ser >= 0' });
+                }
+                if (data.critical_stock_level === null || data.critical_stock_level < 0) {
+                    ctx.addIssue({ path: ['critical_stock_level'], code: 'custom', message: 'El nivel crítico es obligatorio y debe ser >= 0' });
+                }
+                // Validar que critico < bajo < stock
+                if (data.low_stock_level <= data.critical_stock_level) {
+                    ctx.addIssue({ path: ['low_stock_level'], code: 'custom', message: 'Debe ser mayor al nivel crítico' });
+                }
+                
+            }
         })
+
 );
 
 
@@ -245,58 +263,39 @@ const productSchema = toTypedSchema(
 
 const onFormSubmit = async (values) => {
     isLoading.value = true;
-
     try {
-        // Preparar datos según el tipo de producto
-        const productPayload = {
-            product_name: values.product_name,
-            product_price: values.product_price,
-            product_cost: values.product_cost,
-            product_desc: values.product_desc,
-            product_types_id_type: values.product_types_id_type,
-            product_categories_id_category: values.product_categories_id_category
-        };
+        console.log('VALUES: ', values);
+        // 1. Preparar el payload JSON
+        // Vee-validate nos da todos los valores, filtramos los que no van a la API de creación.
+        const { product_image, ...productPayload } = values;
 
-        if (values.product_types_id_type === 1) {
-            // Producto preparado
+        // Limpieza final del payload según el tipo de producto
+        if (productPayload.product_types_id_type === PREPARED_PRODUCT_TYPE) {
+            // Para productos preparados, enviamos el array de IDs de ingredientes
+            // y nos aseguramos de que los campos de stock sean nulos.
             productPayload.product_stock = null;
             productPayload.low_stock_level = null;
             productPayload.critical_stock_level = null;
-            productPayload.ingredient_statuses_id_status = null;
-        } else {
-            // Producto no preparado
-            productPayload.product_stock = values.product_stock;
-            productPayload.low_stock_level = values.low_stock_level;
-            productPayload.critical_stock_level = values.critical_stock_level;
-            productPayload.ingredient_statuses_id_status = values.ingredient_statuses_id_status;
+            // La API debe esperar un array de IDs en el campo 'ingredients'
+        } else if (productPayload.product_types_id_type === NON_PREPARED_PRODUCT_TYPE) {
+            // Para no preparados, eliminamos el campo 'ingredients'.
+            delete productPayload.ingredients;
         }
 
-        // Crear producto sin imagen
-        const createdProduct = await productStore.addProduct(productPayload);
+        // 2. Enviar el payload JSON para crear el producto
+        await productStore.addProduct(productPayload, product_image);
 
-        // Si hay imagen, subirla por separado
-        if (values.product_image && createdProduct.id) {
-            await productStore.uploadProductImage(createdProduct.id, values.product_image);
-        }
 
+        alert.show({ variant: 'success', title: 'Éxito', message: 'Producto creado correctamente.' });
         emits('completed');
-        alert.show({
-            variant: 'success',
-            title: 'Producto creado',
-            message: `El producto ${values.product_name} ha sido creado exitosamente.`,
-        });
 
     } catch (error) {
-        console.error("Error al crear producto:", error);
-
-        alert.show({
-            variant: 'error',
-            title: 'Error al crear producto',
-            message: error?.message || 'Ocurrió un error al crear el producto. Inténtalo de nuevo más tarde.',
-        });
+        console.log('ERROR CREARNDO')
+        alert.show({ variant: 'error', title: 'Error', message: error.message || 'No se pudo crear el producto.' });
     } finally {
         isLoading.value = false;
     }
+
 };
 
 onMounted(async () => {
@@ -309,6 +308,10 @@ onMounted(async () => {
     if (categories.value?.length === 0 || categories.value === null) {
         await productStore.fetchAllCategories();
     }
+
+    if (ingredients.value?.length === 0 || ingredients.value === null) {
+        await productStore.fetchAllIngredients();
+    }
 });
 </script>
 
@@ -316,7 +319,7 @@ onMounted(async () => {
 @reference "../../../../style.css";
 
 .ingredients-section {
-    @apply border border-gray-200 rounded-lg p-4 bg-gray-50;
+    @apply border border-gray-200 rounded-lg p-4 bg-surface;
 }
 
 .selected-ingredients {
