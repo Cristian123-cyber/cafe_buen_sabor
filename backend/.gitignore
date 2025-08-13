@@ -1,2 +1,4 @@
 /logs/*.log
 public/images/products/*
+.env
+database.php

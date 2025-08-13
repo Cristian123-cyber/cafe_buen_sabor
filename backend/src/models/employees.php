@@ -342,18 +342,12 @@ class Employees extends BaseModel
         $query = "SELECT 
                     e.id_employe,
                     e.employe_name as name,
-                    COUNT(DISTINCT t.id_table) as tables_served
+                    0 as tables_served
                   FROM employees e
                   INNER JOIN employees_rol er ON e.employees_rol_id_rol = er.id_rol
-                  LEFT JOIN orders o ON e.id_employe = o.waiter_id
-                  LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
-                  LEFT JOIN tables t ON ts.tables_id_table = t.id_table
                   WHERE e.employees_statuses_id_status = 1
-                  AND er.rol_name = 'WAITER'
-                  $dateCondition
-                  GROUP BY e.id_employe, e.employe_name
-                  HAVING tables_served > 0
-                  ORDER BY tables_served DESC
+                  AND er.rol_name = 'Mesero'
+                  ORDER BY e.employe_name ASC
                   LIMIT 10";
         
         $stmt = $this->conn->prepare($query);
