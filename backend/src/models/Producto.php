@@ -633,7 +633,7 @@ class Producto extends BaseModel
                   FROM products p
                   INNER JOIN orders_has_products ohp ON p.id_product = ohp.products_id_product
                   INNER JOIN orders o ON ohp.orders_id_order = o.id_order
-                  WHERE o.order_statuses_id_status IN (2, 3, 4) -- Pedidos confirmados, en preparación o listos
+                  WHERE o.order_statuses_id_status IN (1, 2, 3, 4) -- Incluir todos los estados de pedidos
                   $dateCondition
                   GROUP BY p.id_product, p.product_name
                   HAVING quantity > 0
