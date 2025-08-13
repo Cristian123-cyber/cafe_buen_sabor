@@ -1,20 +1,14 @@
 <template>
     <div>
-        <BaseForm ref="formRef" :initial-values="employeeData" :validation-schema="employeSchema"
-            :is-submitting="isLoading" @submit="onFormSubmit">
+        <BaseForm ref="formRef" :initial-values="loginData" :validation-schema="loginSchema" :is-submitting="isLoading"
+            @submit="onFormSubmit">
 
             <!-- El slot ya no necesita recibir 'errors'. Cada BaseInput lo gestiona internamente -->
             <template #default="{ values }">
-                <BaseFormRow :cols="2">
+                <BaseFormRow>
                     <BaseInput name="employe_name" label="Nombre" placeholder="">
                         <template #prefix>
                             <i-mdi-person class="w-5 h-5 text-border-dark"></i-mdi-person>
-                        </template>
-                    </BaseInput>
-                    <BaseInput name="employee_cc" type="number" label="Cedula" placeholder="">
-                        <template #prefix>
-                            <i-heroicons-identification-16-solid
-                                class="w-5 h-5 text-border-dark"></i-heroicons-identification-16-solid>
                         </template>
                     </BaseInput>
                 </BaseFormRow>
@@ -38,72 +32,64 @@
                     </BaseInput>
                 </BaseFormRow>
 
-                <BaseFormRow :cols="2">
-
-                    <BaseSelect name="employees_rol_id_rol" label="Rol" :options="roles" option-label="rol_name"
-                        option-value="id_rol" placeholder="Selecciona un rol">
-                    </BaseSelect>
+                <BaseFormRow >
                     <BaseSelect name="employees_statuses_id_status" label="Estado Inicial" :options="states"
                         option-label="status_name" option-value="id_status" placeholder="Selecciona un estado">
                     </BaseSelect>
 
 
                 </BaseFormRow>
-                <!-- Input de imagen -->
-                <BaseFormRow>
-                    <BaseImageInput name="product_image" label="Imagen del Producto"
-                        help-text="Sube una imagen en formato PNG o JPG (máximo 5MB)" />
-                </BaseFormRow>
 
 
             </template>
         </BaseForm>
-
     </div>
 </template>
 
 <script setup>
-
-import { ref, defineExpose, onMounted, computed } from 'vue';
+import { ref, defineExpose, onMounted, watch } from 'vue';
 import { toTypedSchema } from '@vee-validate/zod';
+
 import { useEmployeStore } from '../../../../stores/employeesS';
 import * as z from 'zod';
 import { storeToRefs } from 'pinia';
 import { useAlert } from '../../../../composables/useAlert';
-import { useToasts } from '../../../../composables/useToast';
+
 const alert = useAlert();
 const isLoading = ref(false);
 const employeStore = useEmployeStore();
 
-const { addToast } = useToasts();
-
-const { roles, states } = storeToRefs(employeStore);
-
+const { states } = storeToRefs(employeStore);
 
 const formRef = ref();
-
 const emits = defineEmits(['completed']);
-
 
 defineExpose({
     submit: () => {
         formRef.value.submit();
-
     },
     isLoading
-}); // <-- Esto es clave para exponerlo al padre
+});
 
-const employeeData = ref({
+const props = defineProps({
+  currentTable: { type: Object, default: null },
+});
+
+// Datos iniciales para el formulario de mesas
+const loginData = ref({
     employe_name: '',
     employe_email: '',
     password: '',
     employees_statuses_id_status: 1,
-    employees_rol_id_rol: '',
-    employee_cc: '',
+    employees_rol_id_rol: 4,
+    employee_cc: null,
+    table_id_device: null, // ID de la mesa si se está editando
+    table_number: null, // Número de la mesa si se está editando
 });
 
 
-const employeSchema = toTypedSchema(
+// Schema de validación adaptado para las mesas
+const loginSchema = toTypedSchema(
     z
         .object({
             employe_name: z
@@ -134,64 +120,57 @@ const employeSchema = toTypedSchema(
                     z.number()
                 ])
                 .nullable()
-                .refine(val => val !== null, {
-                    message: 'Debe seleccionar un rol',
+                .refine(val => val !== null && val === 4, {
+                    message: 'Debe seleccionar un rol y debe ser de tipo Login 4',
                 }),
-
-            employee_cc: z
-                .union([
-                    z
-                        .string()
-                        .min(6, 'Debe tener al menos 6 caracteres')
-                        .regex(/^\d+$/, 'Solo se permiten números'),
-                    z
-                        .number()
-                        .refine(val => String(val).length >= 6, 'Debe tener al menos 6 dígitos')
-                ])
-                .transform(val => String(val)),
         })
 );
 
+// Función de envío adaptada para crear una mesa
 const onFormSubmit = async (values) => {
     isLoading.value = true;
-
     try {
         await employeStore.addEmploye(values);
-        emits('completed'); // Emitir el evento de completado
-        addToast({
-            message: 'Empleado creado exitosamente',
-            title: 'Exito',
-            type: 'info',
-            duration: 2000
+        emits('completed');
+        alert.show({
+            variant: 'success',
+            title: 'Login Creado',
+            message: `La mesa #${values.table_number} ahora puede accederse mediante un dispositivo de mesa.`,
         });
-
     } catch (error) {
-        console.error("Error al crear empleado:", error);
 
         alert.show({
             variant: 'error',
-            title: 'Error al crear empleado',
-            message: error?.message || 'Ocurrió un error al crear el empleado. Inténtalo de nuevo más tarde.',
+            title: 'Error al crear el login',
+            message: error?.message || 'Ocurrió un error al crear el login de la mesa. Inténtalo de nuevo más tarde.',
         });
-        // Si la API devuelve errores de campo, los puedes setear en el formulario:
-        // por ejemplo: form.setErrors(error.response.data.errors)
     } finally {
         isLoading.value = false;
     }
 };
 
 
+watch(
+  () => props.currentTable,
+  (newVal) => {
+    if (newVal && newVal !== null) {
 
-onMounted(async () => {
+        loginData.value.table_id_device = newVal.id_table || null;
+        loginData.value.table_number = newVal.table_number || '';
 
-    if (roles.value?.length === 0 || roles.value === null) {
-        await employeStore.fetchRoles();
+      
     }
-    if (states.value?.length === 0 || states.value === null) {
-        await employeStore.fetchStates();
+  },
+  { immediate: true } // ← Para que corra también al montar si ya viene seteado
+);
+
+onMounted(() => {
+
+    if (states.value.length === 0) {
+        employeStore.fetchStates();
     }
 
-})
+});
 
 
 

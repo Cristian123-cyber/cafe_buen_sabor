@@ -71,7 +71,7 @@ const filteredProducts = computed(() => {
 
   return productStore.products.filter(product => {
     const matchesCategory =
-      categoryId === null || product.product_category === categoryId;
+      (categoryId === null || categoryId === 0) || product.product_category === categoryId;
 
     const matchesSearch =
       product.product_name.toLowerCase().includes(search);
@@ -89,7 +89,7 @@ const hasFetched = ref(false);
 const searchTerm = ref('');
 
 
-const selectedCategory = ref(null);
+const selectedCategory = ref(0);
 
 
 const handleViewProduct = (id_product) => {

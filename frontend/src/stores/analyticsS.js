@@ -43,6 +43,20 @@ export const useAnalyticsStore = defineStore("analytics", () => {
     }
   };
 
+  const fetchSummary = async () => {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const data = await analyticsService.getDashboardSummary();
+      summary.value = data;
+    } catch (error) {
+      error.value = "Error al cargar el resumen del dashboard.";
+      console.error(error);
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
   const fetchYearlyRevenueData = async (options) => {
     loadingYearlyRevenue.value = true;
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -119,7 +133,8 @@ export const useAnalyticsStore = defineStore("analytics", () => {
     fetchDashboardData,
     fetchYearlyRevenueData,
     fetchTopProductsData,
-    fetchTopWaiters
+    fetchTopWaiters,
+    fetchSummary,
 
 
   };

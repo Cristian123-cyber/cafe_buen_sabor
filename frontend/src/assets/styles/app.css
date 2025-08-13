@@ -106,7 +106,7 @@
 
    /*INDICACIONES DE COMO USAR EL THEME:
 
-No uses var(--variable) eso no sirve aqui, usalo directamente sobre las utildiades de tailwind en el @apply ejemplo: bg-accent, text-accent, etc*/
+No uses var(--variable) ni theme() eso no sirve aqui, usalo directamente sobre las utildiades de tailwind en el @apply ejemplo: bg-accent, text-accent, etc*/
 }
 
 

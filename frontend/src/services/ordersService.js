@@ -1,4 +1,4 @@
-import api from './api.js'; // Tu instancia de Axios configurada
+import api from "./api.js"; // Tu instancia de Axios configurada
 
 /**
  * product-service.js
@@ -13,26 +13,30 @@ export const orderService = {
    */
   createOrder: async (data) => {
     try {
-      const response = await api.post('/orders', data);
+      const response = await api.post("/orders", data);
       console.log(response);
       return response.data;
     } catch (error) {
-      console.error('Error al crear la orden:', error.response?.data || error.message);
+      console.error(
+        "Error al crear la orden:",
+        error.response?.data || error.message
+      );
       throw error; // Lanza el error para que el store lo maneje
     }
   },
-
 
   getAllOrders: async () => {
     try {
-      const response = await api.get('/orders');
+      const response = await api.get("/orders");
       return response.data;
     } catch (error) {
-      console.error('Error al obtener la ordenesssss:', error.response?.data || error.message);
+      console.error(
+        "Error al obtener la ordenesssss:",
+        error.response?.data || error.message
+      );
       throw error; // Lanza el error para que el store lo maneje
     }
   },
-
 
   getOrdersBySessionId: async (id) => {
     try {
@@ -40,10 +44,11 @@ export const orderService = {
       console.warn(response.data);
       return response.data;
     } catch (error) {
-      console.error('Error al obtener la orden:', error.response?.data || error.message);
+      console.error(
+        "Error al obtener la orden:",
+        error.response?.data || error.message
+      );
       throw error; // Lanza el error para que el store lo maneje
     }
-
-  }
-
-}
+  },
+};

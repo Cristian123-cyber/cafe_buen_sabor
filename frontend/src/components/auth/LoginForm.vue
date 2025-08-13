@@ -43,18 +43,7 @@
                 </BaseButton>
             </template>
 
-            <template #footer>
-                <div class="dev-options">
-                    <span class="dev-options-title">Opciones de Desarrollo</span>
-                    <div class="flex gap-2 justify-center flex-wrap">
-
-                        <button @click.prevent="devLogin('Administrador')" class="dev-button">Admin</button>
-                        <button @click.prevent="devLogin('Mesero')" class="dev-button">Mesero</button>
-                        <button @click.prevent="devLogin('Cocinero')" class="dev-button">Cocinero</button>
-                        <button @click.prevent="devLogin('Cajero')" class="dev-button">Cajero</button>
-                    </div>
-                </div>
-            </template>
+            
 
 
         </BaseForm>
@@ -69,7 +58,7 @@ import { useAuthStore } from '../../stores/authS'; // <- Asegúrate que la ruta 
 import { useAuth } from '../../composables/useAuth';
 import { useAlert } from '../../composables/useAlert'; // <- Y esta también
 import { useRouter } from 'vue-router';
-const { fakeLogin, login } = useAuth();
+const { login } = useAuth();
 
 
 // Stores y Composables
@@ -117,12 +106,7 @@ const handleLogin = async (values) => {
     }
 };
 
-const devLogin = (role) => {
 
-
-    fakeLogin(role)
-
-}
 </script>
 
 <style scoped>

@@ -1,4 +1,4 @@
-import api from './api.js'; // Tu instancia de Axios configurada
+import api from "./api.js"; // Tu instancia de Axios configurada
 
 /**
  * product-service.js
@@ -11,12 +11,16 @@ export const productService = {
    * Corresponde a: GET /api/products
    * @returns {Promise<Array>} Una promesa que resuelve a un array de productos.
    */
-  fetchProducts: async () => {
+  fetchProducts: async (params) => {
     try {
-      const response = await api.get('/productos');
+      const response = await api.get("/productos", { params: params });
+      console.log(response.data);
       return response.data;
     } catch (error) {
-      console.error('Error al obtener los productos:', error.response?.data || error.message);
+      console.error(
+        "Error al obtener los productos:",
+        error.response?.data || error.message
+      );
       throw error; // Lanza el error para que el store lo maneje
     }
   },
@@ -28,10 +32,40 @@ export const productService = {
    */
   fetchCategories: async () => {
     try {
-      const response = await api.get('/categorias-productos');
+      const response = await api.get("/categorias-productos");
       return response.data;
     } catch (error) {
-      console.error('Error al obtener las categorías:', error.response?.data || error.message);
+      console.error(
+        "Error al obtener las categorías:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+  fetchIngredients: async () => {
+    try {
+      const response = await api.get("/ingredientes");
+
+      return response.data.data;
+    } catch (error) {
+      console.error(
+        "Error al obtener las categorías:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+  fetchTypes: async () => {
+    try {
+      const response = await api.get("/products/types");
+
+      console.log(response.data.data);
+      return response.data.data;
+    } catch (error) {
+      console.error(
+        "Error al obtener las categorías:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -45,10 +79,35 @@ export const productService = {
   createProduct: async (productData) => {
     try {
       // Usualmente para archivos se usa 'multipart/form-data', pero si solo es data, JSON está bien.
-      const response = await api.post('/products', productData);
+      const response = await api.post("/productos", productData);
+      console.log('RESPUESTA SERVICE: ', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error al crear el producto:', error.response?.data || error.message);
+      console.error(
+        "Error al crear el producto:",
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+
+  uploadImage: async (img, productID) => {
+    try {
+      const formData = new FormData();
+      formData.append("image", img); // "image" es el nombre que tu backend espera
+
+      const response = await api.post(`/productos/${productID}/image`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        }
+      });
+      console.log("RESPONDE IMAGE UPLOAD: ", response.data);
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Error al subir imagen del producto:",
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -65,7 +124,10 @@ export const productService = {
       const response = await api.put(`/products/${id}`, productData);
       return response.data;
     } catch (error) {
-      console.error(`Error al actualizar el producto ${id}:`, error.response?.data || error.message);
+      console.error(
+        `Error al actualizar el producto ${id}:`,
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -81,25 +143,25 @@ export const productService = {
       const response = await api.delete(`/products/${id}`);
       return response.data; // El backend podría devolver un mensaje de éxito
     } catch (error) {
-      console.error(`Error al eliminar el producto ${id}:`, error.response?.data || error.message);
+      console.error(
+        `Error al eliminar el producto ${id}:`,
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
 
-
-
   getProductById: async (id) => {
-
     try {
       const response = await api.get(`/productos/${id}`);
-      console.warn('data individual: ', response.data);
+      console.warn("data individual: ", response.data);
       return response.data; // El backend podría devolver un mensaje de éxito
     } catch (error) {
-      console.error(`Error al obtener el producto ${id}:`, error.response?.data || error.message);
+      console.error(
+        `Error al obtener el producto ${id}:`,
+        error.response?.data || error.message
+      );
       throw error;
     }
-
-
-
-  }
+  },
 };

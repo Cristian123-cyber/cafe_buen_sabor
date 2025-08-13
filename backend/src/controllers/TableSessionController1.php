@@ -65,6 +65,7 @@ class TableSessionController1 extends BaseController
                     return;
                 }
                 $this->tableModel->updateTable($tableData['id_table'], ['table_status' => 'OCCUPIED']);
+                $this->tableModel->updateTable($tableData['id_table'], ['token_expiration' => null]);
 
                 $session = ['id_session' => $sessionId, 'id_table' => $tableData['id_table']];
             }

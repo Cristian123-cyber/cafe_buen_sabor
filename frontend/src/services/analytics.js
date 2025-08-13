@@ -5,62 +5,21 @@ import api from "./api.js";
 export const analyticsService = {
   getDashboardSummary: async () => {
     try {
-      //const response = await api.get('/analytics/dashboard-summary');
-
-      const response = {
-        data: {
-          revenue: {
-            title: "Ingresos (Hoy)",
-            value: "$1,777",
-            trend: {
-              value: 15.1,
-              text: "vs ayer",
-            },
-          },
-          totalOrders: {
-            title: "Pedidos Totales",
-            value: "84",
-            trend: {
-              value: -5.2,
-              text: "vs ayer",
-            },
-          },
-          activeTables: {
-            title: "Mesas Activas",
-            value: "12 / 20",
-            progress: 60,
-            text: "60% de ocupación",
-            trend: null, // La tendencia es nula para esta métrica de tipo snapshot
-          },
-          averageTicket: {
-            title: "Ticket Promedio",
-            value: "$14.89",
-            trend: {
-              value: 3.2,
-              text: "vs ayer",
-            },
-          },
-        },
-      };
-      return response.data;
+      const response = await api.get('/analytics/dashboard-summary');
+     
+      return response.data.data;
     } catch (error) {
       console.error("Error fetching dashboard summary:", error);
       throw error;
     }
   },
 
-  getYearlyRevenueData: async (options) => {
+  getYearlyRevenueData: async (options = {}) => {
     try {
-
-      /* const [yearlyRevenue, topWaiters] = await Promise.all([
-        api.get(`/analytics/yearly-revenue?year=${options.yearlyRevenue.year}`),
-        api.get(`/analytics/top-waiters?period=${options.topWaiters.period}`),
-      ]); */
-      //const response = await api.get('/analytics/dashboard-summary');
-
-
-      
-
+/* 
+      const response = await api.get(`/analytics/yearly-revenue?${options.year ? `year=${options.year}` : ''}`);
+      console.log("Yearly revenue data fetched:", response.data);
+ */
       const response = {
         data: {
           monthlyRevenue: {
@@ -96,10 +55,12 @@ export const analyticsService = {
     }
   },
 
-  getTopProductsData: async (options) => {
+  getTopProductsData: async (options = {}) => {
 
     try {
-      //const response = await api.get('/analytics/dashboard-summary');
+      /* const response = await api.get(`/analytics/top-products?limit=5&${options.period ? `period=${options.period}` : ''}`);
+
+      console.log("Top products data fetched:", response.data); */
 
       const response = {
         data: {
@@ -134,11 +95,12 @@ export const analyticsService = {
 
   },
 
-  getTopWaitersData: async (options) => {
+  getTopWaitersData: async (options = {}) => {
     try {
-      //const response = await api.get('/analytics/dashboard-summary');
+      /* const response = await api.get(`/analytics/top-waiters?${options.period ? `period=${options.period}` : ''}`);
 
-      const response = {
+      console.log("Top waiters data fetched:", response.data); */
+     const response = {
         data: {
           topWaiters: {
             waiters: [

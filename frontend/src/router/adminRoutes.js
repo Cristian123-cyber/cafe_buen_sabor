@@ -29,12 +29,12 @@ export default [
     component: () => import('../views/admin/AdminReports.vue'),
     meta: { requiresAuth: true, roles: ["Administrador"], title: 'Reportes' }, 
   },
-  {
+  /* {
     path: '/admin/ingredients',
     name: 'AdminIngredients',
     component: () => import('../views/admin/AdminIngredients.vue'),
     meta: { requiresAuth: true, roles: ["Administrador"], title: 'Ingredientes' }, 
-  },
+  }, */
   {
     path: '/admin/ordenes',
     name: 'AdminOrders',
@@ -47,11 +47,4 @@ export default [
     component: () => import('../views/admin/AdminSales.vue'),
     meta: { requiresAuth: true, roles: ["Administrador"], title: 'Ventas' }, 
   },
-  {
-    path: '/admin/sesiones',
-    name: 'AdminSessions',
-    component: () => import('../views/admin/AdminSessions.vue'),
-    meta: { requiresAuth: true, roles: ["Administrador"], title: 'Sesiones' }, 
-  },
-  
 ];

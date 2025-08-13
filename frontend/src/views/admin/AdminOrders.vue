@@ -2,6 +2,8 @@
 
 <script setup>
 
+
+
 </script>
 
 <template>
@@ -13,59 +15,34 @@
 
     
 
-      
-      <div class="p-8 bg-surface-darker rounded-lg shadow-inner">
-        <h1 class="text-4xl font-bold text-text">j de Prueba USERS</h1>
-        <p class="mt-4 text-text-muted">
-          Este es el contido pripal de la página. El sidebar debería estar a la izquierda en desktop
-          y deslizable en móvil.
-        </p>
-        <div class="mt-6">
-          <p class="text-text">Intenta cambiar el rol del usuario en Pinia DevTools para ver cómo cambia la navegación del sidebar dinámicamente.</p>
-        </div>
-      </div>
-      <div class="p-8 bg-surface-darker rounded-lg shadow-inner">
-        <h1 class="text-4xl font-bold text-text">j de Prueba</h1>
-        <p class="mt-4 text-text-muted">
-          Este es el contido pripal de la página. El sidebar debería estar a la izquierda en desktop
-          y deslizable en móvil.
-        </p>
-        <div class="mt-6">
-          <p class="text-text">Intenta cambiar el rol del usuario en Pinia DevTools para ver cómo cambia la navegación del sidebar dinámicamente.</p>
-        </div>
-      </div>
-      <div class="p-8 bg-surface-darker rounded-lg shadow-inner">
-        <h1 class="text-4xl font-bold text-text">j de Prueba</h1>
-        <p class="mt-4 text-text-muted">
-          Este es el contido pripal de la página. El sidebar debería estar a la izquierda en desktop
-          y deslizable en móvil.
-        </p>
-        <div class="mt-6">
-          <p class="text-text">Intenta cambiar el rol del usuario en Pinia DevTools para ver cómo cambia la navegación del sidebar dinámicamente.</p>
-        </div>
-      </div>
-      <div class="p-8 bg-surface-darker rounded-lg shadow-inner">
-        <h1 class="text-4xl font-bold text-text">j de Prueba</h1>
-        <p class="mt-4 text-text-muted">
-          Este es el contido pripal de la página. El sidebar debería estar a la izquierda en desktop
-          y deslizable en móvil.
-        </p>
-        <div class="mt-6">
-          <p class="text-text">Intenta cambiar el rol del usuario en Pinia DevTools para ver cómo cambia la navegación del sidebar dinámicamente.</p>
-        </div>
-      </div>
-      <div class="p-8 bg-surface-darker rounded-lg shadow-inner">
-        <h1 class="text-4xl font-bold text-text">j de Prueba</h1>
-        <p class="mt-4 text-text-muted">
-          Este es el contido pripal de la página. El sidebar debería estar a la izquierda en desktop
-          y deslizable en móvil.
-        </p>
-        <div class="mt-6">
-          <p class="text-text">Intenta cambiar el rol del usuario en Pinia DevTools para ver cómo cambia la navegación del sidebar dinámicamente.</p>
-        </div>
-      </div>
+     <div class="dashboard-container">
+
+      <HeaderSection title="Gestión de ordenes"
+        descriptionMessage="Administra la información de las ordenes del local.">
+
+      </HeaderSection>
+
+<!-- 
+      <ToolsBar v-model:searchTerm="searchTerm" placeholderSearch="Nombre, ID..."
+        v-model:selectedRole="selectedCategory" :roleOptions="categoryOptions" :loading="isLoading"
+        buttonCreateText="Crear Producto" searchLabel="Buscar productos" @create="handleCreate">
+      </ToolsBar> -->
+
+
+     </div>
       
       
     
   </AppLayout>
 </template>
+
+
+<style scoped>
+@reference "../../style.css";
+
+/* Contenedor principal de todo el dashboard */
+.dashboard-container {
+  @apply flex flex-col gap-6 lg:gap-8;
+}
+
+</style>

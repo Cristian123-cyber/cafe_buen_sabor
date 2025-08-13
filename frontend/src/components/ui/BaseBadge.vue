@@ -71,7 +71,7 @@ const badgeClasses = computed(() => [
 .badge {
   @apply inline-flex items-center justify-center rounded-full font-semibold;
   /* Transiciones suaves para el cambio de tamaño y color */
-  @apply transition-all duration-200 ease-out;
+  @apply transition-all duration-300 ease-out;
   /* Efecto de crecimiento al pasar el cursor */
   @apply hover:scale-105;
   /* Promueve el elemento a una capa de GPU para un transform más suave */

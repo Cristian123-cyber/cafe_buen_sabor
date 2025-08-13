@@ -1,8 +1,13 @@
-<!-- src/components/role-specific/admin/EmployeesTable.vue -->
 <script setup>
 import { ref, computed } from 'vue';
+import { useFormatters } from '../../../utils/formatters.js';
 
-
+import MdiShieldCrown from '~icons/mdi/shield-crown';
+import MdiCashRegister from '~icons/mdi/cash-register';
+import MdiRoomService from '~icons/mdi/room-service';
+import MdiChefHat from '~icons/mdi/chef-hat';
+import MdiTabletDashboard from '~icons/mdi/tablet-dashboard';
+import MdiAccountCircle from '~icons/mdi/account-circle';
 
 // --- PROPS Y EMITS ---
 const props = defineProps({
@@ -18,82 +23,100 @@ const props = defineProps({
 
 const emit = defineEmits(['edit', 'delete', 'change-password']);
 
-// --- CONFIGURACIÓN DE LA TABLA ---
+// --- HELPERS ---
+const { formatDate } = useFormatters();
 
-// Definimos las columnas que queremos mostrar. La propiedad 'key' debe coincidir
-// con la clave en el objeto de datos del empleado.
+// --- CONFIGURACIÓN DE LA TABLA ---
+// Se crea una columna 'employee' para agrupar nombre y email, mejorando la presentación.
 const columns = ref([
-    { key: 'id_employe', label: 'ID' },
-    { key: 'employe_name', label: 'Nombre' },
-    { key: 'employee_cc', label: 'Cedula' },
-    { key: 'employe_email', label: 'Email' },
+    { key: 'employee', label: 'Empleado' },
+    { key: 'employee_cc', label: 'Cédula' },
     { key: 'rol_name', label: 'Rol' },
-    { key: 'created_date', label: 'Fecha registro' },
+    { key: 'created_date', label: 'Fecha de Registro' },
     { key: 'status_name', label: 'Estado' },
     { key: 'actions', label: 'Acciones' },
 ]);
 
-// --- LÓGICA DE ESTILOS ---
+// --- LÓGICA DE ESTILOS Y DATOS ---
 
-// Mapeo de estados a clases de Tailwind para los badges.
-// Esto centraliza la lógica de estilos y la hace fácil de mantener.
-const statusClasses = computed(() => ({
-    1: 'success',
-    2: 'neutral',
-    3: 'error',
+// Mapeo de estados a colores de los badges. Es más legible usar el nombre del estado.
+const statusClasses = {
+    'Activo': 'success',
+    'Inactivo': 'neutral',
+    'Eliminado': 'error',
     // Añade otros estados si los tienes
-}));
+};
 
+// Mapeo de roles a colores y un icono representativo para cada uno.
+// Usar el nombre del rol como clave hace el código más semántico y fácil de mantener.
+const roleConfig = {
+    'Administrador': { color: 'primary', icon: MdiShieldCrown },
+    'Cajero': { color: 'info', icon: MdiCashRegister },
+    'Mesero': { color: 'warning', icon: MdiRoomService },
+    'Cocinero': { color: 'success', icon: MdiChefHat },
+    'Dispositivo': { color: 'secondary', icon: MdiTabletDashboard },
+    'default': { color: 'neutral', icon: MdiAccountCircle }
+};
 
-const rolesClasses = computed(() => ({
-    1: 'warning',
-    2: 'primary',
-    3: 'info',
-    4: 'secondary',
-    5: 'success',
-}))
+// Función para obtener la configuración del rol de manera segura.
+const getRoleConfig = (roleName) => {
+    return roleConfig[roleName] || roleConfig.default;
+};
+
+// Función para obtener el color del estado de forma segura.
+const getStatusClass = (statusName) => {
+    return statusClasses[statusName] || 'neutral';
+};
 
 </script>
 
 <template>
     <BaseTable :columns="columns" :data="employees" :loading="loading" track-by="id_employe" size="md" hover>
-        <!-- 
-      Aquí es donde ocurre la magia. Personalizamos CÓMO se ve cada celda
-      usando los slots que nos proporciona BaseTable.
-    -->
+        <!--
+        Se refactorizan los slots para una presentación más limpia y profesional,
+        aprovechando los nuevos mapeos y el formatter de fechas.
+        -->
 
-
-
-        <!-- Slot para la celda de estado (renderiza un badge de color) -->
-        <template #cell(status_name)="{ value, row }">
-            <span class="flex items-center gap-2">
-                <BaseBadge :color="statusClasses[row.employees_statuses_id_status]" dot />
-                {{ value }}
-            </span>
-
-
-
+        <!-- Slot para la celda de Empleado: combina un avatar con nombre y email. -->
+        <template #cell(employee)="{ row }">
+            <div class="employee-info">
+                <div class="user-avatar">
+                    <!-- Icono dinámico según el rol para una rápida identificación visual -->
+                    <component :is="getRoleConfig(row.rol_name).icon" class="w-6 h-6 text-white" />
+                </div>
+                <div class="employee-details">
+                    <span class="employee-name">{{ row.employe_name }}</span>
+                    <span class="employee-email">{{ row.employe_email }}</span>
+                </div>
+            </div>
         </template>
 
-        <template #cell(rol_name)="{ row, value }">
-
-            <BaseBadge :color="rolesClasses[row.employees_rol_id_rol]">
-                <template #icon><i-mdi-account class="w-4 h-4" /></template>
+        <!-- Slot para la celda de Rol: usa BaseBadge con color e icono dinámico. -->
+        <template #cell(rol_name)="{ value }">
+            <BaseBadge :color="getRoleConfig(value).color">
+                <template #icon>
+                    <component :is="getRoleConfig(value).icon" class="w-4 h-4" />
+                </template>
                 {{ value }}
             </BaseBadge>
         </template>
 
+        <!-- Slot para la celda de Fecha: utiliza el formatter para un formato consistente. -->
         <template #cell(created_date)="{ value }">
-            <span class="text-text">
-                {{ new Date(value).toLocaleDateString('es-ES', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                }) }}
+            <span v-if="value" class="text-text-muted">
+                {{ formatDate(value, 'short') }}
             </span>
+            <span v-else class="text-text-muted italic">—</span>
         </template>
 
-        <!-- Slot para la celda de acciones (botones de editar y eliminar) -->
+        <!-- Slot para la celda de Estado: renderiza un badge con punto de color. -->
+        <template #cell(status_name)="{ value }">
+            <BaseBadge :color="getStatusClass(value)" size="sm" class="status-badge">
+                {{ value }}
+            </BaseBadge>
+        </template>
+
+        <!-- Slot para la celda de Acciones: sin cambios funcionales, solo semánticos. -->
         <template #cell(actions)="{ row }">
             <div class="flex items-center justify-start gap-2">
                 <BaseButton @click="emit('edit', row)" variant="success" size="icon" aria-label="Editar empleado">
@@ -102,11 +125,10 @@ const rolesClasses = computed(() => ({
 
                 <BaseButton @click="emit('change-password', row)" variant="secondary" size="icon"
                     aria-label="Cambiar Contraseña">
-
                     <i-ri-key-fill class="w-5 h-5" />
                 </BaseButton>
-                <BaseButton @click="emit('delete', row)" variant="danger" size="icon" aria-label="Desactivar empleado">
 
+                <BaseButton @click="emit('delete', row)" variant="danger" size="icon" aria-label="Desactivar empleado">
                     <i-mdi-trash class="w-5 h-5" />
                 </BaseButton>
             </div>
@@ -118,15 +140,26 @@ const rolesClasses = computed(() => ({
 <style scoped>
 @reference "../../../style.css";
 
-.user-avatar {
-    @apply flex-shrink-0 w-10 h-10 rounded-full bg-accent flex items-center justify-center;
-    @apply border-2 border-white ring-1 ring-border;
+.employee-info {
+    @apply flex items-center gap-4;
 }
 
+.user-avatar {
+    @apply flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center;
+    @apply bg-primary;
+    /* Un color base genérico, el icono da el contexto */
+    @apply border-2 border-white ring-1 ring-border-light;
+}
 
+.employee-details {
+    @apply flex flex-col;
+}
 
-.action-button {
-    @apply p-2 rounded-full text-text-muted transition-colors duration-200;
-    @apply hover:bg-accent hover:text-primary;
+.employee-name {
+    @apply font-semibold text-text;
+}
+
+.employee-email {
+    @apply text-sm text-text-muted;
 }
 </style>

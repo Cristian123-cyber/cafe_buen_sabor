@@ -38,7 +38,7 @@
 
 <script setup>
 
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { defineProps, defineEmits, defineOptions, computed } from 'vue';
 import { useField } from 'vee-validate';
 
@@ -86,5 +86,6 @@ const emit = defineEmits();
 // --- MÉTODOS DE ADAPTABILIDAD ---
 const getOptionValue = (option) => option[props.optionValue];
 const getOptionLabel = (option) => option[props.optionLabel];
+
 
 </script>

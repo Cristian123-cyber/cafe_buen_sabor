@@ -58,9 +58,12 @@ import { useEmployeStore } from '../../../../stores/employeesS';
 import * as z from 'zod';
 import { storeToRefs } from 'pinia';
 import { useAlert } from '../../../../composables/useAlert';
+import { useToasts } from '../../../../composables/useToast';
 const alert = useAlert();
 const isLoading = ref(false);
 const employeStore = useEmployeStore();
+
+const { addToast } = useToasts();
 
 const { roles, states } = storeToRefs(employeStore);
 
@@ -145,10 +148,11 @@ const onFormSubmit = async (values) => {
     try {
         await employeStore.editEmploye(values.id_employe, values);
         emits('completed'); // Emitir el evento de completado
-        alert.show({
-            variant: 'success',
-            title: 'Empleado editado',
-            message: `El empleado ${values.employe_name} ha sido editado exitosamente.`,
+       addToast({
+            message: 'El empleado ha sido actualizado exitosamente',
+            title: 'Exito',
+            type: 'info',
+            duration: 2000
         });
 
 

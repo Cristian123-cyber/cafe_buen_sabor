@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { employeService } from "../services/employees";
 
 export const useEmployeStore = defineStore("employees", () => {
@@ -7,9 +7,11 @@ export const useEmployeStore = defineStore("employees", () => {
   const employees = ref([]);
   const roles = ref([]);
   const states = ref([]);
-  const filterTerm = ref(null);
-  const filterRol = ref(null);
-  const filterState = ref(null);
+  const filterTerm = ref('');
+  const filterRol = ref(0);
+  const filterState = ref(0);
+
+ 
 
   const isLoading = ref(false);
   const error = ref(null);
@@ -32,16 +34,20 @@ export const useEmployeStore = defineStore("employees", () => {
     fetchEmployees();
   };
 
+  
+
   //ACTIONS
 
   const fetchEmployees = async (
+    showLoading = true,
     filters = {
-      term: filterTerm.value,
+      term: filterTerm.value, 
       role: filterRol.value !== 0 ? filterRol.value : null,
       state: filterState.value !== 0 ? filterState.value : null,
     }
+    
   ) => {
-    isLoading.value = true;
+    isLoading.value = showLoading;
     error.value = null;
 
     const params = {
@@ -141,7 +147,6 @@ export const useEmployeStore = defineStore("employees", () => {
   };
 
   const editEmploye = async (id, data) => {
-    isLoading.value = true;
     error.value = null;
 
     try {
@@ -149,18 +154,16 @@ export const useEmployeStore = defineStore("employees", () => {
 
       if (result.success) {
         //employees.value.push(data);
-        fetchEmployees();
+        fetchEmployees(false);
       }
     } catch (e) {
       console.log(e);
       error.value = e;
-    } finally {
-      isLoading.value = false;
     }
   };
 
   const deleteEmploye = async (id) => {
-    isLoading.value = true;
+
     error.value = null;
 
     try {
@@ -168,20 +171,19 @@ export const useEmployeStore = defineStore("employees", () => {
 
       if (result.success) {
         //employees.value.push(data);
-        fetchEmployees();
+        fetchEmployees(false);
       }
     } catch (e) {
       console.log(e);
       throw new Error(e.response?.data?.message || "Error al eliminar empleado");
 
-    } finally {
-      isLoading.value = false;
     }
   };
 
   return {
     filterTerm,
     filterRol,
+    filterState,
     employees,
     isLoading,
     error,

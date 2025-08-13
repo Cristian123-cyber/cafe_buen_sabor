@@ -3,9 +3,12 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useEmployeStore } from '../../stores/employeesS';
 import { useAlert } from '../../composables/useAlert';
+import { useToasts } from '../../composables/useToast';
+
+
 
 const alert = useAlert();
-
+const { addToast } = useToasts();
 
 
 
@@ -93,11 +96,12 @@ const handleDelete = async (employee) => {
 
     try {
       await employeStore.deleteEmploye(employee.id_employe);
-      alert.show({
-        variant: 'success',
-        title: 'Empleado desactivado',
-        message: `El empleado ${employee.employe_name} ha sido desactivado correctamente.`,
-      });
+      addToast({
+            message: 'Empleado desactivado exitosamente',
+            title: 'Exito',
+            type: 'info',
+            duration: 2000
+        });
     } catch (error) {
       alert.show({
         variant: 'error',
@@ -145,10 +149,16 @@ const triggerSubmit = async (form) => {
 
 }
 onMounted(() => {
-
+ 
   employeStore.fetchEmployees();
   employeStore.fetchRoles();
   employeStore.fetchStates();
+
+
+  searchTerm.value = employeStore.filterTerm;
+  selectedRole.value = employeStore.filterRol;
+  selectedState.value = employeStore.filterState;
+  console.log(employeStore.filterState);
 
 });
 
@@ -180,9 +190,7 @@ onMounted(() => {
 
       <EmployeesTable :employees="filteredEmployees" :loading="isLoading" @edit="handleEdit" @delete="handleDelete"
         @change-password="handleChangePassword">
-        <template #header>
-          <h2 class="text-lg font-semibold">Lista de Empleados</h2>
-        </template>
+        
 
       </EmployeesTable>
       <!-- Componente de Paginación -->

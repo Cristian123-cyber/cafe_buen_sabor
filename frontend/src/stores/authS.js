@@ -15,7 +15,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const authStatus = ref("idle");
   const isAuthCheckComplete = ref(false); // <--- LA BANDERA CLAVE
-  const FAKE_TOKEN = "fake-jwt-token-for-development";
+  
 
   const isAuthenticated = computed(
     () => authStatus.value === "success" && !!accessToken.value && !!user.value
@@ -66,7 +66,6 @@ export const useAuthStore = defineStore("auth", () => {
     clearAuthData,
     getDashboardRouteByRole,
     getUnauthorized,
-    FAKE_TOKEN,
     isAuthCheckComplete, // <-- aquí está la magia
   };
 });

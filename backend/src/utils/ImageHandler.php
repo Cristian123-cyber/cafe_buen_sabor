@@ -7,7 +7,7 @@ class ImageHandler
     private const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
     private const MAX_FILE_SIZE = 5242880; // 5MB
     private const UPLOAD_DIR = __DIR__ . '/../../public/images/products/';
-    private const BASE_URL = '/images/products/';
+    private const BASE_URL = 'http://localhost:8000/images/products/';
 
     /**
      * Sube una imagen y devuelve la URL

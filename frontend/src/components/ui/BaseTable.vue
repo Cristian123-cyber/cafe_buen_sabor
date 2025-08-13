@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue';
+import LoadingState from './LoadingState.vue';
 
 // --- PROPS (Sin cambios en la lógica) ---
 const props = defineProps({
@@ -64,15 +65,10 @@ const props = defineProps({
   }
 });
 
-const firstRender = ref(true);
 
 
 
-watch(() => props.data, () => {
-  if (firstRender.value) {
-    firstRender.value = false;
-  }
-});
+
 
 // --- COMPUTED (Clases CSS actualizadas para el nuevo diseño) ---
 const tableClasses = computed(() => [
@@ -89,24 +85,13 @@ const tableClasses = computed(() => [
 
 <template>
   <div class="table-wrapper">
-    <!-- Estado de carga -->
-    <div v-if="loading && firstRender" class="state-wrapper">
-        <i-svg-spinners-bars-scale-fade class="h-16 w-16 text-blue-500 opacity-80" />
-    </div>
+    
+
+    <LoadingState v-if="loading"></LoadingState>
 
     <!-- Estado vacío -->
-    <div v-else-if="!data.length" class="empty-state">
-      <slot name="empty">
-        <div class="empty-content">
-          <div class="empty-icon-container">
-            <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-            </svg>
-          </div>
-          <h3 class="empty-title">No hay datos disponibles</h3>
-          <p class="empty-description">No hay registros que mostrar.</p>
-        </div>
-      </slot>
+    <div v-else-if="!data.length">
+      <EmptyState />
     </div>
 
     <!-- Tabla principal -->
@@ -283,46 +268,6 @@ const tableClasses = computed(() => [
   @apply border-r border-border-light last:border-r-0;
 }
 
-/* === ESTADO VACÍO MEJORADO === */
-.empty-state {
-  @apply w-full rounded-xl border-2 border-dashed border-border p-12 text-center;
-  @apply transition-all duration-500;
-  @apply bg-surface-dark;
-}
-
-.empty-state:hover {
-  @apply border-accent bg-hover;
-}
-
-.empty-content {
-  @apply flex flex-col items-center gap-4 text-text-muted max-w-md mx-auto;
-}
-
-.empty-icon-container {
-  @apply w-24 h-24 mx-auto rounded-full bg-surface-darker flex items-center justify-center;
-  @apply transition-all duration-500;
-}
-
-.empty-state:hover .empty-icon-container {
-  @apply bg-accent;
-}
-
-.empty-icon {
-  @apply w-12 h-12 text-text-muted;
-  @apply transition-colors duration-500;
-}
-
-.empty-state:hover .empty-icon {
-  @apply text-text-light;
-}
-
-.empty-title {
-  @apply text-xl font-bold text-text mt-2;
-}
-
-.empty-description {
-  @apply text-sm text-text-muted leading-relaxed;
-}
 /* === RESPONSIVE PREMIUM (CARDS EN MOBILE) === */
 @media (max-width: 767px) {
   .table-container {

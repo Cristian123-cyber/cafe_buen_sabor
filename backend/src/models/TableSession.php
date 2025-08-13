@@ -35,6 +35,14 @@ class TableSession extends BaseModel
         return false;
     }
 
+    public function closeSessionByIdTable($id) {
+        $query = "UPDATE {$this->table_name} SET session_status = 'CLOSED' WHERE tables_id_table = :table_id AND session_status = 'ACTIVE'";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':table_id', $id);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
     public function deleteSession($id)
     {
         return $this->delete($id);
