@@ -93,8 +93,12 @@ import { useProductStore } from '../../../../stores/productS';
 import * as z from 'zod';
 import { storeToRefs } from 'pinia';
 import { useAlert } from '../../../../composables/useAlert';
+import { useToasts } from '../../../../composables/useToast';
+
 
 const alert = useAlert();
+const { addToast } = useToasts();
+
 const isLoading = ref(false);
 const productStore = useProductStore(); // Asume que tienes un store para productos
 
@@ -252,7 +256,7 @@ const productSchema = toTypedSchema(
                 if (data.low_stock_level <= data.critical_stock_level) {
                     ctx.addIssue({ path: ['low_stock_level'], code: 'custom', message: 'Debe ser mayor al nivel crítico' });
                 }
-                
+
             }
         })
 
@@ -286,7 +290,12 @@ const onFormSubmit = async (values) => {
         await productStore.addProduct(productPayload, product_image);
 
 
-        alert.show({ variant: 'success', title: 'Éxito', message: 'Producto creado correctamente.' });
+        addToast({
+            message: 'Mesa creada exitosamente',
+            title: 'Exito',
+            type: 'info',
+            duration: 2000
+        });
         emits('completed');
 
     } catch (error) {

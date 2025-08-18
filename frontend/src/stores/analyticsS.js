@@ -32,10 +32,12 @@ export const useAnalyticsStore = defineStore("analytics", () => {
         analyticsService.getTopProductsData()
       ]);
 
+      
+
       summary.value = summaryResult;
-      yearlyRevenue.value = yealyRevenueResult.monthlyRevenue;
-      productsTop.value = topProductsResult.productsTop;
-      topWaiters.value = topWaitersResult.topWaiters.waiters;
+      yearlyRevenue.value = yealyRevenueResult;
+      productsTop.value = topProductsResult;
+      topWaiters.value = topWaitersResult.waiters;
     } catch (e) {
       error.value = "No se pudieron cargar las métricas.";
     } finally {
@@ -63,9 +65,10 @@ export const useAnalyticsStore = defineStore("analytics", () => {
 
     try {
       const data = await analyticsService.getYearlyRevenueData(options);
+
       
 
-      yearlyRevenue.value = data.monthlyRevenue;
+      yearlyRevenue.value = data;
       
     } catch (error) {
       yearlyRevenue.value = null;
@@ -85,7 +88,9 @@ export const useAnalyticsStore = defineStore("analytics", () => {
 
     try {
       const data = await analyticsService.getTopProductsData(options);
-      productsTop.value = data.productsTop;
+     
+
+      productsTop.value = data;
       
     } catch (error) {
       productsTop.value = null;
@@ -105,7 +110,9 @@ export const useAnalyticsStore = defineStore("analytics", () => {
 
     try {
       const data = await analyticsService.getTopWaitersData(options);
-      topWaiters.value = data.topWaiters.waiters;
+     
+
+      topWaiters.value = data.waiters;
       
     } catch (error) {
       topWaiters.value = null;
