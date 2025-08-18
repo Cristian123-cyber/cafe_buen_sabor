@@ -80,7 +80,7 @@ export const productService = {
     try {
       // Usualmente para archivos se usa 'multipart/form-data', pero si solo es data, JSON está bien.
       const response = await api.post("/productos", productData);
-      console.log('RESPUESTA SERVICE: ', response.data);
+      console.log("RESPUESTA SERVICE: ", response.data);
       return response.data;
     } catch (error) {
       console.error(
@@ -96,11 +96,15 @@ export const productService = {
       const formData = new FormData();
       formData.append("image", img); // "image" es el nombre que tu backend espera
 
-      const response = await api.post(`/productos/${productID}/image`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const response = await api.post(
+        `/productos/${productID}/image`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
         }
-      });
+      );
       console.log("RESPONDE IMAGE UPLOAD: ", response.data);
       return response.data;
     } catch (error) {
@@ -121,7 +125,7 @@ export const productService = {
    */
   updateProduct: async (id, productData) => {
     try {
-      const response = await api.put(`/products/${id}`, productData);
+      const response = await api.put(`/productos/${id}`, productData);
       return response.data;
     } catch (error) {
       console.error(

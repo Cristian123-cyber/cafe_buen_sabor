@@ -39,6 +39,8 @@ const categoryOptions = computed(() => {
 //MODALS CONTROL
 
 const showCreateModal = ref(false);
+const showEditModal = ref(false);
+const currentProduct = ref(null);
 // Handlers actions
 const handleCreate = () => {
   showCreateModal.value = true;
@@ -51,6 +53,8 @@ const handleViewDetails = (product) => {
 
 const handleEdit = (product) => {
   console.log('Editar:', product);
+  currentProduct.value = product;
+  showEditModal.value = true;
   // Aquí abrirías un modal/formulario para editar el producto
 };
 
@@ -131,9 +135,6 @@ onMounted(() => {
 
         </CreateProductForm>
 
-        
-
-
         <template #footer>
           <BaseButton variant="terciary" @click="showCreateModal = false">
             Cancelar
@@ -143,6 +144,20 @@ onMounted(() => {
           </BaseButton>
         </template>
 
+      </BaseModal>
+
+      <BaseModal v-model="showEditModal" title="Editar Producto" @close="showEditModal = false" max-width="2xl" >
+        <EditProductForm ref="formEditRef" :currentProduct="currentProduct" @completed="showEditModal = false" />
+
+        <template #footer>
+          <BaseButton variant="terciary" @click="showEditModal = false">
+            Cancelar
+          </BaseButton>
+          <BaseButton @click="triggerSubmit('edit')" variant="accent" :loading="formEditRef?.isLoading">
+            Guardar
+          </BaseButton>
+        </template>
+      
       </BaseModal>
 
       <FooterDash>

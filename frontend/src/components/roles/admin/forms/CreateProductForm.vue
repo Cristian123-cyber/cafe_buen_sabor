@@ -33,7 +33,7 @@
                 </BaseFormRow>
 
                 <BaseFormRow>
-                    <BaseSelect name="product_categories_id_category" label="Categoría" :options="categories"
+                    <BaseSelect name="product_categories_id_category" label="Categoría" :options="formCategories"
                         option-label="category_name" option-value="id_category" placeholder="Selecciona una categoría">
                     </BaseSelect>
                 </BaseFormRow>
@@ -104,6 +104,13 @@ const productStore = useProductStore(); // Asume que tienes un store para produc
 
 // Referencias del store
 const { productTypes, ingredients, categories } = storeToRefs(productStore);
+const formCategories = computed(() => {
+    // Si categories.value aún no está cargado o es nulo, devuelve un array vacío.
+    if (!categories.value) return [];
+    
+    // .filter() crea un NUEVO array, sin modificar el original del store.
+    return categories.value.filter(category => category.id_category !== 0);
+});
 
 const formRef = ref();
 const emits = defineEmits(['completed']);

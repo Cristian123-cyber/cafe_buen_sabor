@@ -441,6 +441,8 @@ class ProductoController extends BaseController
 
             // Verificar que el producto existe
             $producto = $this->productoModel->getById($productId);
+                
+
             if (!$producto) {
                 $this->handleResourceNotFoundError('Producto');
                 return;
@@ -452,7 +454,12 @@ class ProductoController extends BaseController
                 return;
             }
 
+            
+
             try {
+
+                ImageHandler::deleteImage($producto['product_image_url']);
+                
                 // Subir imagen
                 $imageUrl = ImageHandler::uploadImage($_FILES['image'], $productId);
 

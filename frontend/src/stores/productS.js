@@ -144,12 +144,26 @@ export const useProductStore = defineStore("products", () => {
         newProduct.data.product_image_url = imageResult?.data?.image_url;
 
         products.value.push(newProduct.data);
-      }else{
-
-        throw new Error("Error al crear producto");
-        
-        
       }
+    } catch (e) {
+      // El error se puede propagar al componente para mostrar una notificación
+      throw new Error("Error al añadir el producto.");
+    }
+  };
+  const editProduct = async (id ,productData, productImg) => {
+    try {
+      const resultUpdate = await productService.updateProduct(id, productData);
+      console.warn('RESULT UPDATE: ', resultUpdate);
+
+      if (resultUpdate?.data?.id_product && productImg) {
+        // Subo la imagen SOLO si hay producto y archivo
+        const imageResult = await productService.uploadImage(
+          productImg,
+          resultUpdate.data.id_product
+        );
+      }
+
+      fetchProducts(false);
     } catch (e) {
       // El error se puede propagar al componente para mostrar una notificación
       throw new Error("Error al añadir el producto.");
@@ -204,6 +218,7 @@ export const useProductStore = defineStore("products", () => {
     fetchAllCategories,
     fetchAllIngredients,
     addProduct,
+    editProduct,
     removeProduct,
     getProductById,
     filterTerm,
