@@ -138,4 +138,17 @@ export const employeService = {
       throw error;
     }
   },
+
+  changePassword: async (id, data) => {
+    try {
+      const response = await api.post(`/employees/${id}/change-password`, data);
+      console.log("result cambiar pass ", response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error("Error al actualizar contraseña:", error);
+      throw error;
+    }
+
+  }
 };

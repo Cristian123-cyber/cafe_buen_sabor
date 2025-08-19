@@ -322,6 +322,14 @@ class Producto extends BaseModel
         return $result;
     }
 
+    public function deleteProduct($id)
+    {
+        $query = "UPDATE products SET product_types_id_type = 3 WHERE id_product = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
+    }
+
     /**
      * Actualiza el stock de un producto (para productos no preparados)
      */

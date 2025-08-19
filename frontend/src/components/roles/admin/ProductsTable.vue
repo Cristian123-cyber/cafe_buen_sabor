@@ -125,10 +125,7 @@ const getCategoryClass = (categoryName) => {
         <!-- Slot para la celda de Acciones: botones para interactuar con la fila -->
         <template #cell(actions)="{ row }">
             <div class="flex items-center justify-start gap-2">
-                <BaseButton @click="emit('view-details', row)" variant="secondary" size="icon"
-                    aria-label="Ver detalles del producto">
-                    <i-mdi-eye class="w-5 h-5" />
-                </BaseButton>
+               
                 <BaseButton @click="emit('edit', row)" variant="success" size="icon" aria-label="Editar producto">
                     <i-mdi-pencil class="w-5 h-5" />
                 </BaseButton>

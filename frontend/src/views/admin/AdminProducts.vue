@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia';
 import { useAlert } from '../../composables/useAlert';
 import { useProductStore } from '../../stores/productS';
 
+import { useToasts } from '../../composables/useToast';
 
 
 const productStore = useProductStore();
@@ -15,6 +16,7 @@ const { products } = storeToRefs(productStore)
 
 
 const alert = useAlert();
+const { addToast } = useToasts();
 
 const searchTerm = ref('');
 
@@ -58,9 +60,42 @@ const handleEdit = (product) => {
   // Aquí abrirías un modal/formulario para editar el producto
 };
 
-const handleDelete = (product) => {
+const handleDelete = async (product) => {
+  
+   const isConfirmed = await alert.show({
+    variant: 'warning',
+    title: '¿Desea eliminar este producto?',
+    message: 'Este producto sera eliminado del sistema. ¿Deseas continuar?',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar',
+  });
+  
 
-};
+  if (isConfirmed) {
+
+    try {
+      await productStore.removeProduct(product.id_product);
+      addToast({
+            message: `El producto ${product.product_name} ha sido eliminado exitosamente`,
+            title: 'Producto eliminado',
+            type: 'info',
+            duration: 2000
+        });
+    } catch (error) {
+      alert.show({
+        variant: 'error',
+        title: 'Error al eliminar el producto',
+        message: error?.message ? error?.message : `No se pudo eliminar el producto ${product.product_name}. Inténtalo de nuevo más tarde.`,
+      });
+
+    }
+  }
+
+
+}
+
+
+
 
 
 //form references

@@ -98,8 +98,10 @@ class EmployeeRoutes
         $router->get('/api/employees', 'EmployeesController@index');
         $router->get('/api/employees/(\d+)', 'EmployeesController@show');
         $router->post('/api/employees', 'EmployeesController@store');
+        $router->post('/api/employees/(\d+)/change-password', 'EmployeesController@changePassword');
         $router->put('/api/employees/(\d+)', 'EmployeesController@update');
         $router->delete('/api/employees/(\d+)', 'EmployeesController@delete');
+
 
         $router->get('/api/employees/filter', 'EmployeesController@filter');
         $router->get('/api/employees/tables-served', 'SalesController@tablesServedByWaiter'); //cantidad de mesas atendidas por mesero 

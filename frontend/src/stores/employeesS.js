@@ -180,6 +180,22 @@ export const useEmployeStore = defineStore("employees", () => {
     }
   };
 
+  const changePassword = async (id, data) => {
+
+    try {
+      const result = await employeService.changePassword(id, data);
+
+      return result.data;
+
+
+    }catch (e) {
+      console.log(e);
+      throw new Error(e.response?.data?.message || "Error al eliminar empleado");
+
+    }
+
+  }
+
   return {
     filterTerm,
     filterRol,
@@ -198,6 +214,7 @@ export const useEmployeStore = defineStore("employees", () => {
     deleteEmploye,
     fetchRoles,
     fetchStates,
+    changePassword,
 
     currentPage,
     perPage,

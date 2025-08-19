@@ -153,7 +153,6 @@ export const useProductStore = defineStore("products", () => {
   const editProduct = async (id ,productData, productImg) => {
     try {
       const resultUpdate = await productService.updateProduct(id, productData);
-      console.warn('RESULT UPDATE: ', resultUpdate);
 
       if (resultUpdate?.data?.id_product && productImg) {
         // Subo la imagen SOLO si hay producto y archivo
@@ -177,8 +176,7 @@ export const useProductStore = defineStore("products", () => {
   const removeProduct = async (productId) => {
     try {
       await productService.deleteProduct(productId);
-      // Filtra el producto eliminado del estado local
-      products.value = products.value.filter((p) => p.id !== productId);
+      fetchProducts(false);
     } catch (e) {
       throw new Error("Error al eliminar el producto.");
     }

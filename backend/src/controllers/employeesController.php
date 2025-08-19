@@ -266,6 +266,70 @@ class EmployeesController extends BaseController
         }, 'Error al actualizar el empleado');
     }
 
+    public function changePassword($id)
+    {
+        return $this->executeWithErrorHandling(function () use ($id) {
+
+
+            // Validar ID
+            $employeeId = $this->validateId($id);
+            if (!$employeeId) {
+                $this->handleResponse(false, 'ID de empleado inválido', [], 400);
+                return;
+            }
+
+            $data = $this->getRequestData();
+
+            $requiredFields = [
+                'new_password',
+                'confirm_password',
+            ];
+            $missingFields = $this->validateRequiredFields($data, $requiredFields);
+
+            if (!empty($missingFields)) {
+                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+                return;
+            }
+
+            $usuario = $this->usuarioModel->getById($employeeId);
+
+            if (!$usuario) {
+                $this->handleResponse(false, 'Empleado no encontrado', [], 404);
+                return;
+            }
+
+            // Primero sanitiza y valida los datos
+            $employeeDataPassword = [
+                'new_password' => $this->sanitizeString($data['new_password']),
+                'confirm_password' => $this->sanitizeString($data['confirm_password']),
+            ];
+
+
+            if (strlen($employeeDataPassword['new_password']) < 6) {
+                $this->handleResponse(false, 'La contraseña debe tener al menos 6 caracteres', [], 400);
+                return;
+            }
+
+            if ($employeeDataPassword['new_password'] !== $employeeDataPassword['confirm_password']) {
+                $this->handleResponse(false, 'Las contraseñas no coinciden', [$employeeDataPassword['new_password'], $employeeDataPassword['confirm_password']], 400);
+            }
+
+            $newPasswordHash = password_hash($employeeDataPassword['new_password'], PASSWORD_DEFAULT);
+
+
+            $updated = $this->usuarioModel->update($employeeId, ['password' => $newPasswordHash]);
+
+
+
+            if ($updated) {
+                $usuario = $this->usuarioModel->getById($employeeId);
+                $this->handleResponse(true, 'Empleado actualizado exitosamente', $usuario);
+            } else {
+                $this->handleResponse(false, 'No se pudo cambiar la contraseña del empleado', [], 500);
+            }
+        }, 'Error al cambiar contraseña el empleado');
+    }
+
     // Eliminar(desactivar) un usuario
     public function delete($id)
     {

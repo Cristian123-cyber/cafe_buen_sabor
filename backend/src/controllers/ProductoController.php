@@ -399,7 +399,7 @@ class ProductoController extends BaseController
                 return;
             }
 
-            $resultado = $this->productoModel->delete($productId);
+            $resultado = $this->productoModel->deleteProduct($productId);
 
             if ($resultado) {
                 $this->handleResponse(true, 'Producto eliminado correctamente', []);

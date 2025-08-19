@@ -4,6 +4,7 @@ import { ref, onMounted, computed, watch } from 'vue';
 import { useEmployeStore } from '../../stores/employeesS';
 import { useAlert } from '../../composables/useAlert';
 import { useToasts } from '../../composables/useToast';
+import ChangePasswordForm from '../../components/roles/admin/forms/ChangePasswordForm.vue';
 
 
 
@@ -62,6 +63,8 @@ const currentEmployee = ref(null);
 
 const formCreateRef = ref(null); // ref para el formulario hijo
 const formEditRef = ref(null); // ref para el formulario hijo
+const formPassword = ref(null); // ref para el formulario hijo
+
 
 
 watch([searchTerm, selectedRole, selectedState], ([newSearch, newRole, newState]) => {
@@ -115,8 +118,8 @@ const handleDelete = async (employee) => {
 }
 
 const handleChangePassword = (employee) => {
-  console.log('Cambiar contraseña para:', employee);
-  // Aquí abrirías el modal de cambio de contraseña
+  currentEmployee.value = employee;
+  showChangePasswordModal.value = true;
 }
 
 const handleCreate = () => {
@@ -142,6 +145,8 @@ const triggerSubmit = async (form) => {
     case 'edit':
       formEditRef.value?.submit();
       break;
+    case 'password':
+      formPassword.value?.submit();
     default:
       console.warn('No se ha definido un formulario para enviar');
       break;
@@ -231,6 +236,21 @@ onMounted(() => {
             Cancelar
           </BaseButton>
           <BaseButton @click="triggerSubmit('edit')" variant="accent" :loading="formEditRef?.isLoading">
+            Guardar
+          </BaseButton>
+        </template>
+      </BaseModal>
+      <BaseModal v-model="showChangePasswordModal" title="Cambiar contraseña">
+        <ChangePasswordForm :employee-id="currentEmployee.id_employe" :employe-name="currentEmployee.employe_name" ref="formPassword" @completed="showChangePasswordModal = false">
+
+        </ChangePasswordForm>
+
+
+        <template #footer>
+          <BaseButton variant="terciary" @click="showEditModal = false">
+            Cancelar
+          </BaseButton>
+          <BaseButton @click="triggerSubmit('password')" variant="accent" :loading="formPassword?.isLoading">
             Guardar
           </BaseButton>
         </template>

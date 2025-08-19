@@ -144,7 +144,7 @@ export const productService = {
    */
   deleteProduct: async (id) => {
     try {
-      const response = await api.delete(`/products/${id}`);
+      const response = await api.delete(`/productos/${id}`);
       return response.data; // El backend podría devolver un mensaje de éxito
     } catch (error) {
       console.error(
