@@ -400,4 +400,5 @@ onMounted(() => {
 .error-details {
   @apply text-sm text-text-light max-w-md bg-primary/80 px-3 py-2 rounded-md break-words;
 }
+
 </style>

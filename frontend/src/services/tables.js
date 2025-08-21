@@ -24,6 +24,7 @@ export const tablesService = {
   getAll: async (params) => {
     try {
       const response = await api.get("/tables", { params: params });
+      console.log('ALL MESAS: ', response.data);
 
       return response.data;
     } catch (error) {
