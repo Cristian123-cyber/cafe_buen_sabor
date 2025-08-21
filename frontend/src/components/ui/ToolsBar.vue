@@ -65,6 +65,10 @@ const props = defineProps({
         type: String,
         default: 'Crear'
     },
+    showCreate: {
+        type: Boolean,
+        default: true
+    },
     /**
      * Cuando es true, deshabilita los controles del toolbar.
      */
@@ -168,7 +172,9 @@ function clearAllFilters() {
                     Limpiar
                 </BaseButton>
 
-                <BaseButton variant="accent" size="md" @click="emit('create')" :disabled="loading">
+                
+
+                <BaseButton v-if="showCreate" variant="accent" size="md" @click="emit('create')" :disabled="loading">
 
                     <template #icon-left>
                         <slot name="create-btn-icon">
