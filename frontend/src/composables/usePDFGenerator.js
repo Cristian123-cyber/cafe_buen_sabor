@@ -1,9 +1,10 @@
 // src/composables/useReportGenerator.js
 
-import { ref } from 'vue';
+import { reactive, ref } from 'vue';
 import { analyticsService } from '../services/analytics.js';
 import { pdfGenerator } from '../utils/PDFGenerator.js';
 import { useToasts  } from './useToast.js';
+
 
 
 const { addToast } = useToasts();
@@ -15,6 +16,7 @@ const { addToast } = useToasts();
  */
 export function useReportGenerator() {
   const isLoading = ref(false);
+  
   const error = ref(null);
   
 
@@ -28,8 +30,12 @@ export function useReportGenerator() {
     isLoading.value = true;
     error.value = null;
 
+    
+
     try {
       const data = await operation();
+
+      console.log('DATAA: ', data);
       
       // Validar si la operación devolvió datos vacíos para no generar un PDF en blanco.
       if (!data || (Array.isArray(data) && data.length === 0) || (data.sales && data.sales.length === 0)) {
@@ -113,6 +119,7 @@ export function useReportGenerator() {
   const generateInventoryStatusReport = async () => {
     await _handleReportGeneration(async () => {
       const data = await analyticsService.getInventoryStatus();
+      console.log('DATAA2: ', data);
       if (data) pdfGenerator.createInventoryStatusPDF(data);
       return data;
     }, 'Reporte de Estado de Inventario generado con éxito.');

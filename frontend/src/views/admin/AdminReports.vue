@@ -7,6 +7,13 @@ import { useToasts } from '../../composables/useToast.js';
 
 const { addToast } = useToasts();
 
+const loadingFlags = ref({
+    loadingSales: false,
+    loadingInvoices: false,
+    loadingPerf: false,
+    loadingInventory: false,
+  });
+
 // 1. Importamos toda la lógica del composable
 const {
   isLoading,
@@ -175,6 +182,10 @@ const areDatesValid = (params) => {
         </ReportCard>
 
       </div>
+      <FooterDash>
+
+      </FooterDash>
+      
     </div>
   </AppLayout>
 </template>
@@ -262,38 +273,7 @@ const areDatesValid = (params) => {
   @apply transition-opacity duration-200;
 }
 
-/* Animación de entrada para las tarjetas */
-.reports-grid>* {
-  animation: fadeInUp 0.6s ease-out forwards;
-}
 
-.reports-grid>*:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.reports-grid>*:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.reports-grid>*:nth-child(3) {
-  animation-delay: 0.3s;
-}
-
-.reports-grid>*:nth-child(4) {
-  animation-delay: 0.4s;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 /* Mejoras adicionales para pantallas pequeñas */
 @media (max-width: 640px) {

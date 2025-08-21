@@ -106,7 +106,7 @@ class EmployeeRoutes
         $router->get('/api/employees/filter', 'EmployeesController@filter');
         $router->get('/api/employees/tables-served', 'SalesController@tablesServedByWaiter'); //cantidad de mesas atendidas por mesero 
         $router->get('/api/employees/(\d+)/sales-summary', 'SalesController@employeeSalesSummary');
-        
+
         // Rutas para roles de empleados
         $router->get('/api/employees/roles', 'RolesController@index');
     }
@@ -140,7 +140,7 @@ class EmployeeStatusRoutes
         $router->post('/api/estados-empleados', 'EmployeesStatusesController@store');
         $router->put('/api/estados-empleados/(\d+)', 'EmployeesStatusesController@update');
         $router->delete('/api/estados-empleados/(\d+)', 'EmployeesStatusesController@delete');
-        
+
         // Rutas para estados de empleados (solo lectura según documentación)
         $router->get('/api/employees/statuses', 'EmployeesStatusesController@index');
     }
@@ -179,7 +179,7 @@ class ProductRoutes
         // Rutas adicionales (mantener compatibilidad)
         $router->get('/api/productos/disponibles', 'ProductoController@getAvailable');
         $router->get('/api/productos/populares', 'ProductoController@getPopular');
-        
+
         // Rutas para tipos de productos
         $router->get('/api/products/types', 'ProductTypesController@index');
     }
@@ -255,11 +255,16 @@ class AnalyticsRoutes
     {
         // Dashboard principal del administrador
         $router->get('/api/analytics/dashboard-summary', 'AnalyticsController@dashboardSummary');
-        
+
         // Gráficos de analytics
         $router->get('/api/analytics/yearly-revenue', 'AnalyticsController@yearlyRevenue');
         $router->get('/api/analytics/top-waiters', 'AnalyticsController@topWaiters');
         $router->get('/api/analytics/top-products', 'AnalyticsController@topProducts');
+
+        $router->get('/api/analytics/sales-balance', 'ReportsController@salesBalance');
+        $router->get('/api/analytics/invoices-list', 'ReportsController@invoicesList');
+        $router->get('/api/analytics/employees-performance', 'ReportsController@employeesPerformance');
+        $router->get('/api/analytics/inventory-status', 'ReportsController@inventoryStatus');
     }
 }
 
@@ -329,7 +334,6 @@ class TableRoutes
         $router->put('/api/tables/(\d+)/activate', 'TablesController@activate');
         // validar token
         $router->post('/api/tables/validate-token', 'TableSessionController@validateQrAndStartSession');
-
     }
 }
 
@@ -413,13 +417,13 @@ class OrdersRoutes
         $router->get('/api/orders', 'OrderController@index'); //mostrar todos
         $router->get('/api/orders/(\d+)', 'OrderController@show'); //filtrar por id
         $router->post('/api/orders', 'OrderController@store'); //agregar
-        
+
         // Rutas de estado de pedidos
         $router->put('/api/orders/(\d+)/confirm', 'OrderController@confirm');
         $router->put('/api/orders/(\d+)/cancel', 'OrderController@cancel');
         $router->put('/api/orders/(\d+)/ready', 'OrderController@ready');
         $router->put('/api/orders/(\d+)/complete', 'OrderController@complete');
-        
+
         // Rutas específicas
         $router->get('/api/orders/status/([A-Z]+)', 'OrderController@getByStatus');
         $router->get('/api/orders/session/(\d+)', 'OrderController@getBySession');
@@ -432,7 +436,6 @@ class OrdersRoutes
 $router->before('POST', '/api/table-sessions/validate-session', function () {
 
     AccessControlMiddleware::handle([], true);
-
 });
 RouteGroup::registerAll($router);
 
