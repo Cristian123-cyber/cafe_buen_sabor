@@ -96,8 +96,6 @@ const handleDelete = async (product) => {
 
 
 
-
-
 //form references
 
 const formCreateRef = ref(null); // ref para el formulario hijo
@@ -122,6 +120,7 @@ const triggerSubmit = async (form) => {
   };
 
 }
+
 
 
 onMounted(() => {

@@ -125,7 +125,8 @@ class OrderController extends BaseController
     {
         return $this->executeWithErrorHandling(function () use ($id) {
             try {
-                $order = $this->orderModel->find($id);
+                // Traer pedido con productos y metadatos (mesa, estado, mesero)
+                $order = $this->orderModel->getByIdWithDetails($id);
                 if (!$order) {
                     $this->handleResponse(false, 'Pedido no encontrado', [], 404);
                     return;
