@@ -163,8 +163,10 @@ onUnmounted(() => {
 
       </template>
 
-      <!-- 👇 Si estoy en la subruta, se muestra TableOrders -->
-      <router-view v-else />
+      
+        <!-- 👇 Si estoy en la subruta, se muestra TableOrders -->
+        <router-view v-else />
+      
     </div>
   </AppLayout>
 </template>
@@ -176,5 +178,12 @@ onUnmounted(() => {
 /* Contenedor principal de todo el dashboard */
 .dashboard-container {
   @apply flex flex-col gap-6 lg:gap-8;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>

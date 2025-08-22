@@ -99,7 +99,7 @@ const error = computed(() => orderStore.errors.fecthOrdersCurrentSession);
  * @param {object} order - El objeto del pedido emitido por OrderCard.
  */
 const openDetailsModal = (order) => {
-    console.log(order);
+
     selectedOrder.value = order;
     isModalOpen.value = true;
 };

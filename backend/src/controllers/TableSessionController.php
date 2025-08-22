@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Table;
 use App\Models\TableSession;
 use Firebase\JWT\JWT;
+use Exception;
 
 class TableSessionController extends BaseController
 {

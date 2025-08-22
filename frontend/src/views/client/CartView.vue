@@ -194,9 +194,9 @@ const handlePlaceOrder = async () => {
 
     try {
 
-        
 
-       const result = await createOrder(dataPedido);
+
+        const result = await createOrder(dataPedido);
 
         if (result.success) {
 
@@ -212,19 +212,19 @@ const handlePlaceOrder = async () => {
 
             cartStore.clearCart();
 
-            router.replace({ name: 'ClientMenu'});
-        }else{
+            router.replace({ name: 'ClientMenu' });
+        } else {
 
             alert.show({
-            title: 'Ha ocurrido un error',
-            message: result.message ? result.message : 'Intentalo de nuevo o comunicate con el personal.',
-            variant: 'error'
-        });
+                title: 'Ha ocurrido un error',
+                message: result.message ? result.message : 'Intentalo de nuevo o comunicate con el personal.',
+                variant: 'error'
+            });
 
-            
+
 
         }
-        
+
     } catch (error) {
 
         console.log(error);
@@ -234,7 +234,7 @@ const handlePlaceOrder = async () => {
             message: error.message ? error.message : 'Intentalo de nuevo o comunicate con el personal.',
             variant: 'error'
         });
-        
+
     }
 
 

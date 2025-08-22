@@ -4,17 +4,20 @@ namespace App\Controllers;
 
 use App\Models\Table;
 use App\Models\TableSession;
+use App\Models\Order;
 use Exception;
 
 class TablesController extends BaseController
 {
     private $tableModel;
     private $tableSession;
+    private $orderModel; // <-- 2. Añade la nueva propiedad
     public function __construct()
     {
         parent::__construct();
         $this->tableModel = new Table();
         $this->tableSession = new TableSession();
+        $this->orderModel = new Order();
     }
 
     // Listar todas las mesas
@@ -165,15 +168,12 @@ class TablesController extends BaseController
                 }
                 $updateData['table_status'] = $status;
 
-                if ($updateData['table_status'] === 'FREE'){
+                if ($updateData['table_status'] === 'FREE') {
                     $updateData['qr_token'] = $this->generarTokenSeguro();
                     $updateData['token_expiration'] = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
                     $this->tableSession->closeSessionByIdTable($id);
-                   
-                    
-
-                } else if ($updateData['table_status'] === 'OCCUPIED'){
+                } else if ($updateData['table_status'] === 'OCCUPIED') {
                     $updateData['token_expiration'] = null;
                 }
             }
@@ -303,5 +303,38 @@ class TablesController extends BaseController
                 $this->handleResponse(false, 'Mesa no encontrada', [], 404);
             }
         }, 'Error al activar la mesa');
+    }
+     /**
+     * Obtiene todos los pedidos asociados a la sesión activa de una mesa.
+     * Este es el controlador para la ruta: GET /api/tables/{id}/active-orders
+     *
+     * @param int $id El ID de la mesa.
+     */
+    public function getActiveOrders($id)
+    {
+        return $this->executeWithErrorHandling(function () use ($id) {
+            // Validar el ID de la mesa
+            $tableId = $this->validateId($id);
+            if (!$tableId) {
+                $this->handleResponse(false, 'ID de mesa inválido.', [], 400);
+                return;
+            }
+
+            // Buscar la sesión activa para esta mesa
+            $activeSession = $this->tableSession->findActiveByTableId($tableId);
+
+            // Si no hay sesión activa, es un caso normal, no un error. Devolvemos un array vacío.
+            if (!$activeSession) {
+                $this->handleResponse(true, 'No hay sesión activa para esta mesa.', []);
+                return;
+            }
+
+            // Si hay sesión, obtener los pedidos usando su ID
+            $sessionId = $activeSession['id_session'];
+            $orders = $this->orderModel->getBySessionWithDetails($sessionId);
+            
+            $this->handleResponse(true, 'Pedidos de la sesión activa obtenidos correctamente.', $orders);
+
+        }, 'Error al obtener los pedidos activos de la mesa');
     }
 }

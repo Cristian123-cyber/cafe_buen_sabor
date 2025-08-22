@@ -23,7 +23,7 @@ export const ORDER_STATUS_LABELS = {
   PENDING: 'Pendiente',
   CONFIRMED: 'En Cocina',
   READY: 'Listo para Recoger',
-  DELIVERED: 'Entregado',
+  COMPLETED: 'Completado',
   CANCELLED: 'Cancelado'
 }
 

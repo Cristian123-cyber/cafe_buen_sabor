@@ -9,17 +9,23 @@ import { ORDER_STATUSES } from "../utils/constants";
  */
 export const useOrderStore = defineStore("orders", () => {
   // ===== STATE =====
-  
+
   // Todos los pedidos cargados (cache principal)
   const orders = ref([]);
 
-  // Todos los pedidos de la session de mesa actual (Solo para clientes)
+  // Todos los pedidos de la session de mesa actual
   const ordersCurrentSession = ref([]);
 
+  // State
+  const ordersForCurrentTable = ref([]);
+  // Action
+  const setOrdersForCurrentTable = (data) => {
+    ordersForCurrentTable.value = data || [];
+  };
 
   // Cola de cocina (solo pedidos CONFIRMED) (Solo cocineros)
   const kitchenQueue = ref([]);
-  
+
   // Pedidos listos para recoger (READY)
   const readyOrders = ref([]);
 
@@ -30,29 +36,21 @@ export const useOrderStore = defineStore("orders", () => {
     fetchOrders: null,
     fetchKitchenQueue: null,
     orderActions: null,
-    fecthOrdersCurrentSession: null
+    fecthOrdersCurrentSession: null,
+    fetchOrdersCurrentTable: null
   });
 
-
   // ===== COMPUTED GETTERS =====
-  
-  
-  
-  
+
   // Estadísticas rápidas
   const orderStats = computed(() => ({
     total: orders.value.length,
     ready: readyOrders.value.length,
-    delivered: deliveredOrders.value.length
+    delivered: deliveredOrders.value.length,
   }));
 
-  
-  
-  
-  
   // ===== ACTIONS =====
 
-  
   /**
    * Limpiar todos los datos del store
    */
@@ -61,56 +59,47 @@ export const useOrderStore = defineStore("orders", () => {
     kitchenQueue.value = [];
     readyOrders.value = [];
     ordersCurrentSession.value = [];
+    ordersForCurrentTable.value = [];
 
-    
     // Reset errors
-    Object.keys(errors).forEach(key => {
+    Object.keys(errors).forEach((key) => {
       errors[key] = null;
     });
   };
 
-
   const setOrdersCurrentSession = (data) => {
-
     if (!data || data === null) return;
 
     ordersCurrentSession.value = data;
-
-  }
+  };
   const setOrders = (data) => {
-
     if (!data || data === null) return;
 
     orders.value = data;
-
-  }
+  };
 
   const setKitchenQueue = (data) => {
-
     if (!data || data === null) return;
 
     kitchenQueue.value = data;
-
-  }
-
+  };
 
   // ===== RETURN STORE INTERFACE =====
-  
-  return {
 
+  return {
     //State
     orders,
     kitchenQueue,
     ordersCurrentSession,
+    ordersForCurrentTable,
     isLoading,
     errors,
-
 
     //actions
     clearStore,
     setOrdersCurrentSession,
     setOrders,
-    setKitchenQueue
-
+    setKitchenQueue,
+    setOrdersForCurrentTable
   };
 });

@@ -334,6 +334,7 @@ class TableRoutes
         $router->put('/api/tables/(\d+)/activate', 'TablesController@activate');
         // validar token
         $router->post('/api/tables/validate-token', 'TableSessionController@validateQrAndStartSession');
+        $router->get('/api/tables/(\d+)/active-orders', 'TablesController@getActiveOrders');
     }
 }
 
@@ -420,6 +421,8 @@ class OrdersRoutes
 
         // Rutas de estado de pedidos
         $router->put('/api/orders/(\d+)/confirm', 'OrderController@confirm');
+        $router->put('/api/orders/confirm-all', 'OrderController@confirmAll');
+        $router->put('/api/orders/cancel-all', 'OrderController@cancelAll');
         $router->put('/api/orders/(\d+)/cancel', 'OrderController@cancel');
         $router->put('/api/orders/(\d+)/ready', 'OrderController@ready');
         $router->put('/api/orders/(\d+)/complete', 'OrderController@complete');

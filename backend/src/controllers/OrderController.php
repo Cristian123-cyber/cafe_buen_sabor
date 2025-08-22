@@ -27,7 +27,7 @@ class OrderController extends BaseController
      */
     public function store()
     {
-        return $this->executeWithErrorHandling(function() {
+        return $this->executeWithErrorHandling(function () {
             try {
                 $data = $this->getRequestData();
                 // Validar campos requeridos según documentación
@@ -108,7 +108,7 @@ class OrderController extends BaseController
      */
     public function index()
     {
-        return $this->executeWithErrorHandling(function() {
+        return $this->executeWithErrorHandling(function () {
             $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
             $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
             $orderBy = isset($_GET['orderBy']) ? $_GET['orderBy'] : null;
@@ -123,7 +123,7 @@ class OrderController extends BaseController
      */
     public function show($id)
     {
-        return $this->executeWithErrorHandling(function() use ($id) {
+        return $this->executeWithErrorHandling(function () use ($id) {
             try {
                 $order = $this->orderModel->find($id);
                 if (!$order) {
@@ -143,7 +143,7 @@ class OrderController extends BaseController
      */
     public function ready($id)
     {
-        return $this->executeWithErrorHandling(function() use ($id) {
+        return $this->executeWithErrorHandling(function () use ($id) {
             $orderId = $this->validateId($id);
             if (!$orderId) {
                 $this->handleInvalidIdError('ID de pedido');
@@ -151,12 +151,115 @@ class OrderController extends BaseController
             }
 
             $result = $this->orderModel->updateStatus($orderId, 4); // READY
-            
+
             if ($result) {
                 $this->handleResponse(true, 'Pedido marcado como listo correctamente', $result);
             } else {
                 $this->handleResponse(false, 'Error al marcar el pedido como listo', [], 500);
             }
+        }, 'Error al marcar el pedido como listo');
+    }
+    public function confirm($id)
+    {
+        return $this->executeWithErrorHandling(function () use ($id) {
+            $orderId = $this->validateId($id);
+            if (!$orderId) {
+                $this->handleInvalidIdError('ID de pedido');
+                return;
+            }
+
+            $result = $this->orderModel->updateStatus($orderId, 2); 
+
+            if ($result) {
+                $this->handleResponse(true, 'Pedido marcado como confirmado correctamente', $result);
+            } else {
+                $this->handleResponse(false, 'Error al marcar el pedido como confirmado', [], 500);
+            }
+        }, 'Error al marcar el pedido como listo');
+    }
+    public function confirmAll()
+    {
+        return $this->executeWithErrorHandling(function () {
+            $data = $this->getRequestData();
+
+            $requiredFields = ['order_ids'];
+
+            $missingFields = $this->validateRequiredFields($data, $requiredFields);
+
+            if (!empty($missingFields)) {
+                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+                return;
+            }
+
+
+            if (!is_array($data['order_ids']) || empty($data['order_ids'])) {
+                $this->handleResponse(false, 'El campo order_ids debe ser un array no vacío', [], 400);
+                return;
+            }
+
+            $orderIds = array_map('intval', $data['order_ids']);
+
+            foreach ($orderIds as $orderId) {
+                if (!$this->orderModel->updateStatus($orderId, 2)) { // READY
+                    $this->handleResponse(false, 'Error al marcar el pedido con ID ' . $orderId . ' como confirmado', [], 500);
+                    return;
+                }
+            }
+            $this->handleResponse(true, 'Pedidos marcados como confirmados correctamente', [], 200);
+
+           
+            
+        }, 'Error al marcar el pedido como listo');
+    }
+    public function cancel($id)
+    {
+        return $this->executeWithErrorHandling(function () use ($id) {
+            $orderId = $this->validateId($id);
+            if (!$orderId) {
+                $this->handleInvalidIdError('ID de pedido');
+                return;
+            }
+
+            $result = $this->orderModel->updateStatus($orderId, 3); // READY
+
+            if ($result) {
+                $this->handleResponse(true, 'Pedido marcado como cancelado correctamente', $result);
+            } else {
+                $this->handleResponse(false, 'Error al marcar el pedido como cancelado', [], 500);
+            }
+        }, 'Error al marcar el pedido como listo');
+    }
+    public function cancelAll()
+    {
+        return $this->executeWithErrorHandling(function () {
+            $data = $this->getRequestData();
+
+            $requiredFields = ['order_ids'];
+
+            $missingFields = $this->validateRequiredFields($data, $requiredFields);
+
+            if (!empty($missingFields)) {
+                $this->handleResponse(false, 'Campos requeridos faltantes: ' . implode(', ', $missingFields), [], 400);
+                return;
+            }
+
+
+            if (!is_array($data['order_ids']) || empty($data['order_ids'])) {
+                $this->handleResponse(false, 'El campo order_ids debe ser un array no vacío', [], 400);
+                return;
+            }
+
+            $orderIds = array_map('intval', $data['order_ids']);
+
+            foreach ($orderIds as $orderId) {
+                if (!$this->orderModel->updateStatus($orderId, 3)) { // READY
+                    $this->handleResponse(false, 'Error al marcar el pedido con ID ' . $orderId . ' como cancelado', [], 500);
+                    return;
+                }
+            }
+            $this->handleResponse(true, 'Pedidos marcados como cancelados correctamente', [], 200);
+
+           
         }, 'Error al marcar el pedido como listo');
     }
 
@@ -166,7 +269,7 @@ class OrderController extends BaseController
      */
     public function complete($id)
     {
-        return $this->executeWithErrorHandling(function() use ($id) {
+        return $this->executeWithErrorHandling(function () use ($id) {
             $orderId = $this->validateId($id);
             if (!$orderId) {
                 $this->handleInvalidIdError('ID de pedido');
@@ -174,7 +277,7 @@ class OrderController extends BaseController
             }
 
             $result = $this->orderModel->updateStatus($orderId, 5); // COMPLETED
-            
+
             if ($result) {
                 $this->handleResponse(true, 'Pedido completado correctamente', $result);
             } else {
@@ -189,12 +292,12 @@ class OrderController extends BaseController
      */
     public function bindWaiter()
     {
-        return $this->executeWithErrorHandling(function() {
+        return $this->executeWithErrorHandling(function () {
             $data = $this->getRequestData();
-            
+
             $requiredFields = ['table_session_id', 'waiter_id'];
             $missingFields = $this->validateRequiredFields($data, $requiredFields);
-            
+
             if (!empty($missingFields)) {
                 $this->handleMissingFieldsError($missingFields);
                 return;
@@ -208,7 +311,7 @@ class OrderController extends BaseController
             }
 
             $result = $this->orderModel->bindWaiter($data['table_session_id'], $data['waiter_id']);
-            
+
             $this->handleResponse(true, 'Mesero asociado correctamente', $result);
         }, 'Error al asociar mesero');
     }
@@ -219,16 +322,16 @@ class OrderController extends BaseController
      */
     public function unify()
     {
-        return $this->executeWithErrorHandling(function() {
+        return $this->executeWithErrorHandling(function () {
             $data = $this->getRequestData();
-            
+
             if (!isset($data['orders_to_unify']) || !is_array($data['orders_to_unify'])) {
                 $this->handleResponse(false, 'El campo orders_to_unify es requerido y debe ser un array', [], 400);
                 return;
             }
 
             $unifiedId = $this->orderModel->unifyOrders($data['orders_to_unify']);
-            
+
             $this->handleResponse(true, 'Pedidos unificados correctamente', [
                 'unified_order_id' => $unifiedId
             ], 201);
@@ -241,7 +344,7 @@ class OrderController extends BaseController
      */
     public function getUnified($id)
     {
-        return $this->executeWithErrorHandling(function() use ($id) {
+        return $this->executeWithErrorHandling(function () use ($id) {
             $unifiedId = $this->validateId($id);
             if (!$unifiedId) {
                 $this->handleInvalidIdError('ID de orden unificada');
@@ -262,19 +365,19 @@ class OrderController extends BaseController
     }
 
     /**
- * Obtener pedidos por sesión de mesa
- * GET /api/orders/session/{id}
- */
-public function getBySession($id)
-{
-    return $this->executeWithErrorHandling(function() use ($id) {
-        $sessionId = $this->validateId($id);
-        if (!$sessionId) {
-            $this->handleInvalidIdError('ID de sesión de mesa');
-            return;
-        }
-        $orders = $this->orderModel->getBySessionWithDetails($sessionId);
-        $this->handleResponse(true, 'Pedidos de la sesión obtenidos correctamente', $orders);
-    }, 'Error al obtener pedidos de la sesión');
+     * Obtener pedidos por sesión de mesa
+     * GET /api/orders/session/{id}
+     */
+    public function getBySession($id)
+    {
+        return $this->executeWithErrorHandling(function () use ($id) {
+            $sessionId = $this->validateId($id);
+            if (!$sessionId) {
+                $this->handleInvalidIdError('ID de sesión de mesa');
+                return;
+            }
+            $orders = $this->orderModel->getBySessionWithDetails($sessionId);
+            $this->handleResponse(true, 'Pedidos de la sesión obtenidos correctamente', $orders);
+        }, 'Error al obtener pedidos de la sesión');
+    }
 }
-} 

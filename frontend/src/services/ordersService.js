@@ -51,4 +51,51 @@ export const orderService = {
       throw error; // Lanza el error para que el store lo maneje
     }
   },
+  getOrdersByTableId: async (tableId) => {
+    try {
+      const response = await api.get(`/tables/${tableId}/active-orders`);
+      return response.data;
+    } catch (error) {
+      console.error(
+        `Error al obtener órdenes para la mesa ${tableId}:`,
+        error.response?.data || error.message
+      );
+      throw error;
+    }
+  },
+  /**
+   * Actualiza el estado de un pedido específico.
+   * Corresponde a: PATCH /api/orders/{id}/status
+   * @param {number} orderId - El ID del pedido a actualizar.
+   * @param {string} status - El nuevo estado ('CONFIRMED', 'CANCELLED').
+   * @returns {Promise<Object>} La respuesta de la API con el pedido actualizado.
+   */
+  updateOrderStatus: async (orderId, action) => {
+    try {
+      const response = await api.put(`/orders/${orderId}/${action}`);
+      return response.data;
+    } catch (error) {
+      console.error(`Error al actualizar el pedido ${orderId}:`, error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  /**
+   * Actualiza el estado de múltiples pedidos en una sola llamada.
+   * Corresponde a: POST /api/orders/bulk-status-update
+   * @param {number[]} orderIds - Un array de IDs de pedidos.
+   * @param {string} status - El nuevo estado a aplicar a todos.
+   * @returns {Promise<Object>} La respuesta de la API.
+   */
+  bulkUpdateStatus: async (orderIds, action) => {
+    try {
+      const response = await api.put(`/orders/${action}`, { 
+        order_ids: orderIds,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error en la actualización masiva de pedidos:', error.response?.data || error.message);
+      throw error;
+    }
+  },
 };
