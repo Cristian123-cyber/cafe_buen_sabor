@@ -42,8 +42,25 @@ class Sale extends BaseModel
                 throw new Exception('Una o más órdenes no existen');
             }
             
-            // Calcular total automáticamente
-            $totalAmount = array_sum(array_column($orders, 'total_amount'));
+            // Filtrar órdenes que ya están asociadas a otra venta
+            $validationQuery = "SELECT orders_id_order FROM sales_has_orders WHERE orders_id_order IN ($placeholders)";
+            $stmt = $this->conn->prepare($validationQuery);
+            $stmt->execute($orderIds);
+            $alreadyAssociatedOrders = $stmt->fetchAll(\PDO::FETCH_COLUMN, 0);
+            
+            // Filtrar las órdenes para excluir las ya asociadas
+            $filteredOrders = array_filter($orders, function($order) use ($alreadyAssociatedOrders) {
+
+                return !in_array($order['id_order'], $alreadyAssociatedOrders);
+            });
+            
+            // Si no quedan órdenes válidas, lanzar una excepción
+            if (empty($filteredOrders)) {
+                throw new Exception('Todas las órdenes ya están asociadas a otras ventas');
+            }
+            
+            // Calcular total automáticamente con las órdenes filtradas
+            $totalAmount = array_sum(array_column($filteredOrders, 'total_amount'));
             
             // Crear la venta
             $saleData = [
@@ -56,17 +73,24 @@ class Sale extends BaseModel
             
             $saleId = $this->create($saleData);
             
-            // Asociar órdenes con la venta en sales_has_orders
-            $associationQuery = "INSERT INTO sales_has_orders (sale_id, order_id) VALUES (?, ?)";
+            // Asociar órdenes con la venta en sales_has_orders (solo las no asociadas)
+            $associationQuery = "INSERT INTO sales_has_orders (sales_id_sale, orders_id_order) VALUES (?, ?)";
             $stmt = $this->conn->prepare($associationQuery);
             
-            foreach ($orderIds as $orderId) {
-                $stmt->execute([$saleId, $orderId]);
+            // Actualizar el estado de las órdenes a COMPLETED (5)
+            $orderIdsToUpdate = array_column($filteredOrders, 'id_order');
+            $placeholdersForUpdate = str_repeat('?,', count($orderIdsToUpdate) - 1) . '?';
+            $updateOrderStatusQuery = "UPDATE orders SET order_statuses_id_status = 5 WHERE id_order IN ($placeholdersForUpdate)";
+            $updateStmt = $this->conn->prepare($updateOrderStatusQuery);
+            $updateStmt->execute($orderIdsToUpdate);
+            
+            foreach ($filteredOrders as $order) {
+                $stmt->execute([$saleId, $order['id_order']]);
             }
             
-            $this->conn->commit();
             
             // Retornar la venta creada con sus datos
+            $this->conn->commit();
             return $this->findWithFullDetails($saleId);
             
         } catch (Exception $e) {
@@ -137,10 +161,10 @@ class Sale extends BaseModel
         // Obtener datos básicos de la venta
         $saleQuery = "SELECT 
                         s.*,
-                        e.name as cashier_name,
-                        e.email as cashier_email
+                        e.employe_name as cashier_name,
+                        e.employe_email as cashier_email
                       FROM {$this->table_name} s
-                      LEFT JOIN employees e ON s.cashier_id = e.id_employee
+                      LEFT JOIN employees e ON s.cashier_id = e.id_employe
                       WHERE s.{$this->primary_key} = ?";
         
         $stmt = $this->conn->prepare($saleQuery);
@@ -153,15 +177,15 @@ class Sale extends BaseModel
         
         // Obtener pedidos asociados con sus productos
         $ordersQuery = "SELECT 
-                          o.id_order,
-                          o.created_date,
-                          o.total_amount,
-                          o.order_statuses_id_status,
-                          o.table_sessions_id_session
-                        FROM sales_has_orders sho
-                        JOIN orders o ON sho.order_id = o.id_order
-                        WHERE sho.sale_id = ?
-                        ORDER BY o.id_order";
+                  o.id_order,
+                  o.created_date,
+                  o.total_amount,
+                  o.order_statuses_id_status,
+                  o.table_sessions_id_session
+                FROM sales_has_orders sho
+                JOIN orders o ON sho.orders_id_order = o.id_order
+                WHERE sho.sales_id_sale = ?
+                ORDER BY o.id_order";
         
         $stmt = $this->conn->prepare($ordersQuery);
         $stmt->execute([$id]);
@@ -172,9 +196,9 @@ class Sale extends BaseModel
             $productsQuery = "SELECT 
                                 ohp.products_id_product,
                                 ohp.quantity,
-                                ohp.price as product_price,
-                                p.name as product_name,
-                                p.price as original_price
+                                ohp.product_price as product_price,
+                                p.product_name as product_name,
+                                p.product_price as original_price
                               FROM orders_has_products ohp
                               JOIN products p ON ohp.products_id_product = p.id_product
                               WHERE ohp.orders_id_order = ?";

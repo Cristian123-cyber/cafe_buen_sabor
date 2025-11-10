@@ -21,7 +21,7 @@ export const ORDER_STATUSES = {
 // Labels para mostrar en UI
 export const ORDER_STATUS_LABELS = {
   PENDING: 'Pendiente',
-  CONFIRMED: 'En Cocina',
+  CONFIRMED: 'Confirmado',
   READY: 'Listo para Recoger',
   COMPLETED: 'Completado',
   CANCELLED: 'Cancelado'

@@ -18,28 +18,54 @@ class Notification extends BaseModel
     /**
      * Obtiene notificaciones con información completa (empleado y pedido)
      */
-    public function getAllWithDetails($page = 1, $limit = 10) {
+    public function getAllWithDetails($page = 1, $limit = 10, $all = true, $notification_type = null) {
         $offset = ($page - 1) * $limit;
+
+
+
+
+
         
         $query = "SELECT n.*, 
-                        e.employe_name as empleado_nombre,
-                        e.employe_email as empleado_email,
-                        o.total_amount as pedido_total,
-                        os.status_name as estado_pedido
+                        e.employe_name,
+                        o.total_amount,
+                        os.status_name,
+                        t.table_number,
+                        t.id_table
+
                  FROM notifications n
                  LEFT JOIN employees e ON n.employee_id = e.id_employe
                  LEFT JOIN orders o ON n.order_id = o.id_order
                  LEFT JOIN order_statuses os ON o.order_statuses_id_status = os.id_status
-                 ORDER BY n.created_at DESC
-                 LIMIT :limit OFFSET :offset";
+                 LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+                 LEFT JOIN tables t ON ts.tables_id_table = t.id_table";
+
+        if (!$all) {
+            $query .= " WHERE n.is_read = 'UNREAD'";
+        }
+        if ($notification_type !== null) {
+            $query .= $all ? " WHERE " : " AND ";
+            $query .= " n.notification_type = :notification_type";
+        }
+        $query .= " ORDER BY n.created_at DESC";
+
+
+      
+
+        
+         
+        
         
         $stmt = $this->conn->prepare($query);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        if ($notification_type !== null) {
+            $stmt->bindParam(':notification_type', $notification_type);
+        }
         $stmt->execute();
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+
 
     /**
      * Obtiene una notificación por ID con información completa
@@ -143,6 +169,25 @@ class Notification extends BaseModel
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function getUnreadCount($notification_type = null) {
+        $query = "SELECT COUNT(*) as unread_count 
+                 FROM notifications 
+                 WHERE is_read = 'UNREAD'";
+
+        if ($notification_type !== null) {
+            $query .= " AND notification_type = :notification_type";
+        }
+        
+        $stmt = $this->conn->prepare($query);
+        if ($notification_type !== null) {
+            $stmt->bindParam(':notification_type', $notification_type);
+        }
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? (int)$result['unread_count'] : 0;
+    }
+
     /**
      * Obtiene notificaciones no leídas por empleado
      */
@@ -168,13 +213,17 @@ class Notification extends BaseModel
     /**
      * Marca una notificación como leída
      */
-    public function markAsRead($id) {
+    public function markAsRead($id, $employee_id = null) {
         $query = "UPDATE notifications 
-                 SET is_read = 'READ' 
+                 SET is_read = 'READ',
+                     employee_id = :employee_id
                  WHERE id_notification = :id";
+
+        
         
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':employee_id', $employee_id);
         return $stmt->execute();
     }
 
@@ -214,7 +263,8 @@ class Notification extends BaseModel
     public function createOrderReadyNotification($order_id, $employee_id = null) {
         $data = [
             'notification_type' => 'ORDER_READY',
-            'message' => 'Pedido listo para recoger',
+            'message' => 'La orden '. $order_id . ' esta lista para recoger en cocina',
+            'title' => 'Orden lista',
             'is_read' => 'UNREAD',
             'employee_id' => $employee_id,
             'order_id' => $order_id
@@ -229,7 +279,8 @@ class Notification extends BaseModel
     public function createOrderConfirmedNotification($order_id, $employee_id = null) {
         $data = [
             'notification_type' => 'ORDER_CONFIRMED',
-            'message' => 'Pedido confirmado y en preparación',
+            'message' => 'La orden '. $order_id .' ha sido confirmada y enviada a cocina para preparacion',
+            'title' => 'Orden confirmada',
             'is_read' => 'UNREAD',
             'employee_id' => $employee_id,
             'order_id' => $order_id
@@ -244,7 +295,8 @@ class Notification extends BaseModel
     public function createOrderCancelledNotification($order_id, $employee_id = null) {
         $data = [
             'notification_type' => 'ORDER_CANCELLED',
-            'message' => 'Pedido cancelado',
+            'message' => 'La orden '. $order_id. ' ha sido cancelada',
+            'title' => 'Orden cancelada',
             'is_read' => 'UNREAD',
             'employee_id' => $employee_id,
             'order_id' => $order_id

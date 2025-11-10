@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use PDO;
@@ -18,16 +19,50 @@ class Order extends BaseModel
         return $result ? $result['product_price'] : false;
     }
 
-    public function getAll($page = 1, $limit = 10, $orderBy = null)
+    public function getAll($page = 1, $limit = 10, $orderBy = null, $state = null, $applyPagination = true)
     {
-    $offset = ($page - 1) * $limit;
-    $query = "SELECT * FROM orders";
-    if ($orderBy) {
-        $query .= " ORDER BY $orderBy";
-    }
-    $query .= " LIMIT $limit OFFSET $offset";
-    $stmt = $this->conn->query($query);
-    return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        $offset = ($page - 1) * $limit;
+        $query = "SELECT o.*, os.status_name as order_status_name,
+                     ts.tables_id_table, t.table_number,
+                     e.employe_name as waiter_name
+              FROM orders o
+              LEFT JOIN order_statuses os ON o.order_statuses_id_status = os.id_status
+              LEFT JOIN table_sessions ts ON o.table_sessions_id_session = ts.id_session
+              LEFT JOIN tables t ON ts.tables_id_table = t.id_table
+              LEFT JOIN employees e ON o.waiter_id = e.id_employe";
+
+        if ($state !== null) {
+            $query .= " WHERE o.order_statuses_id_status = " . intval($state);
+        }
+
+        if ($orderBy) {
+            $query .= " ORDER BY $orderBy";
+        }
+
+        if ($applyPagination) {
+            $query .= " LIMIT $limit OFFSET $offset";
+        }
+
+        $stmt = $this->conn->query($query);
+        $orders = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Agregar productos a cada pedido, incluyendo image_url
+        foreach ($orders as &$order) {
+            $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc, p.product_image_url
+                         FROM orders_has_products ohp
+                         LEFT JOIN products p ON ohp.products_id_product = p.id_product
+                         WHERE ohp.orders_id_order = ?";
+            $stmt = $this->conn->prepare($productsQuery);
+            $stmt->execute([$order['id_order']]);
+            $products = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            foreach ($products as &$prod) {
+                // Remove the image_url field
+                unset($prod['image_url']);
+            }
+            $order['products'] = $products;
+        }
+
+        return $orders;
     }
 
     public function getById($id)
@@ -108,7 +143,7 @@ class Order extends BaseModel
         $stmt->execute([$status]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     // Obtener pedidos por sesión de mesa
     public function getBySession($sessionId)
     {
@@ -118,7 +153,7 @@ class Order extends BaseModel
         $stmt->execute([$sessionId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    
+
     // Asociar mesero a todos los pedidos de una sesión
     public function bindWaiter($sessionId, $waiterId)
     {
@@ -128,7 +163,7 @@ class Order extends BaseModel
         $stmt->execute([$waiterId, $sessionId]);
         return ['updated' => $stmt->rowCount()];
     }
-    
+
     // Unificar pedidos (ejemplo básico, debes adaptar según tu modelo de datos)
     public function unifyOrders($ordersToUnify)
     {
@@ -137,7 +172,7 @@ class Order extends BaseModel
         $stmt = $this->conn->prepare("INSERT INTO orders_unified (created_at) VALUES (NOW())");
         $stmt->execute();
         $unifiedId = $this->conn->lastInsertId();
-    
+
         // 3. Asociar pedidos a la orden unificada
         $stmtAssoc = $this->conn->prepare(
             "INSERT INTO orders_has_unified_has_orders (orders_unified_id, orders_id_order) VALUES (?, ?)"
@@ -147,7 +182,7 @@ class Order extends BaseModel
         }
         return $unifiedId;
     }
-    
+
     // Obtener pedidos de una orden unificada
     public function getByUnified($unifiedId)
     {
@@ -174,7 +209,7 @@ class Order extends BaseModel
                   LEFT JOIN tables t ON ts.tables_id_table = t.id_table
                   LEFT JOIN employees e ON o.waiter_id = e.id_employe
                   ORDER BY o.created_date DESC";
-        
+
         $stmt = $this->conn->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -195,11 +230,11 @@ class Order extends BaseModel
                   LEFT JOIN tables t ON ts.tables_id_table = t.id_table
                   LEFT JOIN employees e ON o.waiter_id = e.id_employe
                   WHERE o.id_order = ?";
-        
+
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$id]);
         $order = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$order) {
             return null;
         }
@@ -209,11 +244,11 @@ class Order extends BaseModel
                          FROM orders_has_products ohp
                          LEFT JOIN products p ON ohp.products_id_product = p.id_product
                          WHERE ohp.orders_id_order = ?";
-        
+
         $stmt = $this->conn->prepare($productsQuery);
         $stmt->execute([$id]);
         $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         return $order;
     }
 
@@ -232,23 +267,23 @@ class Order extends BaseModel
                   LEFT JOIN employees e ON o.waiter_id = e.id_employe
                   WHERE os.status_name = ?
                   ORDER BY o.created_date DESC";
-        
+
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$status]);
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Agregar productos a cada pedido
         foreach ($orders as &$order) {
             $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc
                              FROM orders_has_products ohp
                              LEFT JOIN products p ON ohp.products_id_product = p.id_product
                              WHERE ohp.orders_id_order = ?";
-            
+
             $stmt = $this->conn->prepare($productsQuery);
             $stmt->execute([$order['id_order']]);
             $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
+
         return $orders;
     }
 
@@ -268,11 +303,11 @@ class Order extends BaseModel
                       LEFT JOIN employees e ON o.waiter_id = e.id_employe
                       WHERE o.table_sessions_id_session = ?
                       ORDER BY o.created_date DESC";
-            
+
             $stmt = $this->conn->prepare($query);
             $stmt->execute([$sessionId]);
             $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+
             // Agregar productos a cada pedido, incluyendo image_url
             foreach ($orders as &$order) {
                 $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc, p.product_image_url
@@ -288,7 +323,7 @@ class Order extends BaseModel
                 }
                 $order['products'] = $products;
             }
-            
+
             return $orders;
         } catch (\PDOException $e) {
             error_log('SQL Error: ' . $e->getMessage());
@@ -302,7 +337,7 @@ class Order extends BaseModel
             exit;
         }
     }
-    
+
 
     /**
      * Obtener pedidos de una orden unificada con detalles
@@ -320,23 +355,23 @@ class Order extends BaseModel
                   LEFT JOIN employees e ON o.waiter_id = e.id_employe
                   WHERE uho.orders_unified_id = ?
                   ORDER BY o.created_date DESC";
-        
+
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$unifiedId]);
         $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
+
         // Agregar productos a cada pedido
         foreach ($orders as &$order) {
             $productsQuery = "SELECT ohp.*, p.product_name, p.product_desc
                              FROM orders_has_products ohp
                              LEFT JOIN products p ON ohp.products_id_product = p.id_product
                              WHERE ohp.orders_id_order = ?";
-            
+
             $stmt = $this->conn->prepare($productsQuery);
             $stmt->execute([$order['id_order']]);
             $order['products'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
-        
+
         return $orders;
     }
 
@@ -349,11 +384,11 @@ class Order extends BaseModel
                   FROM {$this->table_name}
                   WHERE created_date >= ?
                   AND created_date <= ?";
-        
+
         $stmt = $this->conn->prepare($query);
         $stmt->execute([$from, $to]);
         $result = $stmt->fetch(\PDO::FETCH_ASSOC);
-        
+
         return (int)$result['total'];
     }
 }

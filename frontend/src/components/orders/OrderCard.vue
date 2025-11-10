@@ -7,9 +7,9 @@
     <div class="order-content">
       <div class="order-info">
         <div class="order-header">
-        
-
-          <BaseBadge :color="statusInfo.badgeClass"> {{ statusInfo.label }}</BaseBadge>
+          <BaseBadge :color="statusInfo.badgeClass">
+            {{ statusInfo.label }}</BaseBadge
+          >
           <span class="order-total">{{ formattedTotal }}</span>
         </div>
 
@@ -18,19 +18,21 @@
       </div>
 
       <div class="additional-actions">
-        <BaseButton @click="$emit('view-details', order)" size="sm" variant="accent">
-          <span>Ver Pedido</span>
+        <BaseButton
+          @click="$emit('view-details', order)"
+          size="sm"
+          variant="secondary"
+        >
+          <span class="hidden sm:inline">Ver pedido</span>
+          <span class="sm:hidden">Detalles</span>
 
           <template #icon-right>
             <i-mdi-arrow-right class="w-4 h-4" />
-
           </template>
         </BaseButton>
 
-
         <!-- (IMPORTANTE) Aquí se renderizarán los botones adicionales -->
-        <div v-if="$slots.actions" >
-
+        <div v-if="$slots.actions">
           <slot name="actions"></slot>
         </div>
       </div>
@@ -39,8 +41,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { ORDER_STATUS_LABELS } from '../../utils/constants';
+import { computed } from "vue";
+import { ORDER_STATUS_LABELS } from "../../utils/constants";
 
 // --- PROPS ---
 const props = defineProps({
@@ -51,7 +53,7 @@ const props = defineProps({
 });
 
 // --- EMITS ---
-defineEmits(['view-details']);
+defineEmits(["view-details"]);
 
 // --- COMPUTED ---
 
@@ -59,11 +61,11 @@ defineEmits(['view-details']);
  * Formatea la fecha del pedido a un formato legible.
  */
 const formattedDate = computed(() => {
-  if (!props.order.created_date) return 'Fecha no disponible';
-  return new Date(props.order.created_date).toLocaleDateString('es-ES', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+  if (!props.order.created_date) return "Fecha no disponible";
+  return new Date(props.order.created_date).toLocaleDateString("es-ES", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 });
 
@@ -72,10 +74,10 @@ const formattedDate = computed(() => {
  */
 const formattedTotal = computed(() => {
   const total = parseFloat(props.order.total_amount);
-  if (isNaN(total)) return '$ 0';
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
+  if (isNaN(total)) return "$ 0";
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
     minimumFractionDigits: 0,
   }).format(total);
 });
@@ -84,30 +86,30 @@ const formattedTotal = computed(() => {
  * Determina el texto y la clase CSS para el distintivo de estado del pedido.
  */
 const statusInfo = computed(() => {
-  const status = props.order.order_status_name || 'UNKNOWN';
+  const status = props.order.order_status_name || "UNKNOWN";
   const info = {
-    label: ORDER_STATUS_LABELS[status] || 'Desconocido',
-    badgeClass: '',
+    label: ORDER_STATUS_LABELS[status] || "Desconocido",
+    badgeClass: "",
   };
 
   switch (status) {
-    case 'PENDING':
-      info.badgeClass = 'warning';
+    case "PENDING":
+      info.badgeClass = "warning";
       break;
-    case 'CONFIRMED':
-      info.badgeClass = 'success';
+    case "CONFIRMED":
+      info.badgeClass = "success";
       break;
-    case 'READY':
-      info.badgeClass = 'info';
+    case "READY":
+      info.badgeClass = "info";
       break;
-    case 'COMPLETED':
-      info.badgeClass = 'neutral';
+    case "COMPLETED":
+      info.badgeClass = "neutral";
       break;
-    case 'CANCELLED':
-      info.badgeClass = 'error';
+    case "CANCELLED":
+      info.badgeClass = "error";
       break;
     default:
-      info.badgeClass = 'neutral';
+      info.badgeClass = "neutral";
   }
   return info;
 });
@@ -117,9 +119,8 @@ const statusInfo = computed(() => {
  * Usamos una imagen de placeholder más atractiva.
  */
 const backgroundImageStyle = computed(() => ({
-  'background-image': `url('${props.order.products[0]?.product_image_url}')`,
+  "background-image": `url('${props.order.products[0]?.product_image_url}')`,
 }));
-
 </script>
 
 <style scoped>
@@ -218,7 +219,4 @@ const backgroundImageStyle = computed(() => ({
 .additional-actions {
   @apply flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-end gap-2 w-full;
 }
-
-
-
 </style>

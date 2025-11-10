@@ -36,10 +36,10 @@
       </div>
       
       <!-- Overlay cuando está expirado -->
-      <div v-if="timeLeft <= 0" class="expired-overlay">
+      <!-- <div v-if="timeLeft <= 0" class="expired-overlay">
         <i-mdi-refresh class="w-6 h-6 text-white" />
-        <span class="text-white text-sm font-medium">Código expirado</span>
-      </div>
+        <span class="text-white text-sm font-medium">Código expiradoooo</span>
+      </div> -->
     </div>
 
     <!-- Timer bar (solo cuando está activo) -->

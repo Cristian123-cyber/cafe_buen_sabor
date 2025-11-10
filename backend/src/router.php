@@ -277,6 +277,7 @@ class NotificationRoutes
     {
         // CRUD básico
         $router->get('/api/notificaciones', 'NotificationController@index');
+        $router->get('/api/notificaciones/unread-count', 'NotificationController@getUnreadCount');
         $router->get('/api/notificaciones/(\d+)', 'NotificationController@show');
         $router->post('/api/notificaciones', 'NotificationController@store');
         $router->put('/api/notificaciones/(\d+)', 'NotificationController@update');
@@ -289,7 +290,7 @@ class NotificationRoutes
         $router->get('/api/notificaciones/empleado/(\d+)/no-leidas', 'NotificationController@getUnreadByEmployee');
 
         // Rutas de gestión de lectura
-        $router->put('/api/notificaciones/(\d+)/leer', 'NotificationController@markAsRead');
+        $router->put('/api/notificaciones/(\d+)/read', 'NotificationController@markAsRead');
         $router->put('/api/notificaciones/leer-multiples', 'NotificationController@markMultipleAsRead');
         $router->put('/api/notificaciones/empleado/(\d+)/leer-todas', 'NotificationController@markAllAsReadByEmployee');
 

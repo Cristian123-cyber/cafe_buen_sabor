@@ -8,19 +8,18 @@ export const navigationConfig = {
     { label: 'Mesas', to: { name: 'AdminTables' }, icon: iconsMap['mdi-table-chair'] },
     { label: 'Productos', to: { name: 'AdminProducts' }, icon: iconsMap['mdi-food-outline'] },
     { label: 'Ordenes', to: { name: 'AdminOrders' }, icon: iconsMap['i-material-symbols-orders-rounded'] },
-    { label: 'Ventas', to: { name: 'AdminSales' }, icon: iconsMap['mdi-food-apple'] },
+    { label: 'Ventas', to: { name: 'AdminSales' }, icon: iconsMap['mdi-receipt-text-outline'] },
     { label: 'Reportes', to: { name: 'AdminReports' }, icon: iconsMap['mdi-chart-line'] },
   ],
   3: [
-    { label: 'Mesas', to: { name: 'CashierTables'}, icon: 'i-mdi-table-chair' },
-    { label: 'Ventas', to: { name: 'CashierSales' }, icon: 'i-mdi-receipt-text-outline' },
+    { label: 'Mesas', to: { name: 'CashierTables'}, icon: iconsMap['mdi-table-chair'] },
+    { label: 'Ventas', to: { name: 'CashierSales' }, icon: iconsMap['mdi-receipt-text-outline'] },
   ],
   2: [
     { label: 'Cola de Pedidos', to: { name: 'KitchenDashboard' }, icon: iconsMap['mdi-stove'] },
   ],
   1: [
     { label: 'Mesas', to: { name: 'WaiterTables' }, icon: iconsMap['mdi-table-chair'] },
-    { label: 'Ordenes', to: { name: 'WaiterOrders' }, icon: iconsMap['i-material-symbols-orders-rounded'] }
   ],
   Client: [
     { label: 'Home', to: { name: 'ClientHome' }, icon: iconsMap['i-ic-baseline-home'] },

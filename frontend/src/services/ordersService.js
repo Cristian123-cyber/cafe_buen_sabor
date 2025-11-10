@@ -19,15 +19,18 @@ export const orderService = {
     } catch (error) {
       console.error(
         "Error al crear la orden:",
+
         error.response?.data || error.message
       );
       throw error; // Lanza el error para que el store lo maneje
     }
   },
 
-  getAllOrders: async () => {
+  getAllOrders: async (state = null) => {
     try {
-      const response = await api.get("/orders");
+      const response = await api.get("/orders", {
+        params: (state !== null) ? { state } : {}
+      });
       return response.data;
     } catch (error) {
       console.error(
@@ -67,7 +70,7 @@ export const orderService = {
    * Actualiza el estado de un pedido específico.
    * Corresponde a: PATCH /api/orders/{id}/status
    * @param {number} orderId - El ID del pedido a actualizar.
-   * @param {string} status - El nuevo estado ('CONFIRMED', 'CANCELLED').
+   * @param {string} status - El nuevo estado ('CONFIRMED', 'CANCELLED', 'READY').
    * @returns {Promise<Object>} La respuesta de la API con el pedido actualizado.
    */
   updateOrderStatus: async (orderId, action) => {

@@ -17,6 +17,7 @@ const tableStore = useTablesStore();
 
 const alert = useAlert();
 const { addToast } = useToasts();
+
 const searchTerm = ref('');
 
 const selectedState = ref(0);
@@ -49,14 +50,14 @@ const handleQrView = (table) => {
   currentTable.value = table;
 }
 const handleViewOrders = (table) => {
-  router.push({ name: 'WaiterTableOrders', params: { id: table.id_table } });
+  router.push({ name: 'WaiterTableOrders', params: { id: table.id_table }, query: { table_number: table.table_number } });
 
 }
 const handleMakeOrder = (table) => {
-  router.push({ 
-  name: 'SessionValidate', 
-  query: { token: table.qr_token, table: table.id_table } 
-});
+  router.push({
+    name: 'SessionValidate',
+    query: { token: table.qr_token, table: table.id_table }
+  });
 
 
 
@@ -163,10 +164,10 @@ onUnmounted(() => {
 
       </template>
 
-      
-        <!-- 👇 Si estoy en la subruta, se muestra TableOrders -->
-        <router-view v-else />
-      
+
+      <!-- 👇 Si estoy en la subruta, se muestra TableOrders -->
+      <router-view v-else />
+
     </div>
   </AppLayout>
 </template>
@@ -180,10 +181,13 @@ onUnmounted(() => {
   @apply flex flex-col gap-6 lg:gap-8;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s ease;
 }
-.fade-enter-from, .fade-leave-to {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 </style>

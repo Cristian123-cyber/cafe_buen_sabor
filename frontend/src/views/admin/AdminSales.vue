@@ -1,5 +1,3 @@
-
-
 <script setup>
 import { onMounted, ref, computed, watch } from 'vue';
 import { useSalesStore } from '../../stores/salesS';
@@ -7,9 +5,22 @@ import api from '../../services/api';
 import { useAlert } from '../../composables/useAlert';
 import { useToasts } from '../../composables/useToast';
 
+import { salesService } from '../../services/salesService';
+import { useInvoiceGenerator } from '../../utils/InvoicesGenerator.js';
+
+
 const salesStore = useSalesStore();
-const { showAlert } = useAlert();
+const alert = useAlert();
 const { addToast } = useToasts();
+
+// Configurar información de la empresa (opcional)
+const { download, open, getBlob } = useInvoiceGenerator({
+    name: 'Cafe Buen Sabor',
+    address: 'Calle 123 #45-67, Cartago Valle del Cauca, Colombia',
+    phone: '+57 300 123 4567',
+    email: 'ventas@cafebuensabor.com',
+    taxId: 'NIT: 900.123.456-7'
+});
 
 // Filtros
 const searchTerm = ref('');
@@ -114,45 +125,62 @@ async function viewSale(row) {
   }
   showSale.value = true;
 }
+
+const generateInvoice = async (row) => {
+
+try {
+  const data = await salesService.getSaleById(row.id_sale);
+
+
+
+  open(data.data);
+ 
+  
+} catch (error) {
+
+   alert.show({
+        variant: 'error',
+        title: 'Error al generar la factura ',
+        message: error?.message ? error?.message : `No se pudo generar la factura de la venta #${row.id_sale}. Inténtalo de nuevo más tarde.`,
+      });
+
+
+  
+}
+  
+
+
+  
+};
 </script>
 
 <template>
   <AppLayout>
     <div class="dashboard-container">
-      <HeaderSection title="Gestión de Ventas" descriptionMessage="Administra la información de las ventas del local."></HeaderSection>
+      <HeaderSection title="Gestión de Ventas" descriptionMessage="Administra la información de las ventas del local.">
+      </HeaderSection>
 
-      <ToolsBar
-        v-model:searchTerm="searchTerm"
-        searchLabel="Buscar ventas"
-        placeholderSearch="ID, Cajero, Método de pago..."
-        v-model:selectedRole="selectedStatus"
-        :roleOptions="statusOptions"
-        titleRoleOptions="Estado"
-        :loading="salesStore.loadingSales"
-        buttonCreateText="Crear Venta"
-        @create="() => {}"
-      />
+      <ToolsBar v-model:searchTerm="searchTerm" searchLabel="Buscar ventas"
+        placeholderSearch="ID, Cajero, Método de pago..." v-model:selectedRole="selectedStatus"
+        :roleOptions="statusOptions" titleRoleOptions="Estado" :loading="salesStore.loadingSales"
+        buttonCreateText="Crear Venta" @create="() => { }" />
 
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MetricCard title="Total Ventas" :value="salesStore.salesStats.total" icon="i-mdi-chart-bar" />
-        <MetricCard title="Total Recaudado" :value="formatCurrency(salesStore.salesStats.totalAmount)" icon="i-mdi-cash" />
+        <MetricCard title="Total Recaudado" :value="formatCurrency(salesStore.salesStats.totalAmount)"
+          icon="i-mdi-cash" />
         <MetricCard title="Completadas" :value="salesStore.salesStats.completed" icon="i-mdi-check" />
         <MetricCard title="Canceladas" :value="salesStore.salesStats.canceled" icon="i-mdi-close-circle" />
       </div>
 
-      <BaseTable
-        :columns="columns"
-        :data="paginatedSales"
-        trackBy="id_sale"
-        :loading="salesStore.loadingSales"
-        size="md"
-        hover
-        striped
-      >
-        <template #cell(payment_method)="{ value }">{{ (value === 'EFECTIVO' || value === 'CASH') ? 'Efectivo' : (value === 'TRANSFERENCIA' || value === 'TRANSFER' ? 'Transferencia' : value) }}</template>
+      <BaseTable :columns="columns" :data="paginatedSales" trackBy="id_sale" :loading="salesStore.loadingSales"
+        size="md" hover striped>
+        <template #cell(payment_method)="{ value }">{{ (value === 'EFECTIVO' || value === 'CASH') ? 'Efectivo' : (value
+          === 'TRANSFERENCIA' || value === 'TRANSFER' ? 'Transferencia' : value) }}</template>
         <template #cell(total_amount)="{ value }">{{ formatCurrency(value) }}</template>
         <template #cell(sale_status)="{ value }">
-          <span class="inline-flex items-center px-2 py-1 rounded-full border text-xs font-semibold" :class="statusBadge(value).cls">
+          <span class="inline-flex items-center px-2 py-1 rounded-full border text-xs font-semibold"
+            :class="statusBadge(value).cls">
             {{ statusBadge(value).label }}
           </span>
         </template>
@@ -162,24 +190,23 @@ async function viewSale(row) {
             <BaseButton variant="success" size="icon" @click="viewSale(row)" aria-label="Ver detalles">
               <i-mdi-eye class="w-5 h-5" />
             </BaseButton>
+
+            <BaseButton variant="secondary" size="icon" @click="generateInvoice(row)" aria-label="Generar factura">
+              <i-mdi-receipt class="w-5 h-5" />
+            </BaseButton>
           </div>
         </template>
       </BaseTable>
 
-      <BasePagination
-        :current-page="currentPage"
-        :per-page="perPage"
-        :total="total"
-        :per-page-options="[5,10,25,50]"
-        @page-changed="handlePageChange"
-        @per-page-changed="handlePerPageChange"
-      />
+      <BasePagination :current-page="currentPage" :per-page="perPage" :total="total" :per-page-options="[5, 10, 25, 50]"
+        @page-changed="handlePageChange" @per-page-changed="handlePerPageChange" />
 
       <BaseModal v-model="showSale" title="Detalle de Venta" max-width="2xl">
         <div v-if="selectedSale" class="space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold">Venta #{{ selectedSale.id_sale }}</h3>
-            <span class="inline-flex items-center px-2 py-1 rounded-full border text-xs font-semibold" :class="statusBadge(selectedSale.sale_status).cls">
+            <span class="inline-flex items-center px-2 py-1 rounded-full border text-xs font-semibold"
+              :class="statusBadge(selectedSale.sale_status).cls">
               {{ statusBadge(selectedSale.sale_status).label }}
             </span>
           </div>
@@ -194,7 +221,10 @@ async function viewSale(row) {
             </div>
             <div>
               <div class="text-gray-500">Método de pago</div>
-              <div class="font-medium">{{ (selectedSale.payment_method === 'EFECTIVO' || selectedSale.payment_method === 'CASH') ? 'Efectivo' : (selectedSale.payment_method === 'TRANSFERENCIA' || selectedSale.payment_method === 'TRANSFER' ? 'Transferencia' : selectedSale.payment_method) }}</div>
+              <div class="font-medium">{{ (selectedSale.payment_method === 'EFECTIVO' || selectedSale.payment_method ===
+                'CASH') ? 'Efectivo' : (selectedSale.payment_method === 'TRANSFERENCIA' || selectedSale.payment_method
+                  ===
+                  'TRANSFER' ? 'Transferencia' : selectedSale.payment_method) }}</div>
             </div>
             <div>
               <div class="text-gray-500">Total</div>
@@ -214,5 +244,8 @@ async function viewSale(row) {
 
 <style scoped>
 @reference "../../style.css";
-.dashboard-container { @apply flex flex-col gap-6 lg:gap-8; }
+
+.dashboard-container {
+  @apply flex flex-col gap-6 lg:gap-8;
+}
 </style>

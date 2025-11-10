@@ -10,11 +10,13 @@ import { useAlert } from '../../composables/useAlert'; // Para confirmaciones
 const orderStore = useOrderStore();
 const { ordersForCurrentTable, errors, isLoading } = storeToRefs(orderStore);
 const { fetchOrdersByTableId, handleUpdateStatus, handleBulkUpdateStatus } = useOrders();
+
 const alert = useAlert();
 const router = useRouter();
 const route = useRoute();
 
 const tableId = ref(route.params.id);
+const tableNumber = ref(route.query.table_number);
 const isBulkConfirmLoading = ref(false);
 const isBulkCancelLoading = ref(false);
 
@@ -84,9 +86,9 @@ const cancelOrder = async (orderId) => {
 const confirmAllPending = async () => {
   const isConfirmed = await alert.show({
     variant: 'warning',
-    title: '¿Cancelar todos los pedidos pendientes?',
-    message: 'Esta acción cancelará todos los pedidos pendientes. ¿Deseas continuar?',
-    confirmButtonText: 'Sí, cancelar',
+    title: 'Confirmar todos los pedidos pendientes?',
+    message: 'Esta acción confirmara todos los pedidos pendientes. ¿Deseas continuar?',
+    confirmButtonText: 'Sí, confirmar',
     cancelButtonText: 'Cancelar',
   });
   if (isConfirmed){
@@ -119,6 +121,7 @@ const cancelAllPending = async () => {
 onMounted(async () => {
   if (tableId.value) {
     await fetchOrdersByTableId(tableId.value);
+    console.log("ordersForCurrentTable en mounted:: ", ordersForCurrentTable.value);
   } else {
     errors.value.fetchOrders = "ID de mesa no proporcionado.";
   }
@@ -138,7 +141,7 @@ onUnmounted(() => {
           <i-mdi-arrow-left class="w-6 h-6" />
         </BaseButton>
         <div class="header-info">
-          <h1 class="header-title">Mesa #{{ tableId }}</h1>
+          <h1 class="header-title">Mesa #{{ tableNumber }}</h1>
           <p class="header-subtitle">Gestión de pedidos</p>
         </div>
         <div class="header-status" v-if="ordersForCurrentTable && ordersForCurrentTable.length > 0">
@@ -179,27 +182,32 @@ onUnmounted(() => {
 
     <!-- Contenido Principal -->
     <div class="content-area">
-      <div v-if="isLoading" class="orders-skeleton flex flex-col gap-3">
-        <div v-for="n in 4" :key="n" class="animate-pulse">
+      <div v-if="isLoading" class="orders-skeleton">
+        <div v-for="n in 4" :key="n" class="skeleton-card">
           <!-- Card simulada -->
-          <div class="bg-gray-100 rounded-xl border border-gray-200 p-4 flex gap-4 items-start relative">
-
+          <div class="skeleton-wrapper">
             <!-- Imagen simulada -->
-            <div class="w-24 h-24 rounded-lg bg-gray-300 flex-shrink-0"></div>
+            <div class="skeleton-image"></div>
 
             <!-- Contenido (texto + botón falso) -->
-            <div class="flex-1 flex flex-col justify-between h-full">
+            <div class="skeleton-content">
               <!-- Bloque de info completa (status, id, fecha, etc.) -->
-              <div class="w-full h-20 bg-gray-200 rounded-md mb-3"></div>
+              <div class="skeleton-info">
+                <div class="skeleton-line skeleton-line-lg"></div>
+                <div class="skeleton-line skeleton-line-md"></div>
+                <div class="skeleton-line skeleton-line-full"></div>
+                <div class="skeleton-line skeleton-line-sm"></div>
+              </div>
 
-              <!-- Botón simulado ocupando el resto -->
-              <div class="w-full h-10 bg-gray-300 rounded-md"></div>
+              <!-- Botones simulados -->
+              <div class="skeleton-actions">
+                <div class="skeleton-button"></div>
+                <div class="skeleton-button"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-
-
 
 
       <!-- Estado de Error -->
@@ -216,28 +224,35 @@ onUnmounted(() => {
       </div>
 
       <!-- Lista de Pedidos -->
-      <div v-else class="orders-list">
-        <OrderCard v-for="order in ordersForCurrentTable" :key="order.id_order" :order="order"
-          @view-details="openDetailsModal">
-          <!-- Slot de acciones para CADA tarjeta -->
-          <template #actions>
-            <div v-if="order.order_status_name !== 'READY' && order.order_status_name !== 'COMPLETED'" class="individual-actions">
-              <BaseButton variant="success" size="sm" @click.stop="confirmOrder(order.id_order)">
-
-                <template #icon-left>
-                  <i-line-md-circle-filled-to-confirm-circle-filled-transition class="w-4 h-4" />
-                </template>
-                <span>Confirmar</span>
-              </BaseButton>
-              <BaseButton variant="danger" size="sm" @click.stop="cancelOrder(order.id_order)">
-                <template #icon-left>
-                  <i-material-symbols-cancel-rounded class="w-4 h-4" />
-                </template>
-                <span>Cancelar</span>
-              </BaseButton>
-            </div>
-          </template>
-        </OrderCard>
+      <div v-else class="orders-grid">
+        <div v-for="order in ordersForCurrentTable" :key="order.id_order" class="order-card-container">
+          <div class="order-card-inner">
+            <OrderCard :order="order" @view-details="openDetailsModal" class="order-card-component">
+              <!-- Slot de acciones para CADA tarjeta -->
+              <template #actions>
+                <div class="order-actions-wrapper">
+                  <div v-if="order.order_status_name !== 'READY' && order.order_status_name !== 'COMPLETED'" class="pending-actions">
+                    <BaseButton variant="success" size="sm" @click.stop="confirmOrder(order.id_order)">
+                      <template #icon-left>
+                        <i-line-md-circle-filled-to-confirm-circle-filled-transition class="w-4 h-4" />
+                      </template>
+                      <span class="hidden sm:inline">Confirmar</span>
+                      <span class="sm:hidden">OK</span>
+                    </BaseButton>
+                    <BaseButton variant="danger" size="sm" @click.stop="cancelOrder(order.id_order)">
+                      <template #icon-left>
+                        <i-material-symbols-cancel-rounded class="w-4 h-4" />
+                      </template>
+                      <span class="hidden sm:inline">Cancelar</span>
+                      <span class="sm:hidden">X</span>
+                    </BaseButton>
+                  </div>
+                  
+                </div>
+              </template>
+            </OrderCard>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -302,12 +317,75 @@ onUnmounted(() => {
   @apply flex flex-col items-center justify-center text-center py-16 bg-gray-50/50 rounded-lg;
 }
 
-.orders-list {
-  @apply flex flex-col gap-4;
+/* Grid principal de órdenes */
+.orders-grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-4;
 }
 
+/* Contenedor de cada card */
+.order-card-container {
+  @apply w-full;
+}
+
+.order-card-inner {
+  @apply h-full flex flex-col;
+}
+
+.order-card-component {
+  @apply flex-1 h-full;
+}
+
+/* Skeleton loading */
 .orders-skeleton {
-  @apply flex flex-col gap-4;
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-4;
+}
+
+.skeleton-card {
+  @apply animate-pulse;
+}
+
+.skeleton-wrapper {
+  @apply bg-white rounded-xl border border-gray-200 p-6 flex gap-4 min-h-[180px] shadow-sm;
+}
+
+.skeleton-image {
+  @apply w-20 h-20 lg:w-24 lg:h-24 rounded-lg bg-gray-200 flex-shrink-0;
+}
+
+.skeleton-content {
+  @apply flex-1 flex flex-col justify-between;
+}
+
+.skeleton-info {
+  @apply space-y-3 flex-1;
+}
+
+.skeleton-line {
+  @apply bg-gray-200 rounded h-3;
+}
+
+.skeleton-line-lg {
+  @apply w-3/4 h-4;
+}
+
+.skeleton-line-md {
+  @apply w-1/2;
+}
+
+.skeleton-line-full {
+  @apply w-full;
+}
+
+.skeleton-line-sm {
+  @apply w-2/3;
+}
+
+.skeleton-actions {
+  @apply flex gap-2 mt-4;
+}
+
+.skeleton-button {
+  @apply flex-1 h-9 bg-gray-300 rounded-md;
 }
 
 /* Estilos mejorados para la barra de acciones masivas */
@@ -332,7 +410,7 @@ onUnmounted(() => {
 }
 
 .bulk-title {
-  @apply text-lg font-medium text-gray-700;
+  @apply text-lg font-semibold text-gray-700;
 }
 
 .bulk-subtitle {
@@ -355,16 +433,37 @@ onUnmounted(() => {
   @apply transform transition-transform duration-200 -translate-y-px;
 }
 
-.confirm-btn {
-  @apply bg-emerald-50 text-emerald-700 border border-emerald-100 hover:bg-emerald-100 hover:shadow-sm;
+
+
+
+/* Acciones de las cards */
+.order-actions-wrapper {
+  @apply w-full;
 }
 
-.cancel-btn {
-  @apply bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100 hover:shadow-sm;
+.pending-actions {
+  @apply flex gap-2 w-full;
+}
+
+.action-btn {
+  @apply flex-1 justify-center transition-all duration-200 hover:scale-[1.02] font-medium;
 }
 
 
-.individual-actions {
-  @apply grid grid-cols-2 gap-2 w-full;
+
+.status-display {
+  @apply flex justify-center w-full;
+}
+
+.status-badge {
+  @apply inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all;
+}
+
+.status-ready {
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.status-completed {
+  @apply bg-blue-50 text-blue-700 border border-blue-200;
 }
 </style>

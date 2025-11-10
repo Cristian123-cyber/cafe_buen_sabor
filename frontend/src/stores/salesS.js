@@ -277,6 +277,7 @@ export const useSalesStore = defineStore("sales", () => {
       }
       return response;
     } catch (error) {
+      console.log('error redibidop en store');
       errors.createSale = error.message || 'Error al crear la venta';
       throw error;
     } finally {

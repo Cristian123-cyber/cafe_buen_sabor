@@ -1,10 +1,10 @@
 // src/stores/notifications.js
 
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import { notificationService } from '../services/notification.js';
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import { notificationService } from "../services/notification.js";
 
-export const useNotificationStore = defineStore('notifications', () => {
+export const useNotificationStore = defineStore("notifications", () => {
   // --- STATE ---
   const notifications = ref([]);
   const unreadCount = ref(0);
@@ -20,16 +20,23 @@ export const useNotificationStore = defineStore('notifications', () => {
    * Obtiene la lista completa de notificaciones y actualiza el estado.
    * Se usa para poblar el dropdown de notificaciones.
    */
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (getAll) => {
     isLoading.value = true;
     try {
-      const response = await notificationService.getNotifications();
+      let response;
+
+      if (getAll) {
+        response = await notificationService.getNotifications();
+      } else {
+        response = await notificationService.getUnreadNotifications();
+      }
       // Asumiendo que la API devuelve { data: [...], meta: { unread_count: X } }
-      notifications.value = response.data;
-      unreadCount.value = response.meta.unread_count;
+      notifications.value = response.data.data;
+      unreadCount.value = response.data.unread_count;
     } catch (error) {
       // El manejo de errores ya se loguea en el servicio, aquí podrías
       // mostrar una notificación al usuario si fuese necesario.
+      throw error;
     } finally {
       isLoading.value = false;
     }
@@ -42,7 +49,7 @@ export const useNotificationStore = defineStore('notifications', () => {
   const fetchUnreadCount = async () => {
     try {
       const data = await notificationService.getUnreadCount();
-      unreadCount.value = data.count;
+      unreadCount.value = data.unread_count;
     } catch (error) {
       // Si el polling falla, no interrumpimos al usuario, el error ya se logueó.
     }
@@ -52,41 +59,14 @@ export const useNotificationStore = defineStore('notifications', () => {
    * Marca una notificación como leída y actualiza el estado localmente
    * para una respuesta instantánea en la UI (actualización optimista).
    */
-  const markNotificationAsRead = async (notificationId) => {
-    const notification = notifications.value.find(n => n.id === notificationId);
-    // Si la notificación ya está leída o no existe, no hacemos nada.
-    if (!notification || notification.is_read) {
-      return;
-    }
-    
+  const markNotificationAsRead = async (notificationId, userId) => {
     try {
-      await notificationService.markAsRead(notificationId);
-      // Actualización optimista: asumimos éxito y actualizamos la UI inmediatamente.
-      notification.is_read = true;
-      unreadCount.value = Math.max(0, unreadCount.value - 1);
+      const result = await notificationService.markAsRead(notificationId, userId);
+      return result.success
     } catch (error) {
+      return false;
       // Si la API falla, podríamos revertir el estado si fuera crítico,
       // pero por ahora solo lo logueamos.
-    }
-  };
-
-  /**
-   * Marca todas las notificaciones como leídas y actualiza el estado localmente.
-   */
-  const markAllNotificationsAsRead = async () => {
-    if (unreadCount.value === 0) return;
-    
-    try {
-      await notificationService.markAllAsRead();
-      // Actualización optimista
-      unreadCount.value = 0;
-      notifications.value.forEach(n => {
-        if (!n.is_read) {
-          n.is_read = true;
-        }
-      });
-    } catch (error) {
-       // El error ya se logueó en la capa de servicio.
     }
   };
 
@@ -104,7 +84,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     pollingIntervalId.value = setInterval(() => {
       fetchUnreadCount();
     }, 15000); // 15 segundos
-    console.log('Notification polling started.');
+    console.log("Notification polling started.");
   };
 
   /**
@@ -115,7 +95,7 @@ export const useNotificationStore = defineStore('notifications', () => {
     if (pollingIntervalId.value) {
       clearInterval(pollingIntervalId.value);
       pollingIntervalId.value = null;
-      console.log('Notification polling stopped.');
+      console.log("Notification polling stopped.");
     }
   };
 
@@ -130,7 +110,6 @@ export const useNotificationStore = defineStore('notifications', () => {
     fetchNotifications,
     fetchUnreadCount,
     markNotificationAsRead,
-    markAllNotificationsAsRead,
     startPolling,
     stopPolling,
   };

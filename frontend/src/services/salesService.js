@@ -1,3 +1,4 @@
+import { da } from "date-fns/locale";
 import api from "./api.js";
 
 /**
@@ -58,10 +59,11 @@ export const salesService = {
   createSale: async (data) => {
     try {
       const response = await api.post("/sales", data);
+      console.warn('RESPOPNSEEEE sale', response);
       return response.data;
     } catch (error) {
       console.error(
-        "Error al crear la venta:",
+        "Error al crear la venta aaccaaa:",
         error.response?.data || error.message
       );
       throw error;

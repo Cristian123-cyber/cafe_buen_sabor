@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\Order;
 use App\Models\TableSession;
 use App\Models\Employees;
+use App\Models\Notification;
 use Exception;
 
 class OrderController extends BaseController
@@ -12,11 +13,14 @@ class OrderController extends BaseController
     private $orderModel;
     private $tableSessionModel;
     private $employeeModel;
+    private $notificationModel;
 
     public function __construct()
     {
         parent::__construct();
         $this->orderModel = new Order();
+        $this->notificationModel = new Notification();
+
         $this->tableSessionModel = new TableSession();
         $this->employeeModel = new Employees();
     }
@@ -111,11 +115,16 @@ class OrderController extends BaseController
         return $this->executeWithErrorHandling(function () {
             $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
             $limit = isset($_GET['limit']) ? max(1, intval($_GET['limit'])) : 10;
+            $applyPagination = isset($_GET['apply_pag']) ? filter_var($_GET['apply_pag'], FILTER_VALIDATE_BOOLEAN) : true;
             $orderBy = isset($_GET['orderBy']) ? $_GET['orderBy'] : null;
-            $orders = $this->orderModel->getAll($page, $limit, $orderBy);
+
+            $state = isset($_GET['state']) ? intval($_GET['state']) : null;
+            $orders = $this->orderModel->getAll($page, $limit, $orderBy, $state, $applyPagination);
             $this->handleResponse(true, 'Pedidos obtenidos correctamente', $orders);
         }, 'Error al obtener los pedidos');
     }
+
+    
 
     /**
      * Obtener un pedido específico
@@ -154,6 +163,8 @@ class OrderController extends BaseController
             $result = $this->orderModel->updateStatus($orderId, 4); // READY
 
             if ($result) {
+
+                $this->notificationModel->createOrderReadyNotification($orderId);
                 $this->handleResponse(true, 'Pedido marcado como listo correctamente', $result);
             } else {
                 $this->handleResponse(false, 'Error al marcar el pedido como listo', [], 500);
@@ -172,6 +183,9 @@ class OrderController extends BaseController
             $result = $this->orderModel->updateStatus($orderId, 2); 
 
             if ($result) {
+
+                $this->notificationModel->createOrderConfirmedNotification($orderId);
+
                 $this->handleResponse(true, 'Pedido marcado como confirmado correctamente', $result);
             } else {
                 $this->handleResponse(false, 'Error al marcar el pedido como confirmado', [], 500);
@@ -205,6 +219,7 @@ class OrderController extends BaseController
                     $this->handleResponse(false, 'Error al marcar el pedido con ID ' . $orderId . ' como confirmado', [], 500);
                     return;
                 }
+                $this->notificationModel->createOrderConfirmedNotification($orderId);
             }
             $this->handleResponse(true, 'Pedidos marcados como confirmados correctamente', [], 200);
 
@@ -224,6 +239,7 @@ class OrderController extends BaseController
             $result = $this->orderModel->updateStatus($orderId, 3); // READY
 
             if ($result) {
+                $this->notificationModel->createOrderCancelledNotification($orderId);
                 $this->handleResponse(true, 'Pedido marcado como cancelado correctamente', $result);
             } else {
                 $this->handleResponse(false, 'Error al marcar el pedido como cancelado', [], 500);
@@ -257,6 +273,7 @@ class OrderController extends BaseController
                     $this->handleResponse(false, 'Error al marcar el pedido con ID ' . $orderId . ' como cancelado', [], 500);
                     return;
                 }
+                $this->notificationModel->createOrderCancelledNotification($orderId);
             }
             $this->handleResponse(true, 'Pedidos marcados como cancelados correctamente', [], 200);
 

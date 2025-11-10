@@ -6,6 +6,9 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Exception;
 
+use App\Models\TableSession;
+
+
 class AccessControlMiddleware
 {
     /**
@@ -37,6 +40,16 @@ class AccessControlMiddleware
             if ($isClientSession) {
                 if (!$allowClientSession) {
                     throw new Exception('Esta acción no está permitida para sesiones de cliente.');
+                }
+
+
+// CORRECCIÓN: Instanciar correctamente la clase TableSession
+                $tableSessionModel = new TableSession();
+
+                $isValidSesion = $tableSessionModel->validateSession($tokenData->sessionId);
+
+                if (!$isValidSesion || $isValidSesion === false){
+                    throw new Exception('La sesión no es válida.');
                 }
                
                 return; // Acceso concedido para el cliente

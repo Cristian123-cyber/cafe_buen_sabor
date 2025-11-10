@@ -39,7 +39,6 @@
 
 <script setup>
 import { useAlert } from '../../composables/useAlert.js';
-
 const { activeAlert, _close: closeAlert } = useAlert();
 
 // Cerrar la alerta si el usuario hace clic en el overlay (equivale a cancelar)

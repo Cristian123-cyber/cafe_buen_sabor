@@ -12,10 +12,10 @@ export const notificationService = {
    */
   getNotifications: async () => {
     try {
-      //const response = await api.get('/notifications');
+      const response = await api.get('/notificaciones?all=true');
       // La API devuelve un objeto con { data: [...], meta: {...} }
 
-      const response = {
+/*       const response = {
         data: [
           // --- Notificaciones NO LEÍDAS ---
 
@@ -111,10 +111,21 @@ export const notificationService = {
         meta: {
           unread_count: 4,
         },
-      };
-      return response;
+      }; */
+      console.log('RESPONSE NOTIFICACIONES: ', response.data)
+      return response.data;
     } catch (error) {
       console.error("Error al obtener las notificaciones:", error);
+      throw error;
+    }
+  },
+  getUnreadNotifications: async () => {
+    try {
+      const response = await api.get('/notificaciones?all=false');
+      console.log('unread:' , response.data)
+      return response.data;
+    } catch (error) {
+      console.error("Error al obtener las notificaciones no leídas:", error);
       throw error;
     }
   },
@@ -126,14 +137,11 @@ export const notificationService = {
    */
   getUnreadCount: async () => {
     try {
-      //const response = await api.get('/notifications/unread-count');
+      const response = await api.get("/notificaciones/unread-count");
 
-      const response = {
-        data: {
-          count: 4,
-        },
-      };
-      return response.data;
+      console.log("Respuesta del contador de no leídas:", response);
+
+      return response.data.data;
     } catch (error) {
       console.error("Error al obtener el contador de no leídas:", error);
       throw error;
@@ -145,10 +153,10 @@ export const notificationService = {
    * @param {string|number} notificationId El ID de la notificación.
    * @returns {Promise<Object>} La respuesta de la API.
    */
-  markAsRead: async (notificationId) => {
+  markAsRead: async (notificationId, userId) => {
     try {
-      /* const response = await api.put(`/notifications/${notificationId}/read`);
-      return response.data; */
+      const response = await api.put(`/notificaciones/${notificationId}/read`, { employee_id: userId });
+      return response.data;
     } catch (error) {
       console.error(
         `Error al marcar la notificación ${notificationId} como leída:`,
@@ -157,6 +165,4 @@ export const notificationService = {
       throw error;
     }
   },
-
-  
 };

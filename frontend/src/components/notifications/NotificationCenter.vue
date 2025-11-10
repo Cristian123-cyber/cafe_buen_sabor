@@ -2,7 +2,7 @@
   <div ref="notificationCenterRef" class="relative">
     <NotificationBell
       :count="unreadCount"
-      .maxCount="3"
+      :maxCount="9"
       @click="toggleDropdown"
       :aria-expanded="isOpen"
     />
@@ -62,7 +62,7 @@
           <ul v-else class="notification-list">
             <NotificationItem
               v-for="notification in filteredNotifications"
-              :key="notification.id"
+              :key="notification.id_notification"
               :notification="notification"
               @read="handleMarkAsRead"
             />
@@ -78,6 +78,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useNotificationStore } from '../../stores/notificationsS';
 import { useToasts } from '../../composables/useToast';
 import { useAlert } from '../../composables/useAlert';
+import { useAuthStore } from '../../stores/authS';
 const alert = useAlert();
 
 const { addToast } = useToasts();
@@ -85,20 +86,20 @@ const { addToast } = useToasts();
 // Estado local del componente
 const isOpen = ref(false);
 const notificationCenterRef = ref(null);
-const activeTab = ref('unread');
+const activeTab = ref(null);
 
 // Integración con Pinia Store
 const notificationStore = useNotificationStore();
 const unreadCount = computed(() => notificationStore.unreadCount);
 const notifications = computed(() => notificationStore.notifications);
 const isLoading = computed(() => notificationStore.isLoading);
-const hasUnread = computed(() => notificationStore.hasUnread);
+
+
+const authStore = useAuthStore();
+
 
 // Lógica de filtrado
 const filteredNotifications = computed(() => {
-  if (activeTab.value === 'unread') {
-    return notifications.value.filter(n => !n.is_read);
-  }
   return notifications.value;
 });
 
@@ -121,15 +122,33 @@ const setActiveTab = (tabName) => {
 
 // Manejadores de eventos
 const handleMarkAsRead = async (id) => {
+
+  
   const isConfirmed = await alert.show({
     variant: 'warning',
-    title: '¿Confirmar Pedido?',
-    message: 'El pedido se enviará a la cocina y no podrá modificarse. ¿Deseas continuar?',
-    confirmButtonText: 'Sí, enviar',
-    cancelButtonText: 'Aún no',
+    title: '¿Marcar como leida ?',
+    message: '¿Estás seguro de que deseas marcar esta notificación como leída?, esta acción no se puede deshacer.',
+    confirmButtonText: 'Sí, marcar',
+    cancelButtonText: 'Cancelar'
   });
 
   if (isConfirmed) {
+
+    const result = await notificationStore.markNotificationAsRead(id, authStore.user.id);
+
+    if (!result) {
+      addToast({
+        message: 'Error al marcar la notificación como leida, verifica que no haya sido marcada como leida previamente.',
+        title: 'Error',
+        type: 'error',
+        duration: 5000
+      });
+      return;
+    }
+
+    setActiveTab('unread');
+
+
     addToast({
       message: 'Notification marcada como leida',
       title: 'Exito',
@@ -146,10 +165,34 @@ const handleMarkAsRead = async (id) => {
 watch(isOpen, (newValue) => {
   if (newValue) {
     activeTab.value = 'unread';
-    notificationStore.fetchNotifications();
+  }else {
+    activeTab.value = null; // Limpiar la pestaña activa al cerrar
   }
 });
 
+watch(activeTab, (newTab) => {
+  if (newTab === 'unread') {
+    notificationStore.fetchNotifications(false).catch((error) => {
+      console.error('Error al cargar notificaciones no leídas:', error);
+      addToast({
+        message: 'Error al cargar notificaciones no leídas',
+        title: 'Error',
+        type: 'error',
+        duration: 5000
+      });
+    });
+  } else if (newTab === 'all') {
+    notificationStore.fetchNotifications(true).catch((error) => {
+      console.error('Error al cargar todas las notificaciones:', error);
+      addToast({
+        message: 'Error al cargar todas las notificaciones',
+        title: 'Error',
+        type: 'error',
+        duration: 5000
+      });
+    });
+  }
+});
 const handleClickOutside = (event) => {
   if (notificationCenterRef.value && !notificationCenterRef.value.contains(event.target)) {
     closeDropdown();

@@ -35,7 +35,7 @@ class SalesController
     {
         try {
             $saleModel = new Sale();
-            $sale = $saleModel->find($id);
+            $sale = $saleModel->findWithFullDetails($id);
             if ($sale) {
                 echo json_encode([
                     'success' => true,
@@ -62,6 +62,68 @@ class SalesController
     {
         try {
             $data = json_decode(file_get_contents('php://input'), true);
+            
+            // Validaciones básicas
+            if (!$data) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Datos inválidos o incompletos'
+                ]);
+                return;
+            }
+            
+            // Validar que exista la clave 'orders'
+            if (!isset($data['orders']) || !is_array($data['orders'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'El campo "orders" es requerido y debe ser un array'
+                ]);
+                return;
+            }
+            
+            // Validar que el array de orders no esté vacío
+            if (empty($data['orders'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Debe proporcionar al menos una orden'
+                ]);
+                return;
+            }
+            
+            // Validar que cada elemento en orders sea un número entero
+            foreach ($data['orders'] as $orderId) {
+                if (!is_numeric($orderId) || intval($orderId) <= 0) {
+                    http_response_code(400);
+                    echo json_encode([
+                        'success' => false,
+                        'message' => 'Todos los IDs de orden deben ser números enteros positivos'
+                    ]);
+                    return;
+                }
+            }
+            
+            // Validar campos requeridos adicionales
+            if (!isset($data['cashier_id']) || !is_numeric($data['cashier_id']) || intval($data['cashier_id']) <= 0) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'El campo "cashier_id" es requerido y debe ser un número entero positivo'
+                ]);
+                return;
+            }
+            
+            if (!isset($data['payment_method']) || empty($data['payment_method'])) {
+                http_response_code(400);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'El campo "payment_method" es requerido'
+                ]);
+                return;
+            }
+            
             $saleModel = new Sale();
             $sale = $saleModel->createSale($data);
             echo json_encode([

@@ -48,6 +48,26 @@ export const useOrders = () => {
       orderStore.isLoading = false;
     }
   };
+  const fetchOrdersForKitchen = async () => {
+    const orderStore = useOrderStore();
+    orderStore.isLoading = true;
+    orderStore.errors.fetchKitchenQueue = null;
+
+    try {
+      const data = await orderService.getAllOrders(2);
+
+      orderStore.setKitchenQueue(data.data);
+      console.log(
+        "data seteada ordenes cocina:: ",
+        orderStore.kitchenQueue
+      );
+    } catch (error) {
+      orderStore.errors.fetchKitchenQueue =
+        "Ha ocurrido un error al obtener las ordenes";
+    } finally {
+      orderStore.isLoading = false;
+    }
+  };
 
   const fetchOrdersByTableId = async (tableId, showLoading = true) => {
     const orderStore = useOrderStore();
@@ -56,7 +76,7 @@ export const useOrders = () => {
 
     try {
       const data = await orderService.getOrdersByTableId(tableId);
-      console.warn("PEIDOS DE LA MESAAAA:", data);
+      
       orderStore.setOrdersForCurrentTable(data.data);
     } catch (error) {
       orderStore.errors.fetchOrders = "Error al cargar los pedidos de la mesa.";
@@ -85,7 +105,7 @@ export const useOrders = () => {
   /**
    * Maneja la actualización de estado para un solo pedido.
    * @param {number} orderId - ID del pedido.
-   * @param {'CONFIRMED' | 'CANCELLED'} status - Nuevo estado.
+   * @param {'CONFIRMED' | 'CANCELLED' | 'READY'} status - Nuevo estado.
    * @returns {Promise<boolean>} - True si tuvo éxito, false si no.
    */
   const handleUpdateStatus = async (orderId, status, tableId) => {
@@ -101,7 +121,7 @@ export const useOrders = () => {
       addToast({
         title: "Éxito",
         message: `El pedido #${orderId} ha sido ${
-          status === "confirm" ? "confirmado" : "cancelado"
+          status === "confirm" ? "confirmado" : status === 'ready' ? "marcado como listo" : "cancelado"
         }.`,
         type: "success",
       });
@@ -156,6 +176,7 @@ export const useOrders = () => {
     fetchAllOrders,
     fetchOrdersCurrentSession,
     fetchOrdersByTableId,
+    fetchOrdersForKitchen,
     createOrder,
     handleUpdateStatus,
     handleBulkUpdateStatus,
